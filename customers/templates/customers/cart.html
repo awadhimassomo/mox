@@ -1,0 +1,233 @@
+{% extends 'customers/base.html' %}
+{% load humanize %}
+
+{% block title %}Cart | Mo-Express{% endblock %}
+
+{% block back_button %}
+<a href="javascript:history.back()" class="text-gray-600 dark:text-gray-300">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+</a>
+{% endblock %}
+
+{% block header_title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="pb-32">
+    {% if not cart_items %}
+    <!-- Empty Cart -->
+    <div class="flex flex-col items-center justify-center py-12">
+        <svg class="w-24 h-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <p class="text-gray-600 dark:text-gray-400 text-lg mb-4">Your cart is empty</p>
+        <a href="{% url 'customers:home' %}" 
+           class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors">
+            Browse Businesses
+        </a>
+    </div>
+    {% else %}
+    <!-- Cart Items -->
+    <div class="px-4 py-6">
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Your Cart</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ cart_count }} item{% if cart_count != 1 %}s{% endif %} in cart</p>
+        </div>
+
+        <div class="space-y-4 mb-8">
+            {% for item in cart_items %}
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm" id="cart-item-{{ item.id }}">
+                <div class="flex items-start space-x-4">
+                    {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" 
+                         alt="{{ item.product.name }}" 
+                         class="w-20 h-20 object-cover rounded-lg">
+                    {% else %}
+                    <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                        <span class="text-gray-500">No Image</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-2">
+                            <h3 class="font-medium">{{ item.product.name }}</h3>
+                            <p class="font-semibold">TZS {{ item.total_price|floatformat:0 }}</p>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            TZS {{ item.unit_price|floatformat:0 }} each
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <button onclick="window.updateCartItem('{{ item.id }}', parseInt({{ item.quantity|add:'-1' }}))"
+                                        class="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                    </svg>
+                                </button>
+                                <span id="quantity-{{ item.id }}" class="font-medium">{{ item.quantity }}</span>
+                                <button onclick="window.updateCartItem('{{ item.id }}', parseInt({{ item.quantity|add:'1' }}))"
+                                        class="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <button onclick="window.updateCartItem('{{ item.id }}', 0)"
+                                    class="text-red-600 text-sm hover:text-red-700">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% if item.notes %}
+                <div class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="font-medium">Notes:</p>
+                    <p>{{ item.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
+            <h3 class="font-semibold mb-4">Order Summary</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+                    <span id="cart-subtotal">TZS {{ subtotal|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                    <span id="delivery-fee">TZS {{ delivery_fee|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1 mb-2">
+                    <p>Delivery fee is calculated based on distance (1,200 TZS per km)</p>
+                    {% if cart.business and cart.business.latitude and cart.business.longitude %}
+                    <p>From: {{ cart.business.name }} ({{ cart.business.address|default:"Location" }})</p>
+                    {% endif %}
+                </div>
+                <div class="border-t dark:border-gray-700 pt-2 mt-2">
+                    <div class="flex justify-between font-semibold">
+                        <span>Total</span>
+                        <span id="cart-total">TZS {{ total|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Button -->
+        <a href="{% url 'customers:checkout' %}" 
+           class="block w-full py-3 bg-primary text-white text-center rounded-lg font-medium hover:bg-red-700 transition-colors mb-3">
+            Proceed to Checkout
+        </a>
+        
+        <!-- Continue Shopping Button -->
+        {% if cart.business %}
+        <a href="{% url 'customers:business_detail' business_id=cart.business.id %}" 
+           class="block w-full py-3 border border-primary text-primary text-center rounded-lg font-medium hover:bg-red-50 transition-colors">
+            Continue Shopping
+        </a>
+        {% else %}
+        <a href="{% url 'customers:home' %}" 
+           class="block w-full py-3 border border-primary text-primary text-center rounded-lg font-medium hover:bg-red-50 transition-colors">
+            Continue Shopping
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to update cart item quantity
+        window.updateCartItem = function(itemId, quantity) {
+            // Show loading state
+            const quantityElement = document.getElementById(`quantity-${itemId}`);
+            const originalContent = quantityElement.innerHTML;
+            quantityElement.innerHTML = '<span class="animate-pulse">Updating...</span>';
+            
+            // Send AJAX request to update cart
+            fetch(`/customers/update_cart/${itemId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    quantity: quantity
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    if (quantity > 0) {
+                        // Update item quantity display
+                        quantityElement.innerHTML = quantity;
+                        
+                        // Update item subtotal
+                        const itemSubtotal = document.getElementById(`subtotal-${itemId}`);
+                        if (itemSubtotal) {
+                            itemSubtotal.innerHTML = `TZS ${data.item_subtotal.toLocaleString()}`;
+                        }
+                    } else {
+                        // Remove item from UI
+                        const cartItem = document.getElementById(`cart-item-${itemId}`);
+                        if (cartItem) {
+                            cartItem.remove();
+                        }
+                    }
+                    
+                    // Update cart totals
+                    const subtotalElement = document.getElementById('cart-subtotal');
+                    const deliveryFeeElement = document.getElementById('delivery-fee');
+                    const totalElement = document.getElementById('cart-total');
+                    const cartCountElement = document.getElementById('cart-count');
+                    
+                    if (subtotalElement) subtotalElement.innerHTML = `TZS ${data.subtotal.toLocaleString()}`;
+                    if (deliveryFeeElement) deliveryFeeElement.innerHTML = `TZS ${data.delivery_fee.toLocaleString()}`;
+                    if (totalElement) totalElement.innerHTML = `TZS ${data.total.toLocaleString()}`;
+                    if (cartCountElement) cartCountElement.innerHTML = data.cart_count;
+                    
+                    // Update navbar cart count
+                    const navCartCount = document.getElementById('nav-cart-count');
+                    if (navCartCount) {
+                        navCartCount.innerHTML = data.cart_count;
+                        navCartCount.style.display = data.cart_count > 0 ? 'block' : 'none';
+                    }
+                    
+                    // Check if cart is empty and show empty message if needed
+                    if (data.cart_count === 0) {
+                        const cartContent = document.getElementById('cart-content');
+                        const emptyCart = document.getElementById('empty-cart');
+                        if (cartContent) cartContent.style.display = 'none';
+                        if (emptyCart) emptyCart.style.display = 'block';
+                    }
+                } else {
+                    // Show error
+                    console.error('Error updating cart:', data.error);
+                    alert(`Error: ${data.error}`);
+                    
+                    // Restore original content
+                    quantityElement.innerHTML = originalContent;
+                }
+            })
+            .catch(error => {
+                console.error('Error updating cart:', error);
+                alert(`Error updating cart: ${error.message}`);
+                
+                // Restore original content
+                quantityElement.innerHTML = originalContent;
+            });
+        }
+    });
+</script>
+{% endblock %}

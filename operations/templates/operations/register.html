@@ -1,0 +1,205 @@
+{% extends 'operations/auth_base.html' %}
+{% load static %}
+
+{% block title %}Register - Mo Delivery Management{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 border border-gray-100">
+        <div class="text-center mb-8">
+            <!-- Logo could be added here -->
+            <img src="{% static 'img/logo.png' %}" alt="Mo Delivery" class="h-12 mx-auto mb-3" onerror="this.style.display='none'">
+            <h2 class="text-3xl font-extrabold text-red-600 mb-2">
+                Create Account
+            </h2>
+            <p class="text-sm text-gray-600">
+                Already have an account?
+                <a href="{% url 'operations:login' %}" class="font-medium text-red-600 hover:text-red-500 transition-colors duration-150">
+                    Sign in
+                </a>
+            </p>
+        </div>
+        
+        <form class="space-y-6" action="{% url 'operations:dashboard_register' %}" method="POST" novalidate>
+            {% csrf_token %}
+            
+            {% if messages %}
+            <div class="rounded-md bg-red-50 p-4 mb-6 border-l-4 border-red-500">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <!-- Error icon -->
+                        <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="space-y-5">
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 pointer-events-none">+255</span>
+                        <input id="phone" name="phone" type="tel" required pattern="[0-9]{9,12}"
+                            class="appearance-none block w-full pl-14 pr-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-colors duration-150"
+                            placeholder="712345678"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Enter 9 digits after 255 (e.g., 712345678)</p>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <input id="email" name="email" type="email" required
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-colors duration-150"
+                            placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <input id="password1" name="password1" type="password" required minlength="6"
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-colors duration-150"
+                            placeholder="••••••••">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">At least 6 characters</p>
+                </div>
+
+                <div>
+                    <label for="password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <input id="password2" name="password2" type="password" required minlength="6"
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-colors duration-150"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="region" class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <select id="region" name="region" required
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-colors duration-150">
+                            <option value="">Select your region</option>
+                            {% for region_code, region_name in regions %}
+                            <option value="{{ region_code }}">{{ region_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150">
+                    Create Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const phone = document.getElementById('phone');
+    const email = document.getElementById('email');
+    const password1 = document.getElementById('password1');
+    const password2 = document.getElementById('password2');
+    const region = document.getElementById('region');
+
+    // Show inline validation errors instead of alerts
+    const createErrorMessage = (input, message) => {
+        // Remove any existing error message
+        const existingError = input.parentNode.parentNode.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create new error message
+        const errorDiv = document.createElement('p');
+        errorDiv.className = 'error-message text-sm text-red-600 mt-1';
+        errorDiv.textContent = message;
+        
+        // Add after input's parent container
+        input.parentNode.parentNode.appendChild(errorDiv);
+        
+        // Highlight input
+        input.classList.add('border-red-500');
+    };
+    
+    // Remove error styling when user starts typing
+    const clearError = (input) => {
+        const errorMessage = input.parentNode.parentNode.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+        input.classList.remove('border-red-500');
+    };
+    
+    // Add input event listeners to clear errors
+    [phone, email, password1, password2, region].forEach(input => {
+        input.addEventListener('input', () => clearError(input));
+    });
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear all previous errors
+        document.querySelectorAll('.error-message').forEach(el => el.remove());
+        
+        // Validate phone number
+        const phoneValue = phone.value.trim();
+        if (!/^[0-9]{9,12}$/.test(phoneValue)) {
+            createErrorMessage(phone, 'Please enter a valid phone number (9-12 digits)');
+            isValid = false;
+        }
+        
+        // Validate email
+        if (!email.value.trim()) {
+            createErrorMessage(email, 'Email is required');
+            isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(email.value)) {
+            createErrorMessage(email, 'Please enter a valid email address');
+            isValid = false;
+        }
+        
+        // Validate password
+        if (password1.value.length < 6) {
+            createErrorMessage(password1, 'Password must be at least 6 characters');
+            isValid = false;
+        }
+        
+        // Validate passwords match
+        if (password1.value !== password2.value) {
+            createErrorMessage(password2, 'Passwords do not match');
+            isValid = false;
+        }
+        
+        // Validate region
+        if (!region.value) {
+            createErrorMessage(region, 'Please select a region');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

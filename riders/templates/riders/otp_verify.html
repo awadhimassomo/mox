@@ -1,0 +1,228 @@
+{% load static %}
+
+{% block content %}
+<style>
+    .otp-container {
+        min-height: 100vh;
+        background-color: #f3f4f6;
+        padding: 3rem 1rem;
+    }
+
+    .otp-form-container {
+        max-width: 500px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+        font-size: 2rem;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+        color: #6b7280;
+    }
+
+    .otp-section {
+        background-color: #f9fafb;
+        border-radius: 6px;
+        padding: 1.5rem;
+    }
+
+    .otp-input-group {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+
+    .otp-input {
+        width: 3rem;
+        height: 3rem;
+        text-align: center;
+        font-size: 1.25rem;
+        border: 2px solid #d1d5db;
+        border-radius: 8px;
+        background-color: white;
+    }
+
+    .otp-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .resend-otp {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    .timer {
+        display: block;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    .btn-secondary {
+        background-color: transparent;
+        color: #6b7280;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        color: #4b5563;
+    }
+
+    .btn-secondary:disabled {
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    #alertBox {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border-radius: 6px;
+        display: none;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .alert-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+</style>
+
+<div class="otp-container">
+    <div class="otp-form-container">
+        <div class="form-header">
+            <h2>Phone Verification</h2>
+            <p>Enter the verification code sent to <strong>{{ user.phone }}</strong></p>
+        </div>
+
+        <div id="alertBox"></div>
+
+        <div class="otp-section">
+            <form id="otpForm" method="POST" action="{% url 'riders:verify_otp' %}">
+                {% csrf_token %}
+                
+                <!-- ✅ Hidden input to send the correct phone number -->
+                <input type="hidden" name="phone" id="phoneInput" value="{{ phone }}">
+
+                
+                <div class="otp-input-group">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                </div>
+
+                <!-- Hidden input to hold the final OTP value -->
+                <input type="hidden" name="otp" id="finalOtp">
+
+                <div class="resend-otp">
+                    <span class="timer">Resend code in <span id="countdown">60</span>s</span>
+                    <button type="button" id="resendOTP" class="btn btn-secondary" disabled>Resend Code</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Verify</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("otpForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        
+        // Combine OTP digits into one string
+        const otpInputs = document.querySelectorAll(".otp-input");
+        const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+
+        // Set the hidden input field value
+        document.getElementById("finalOtp").value = otpValue;
+
+        // Submit the form
+        this.submit();
+    });
+
+    const resendOTPBtn = document.getElementById("resendOTP");
+    let countdownInterval;
+
+    function startCountdown() {
+        let timeLeft = 60;
+        const countdownDisplay = document.getElementById("countdown");
+        resendOTPBtn.disabled = true;
+
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            countdownDisplay.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                resendOTPBtn.disabled = false;
+                document.querySelector(".timer").style.display = "none";
+            }
+        }, 1000);
+    }
+
+    // OTP input handling
+    const otpInputs = document.querySelectorAll(".otp-input");
+    otpInputs.forEach((input, index) => {
+        input.addEventListener("input", (e) => {
+            if (e.target.value.length === 1) {
+                if (index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            }
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !e.target.value && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+    });
+
+    // Start countdown on page load
+    startCountdown();
+</script>
+{% endblock %}

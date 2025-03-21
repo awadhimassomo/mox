@@ -1,0 +1,11 @@
+DEBUG:root:Email: athimassomo@gmail.com, Phone: +255687046323, Password: Mamashoko65
+ERROR:django.request:Internal Server Error: /postsignUp/
+Traceback (most recent call last):
+  File "C:\Users\awadhi\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\exception.py", line 56, in inner
+    response = get_response(request)
+  File "C:\Users\awadhi\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\base.py", line 204, in _get_response
+    self.check_response(response, callback)
+  File "C:\Users\awadhi\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\handlers\base.py", line 332, in check_response
+    raise ValueError(
+ValueError: The view registration.views.postsignUp didn't return an HttpResponse object. It returned None instead.
+INFO:django.utils.autoreload:C:\Users\awadhi\Desktop\projects\Mandood\mo-web\registration\views.py changed, reloading.

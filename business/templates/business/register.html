@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Registration | Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-8">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+        <h2 class="text-2xl font-bold text-center text-[#FF0000] mb-6">Register Your Gas Business</h2>
+        <p class="text-center text-gray-600 mb-6">Join our B2B gas delivery platform in Tanzania</p>
+
+        <!-- Error messages -->
+        <div id="error-messages" class="text-red-500 text-center mb-4"></div>
+
+        <form class="space-y-6" method="POST" id="business-register-form">
+            {% csrf_token %}
+            
+            <!-- Hidden location fields -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+
+            <div>
+                <label class="block text-gray-700 mb-2">Business Name:</label>
+                <input type="text" name="business_name" id="business_name" required
+                    placeholder="Enter your business name"
+                    title="Enter your business name"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Owner Name:</label>
+                <input type="text" name="owner_name" id="owner_name" required
+                    placeholder="Enter owner's full name"
+                    title="Enter owner's full name"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Phone Number:</label>
+                <input type="tel" name="phone" id="phone" required
+                    placeholder="Enter your phone number"
+                    title="Enter your phone number"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Region:</label>
+                <select name="region" id="region" required
+                    title="Select your region"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white">
+                    <option value="">Select Region</option>
+                    <option value="dar_es_salaam">Dar es Salaam</option>
+                    <option value="arusha">Arusha</option>
+                    <option value="mwanza">Mwanza</option>
+                    <option value="dodoma">Dodoma</option>
+                    <option value="tanga">Tanga</option>
+                    <option value="mbeya">Mbeya</option>
+                    <option value="morogoro">Morogoro</option>
+                    <option value="zanzibar">Zanzibar</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Business Address:</label>
+                <textarea name="address" id="address" rows="3" required
+                    placeholder="Enter your business address"
+                    title="Enter your business address"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Password:</label>
+                <input type="password" name="password" id="password" required
+                    placeholder="Enter your password"
+                    title="Enter your password"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <button type="submit" class="w-full bg-[#FF0000] text-white py-3 rounded-lg hover:bg-red-700">
+                Register
+            </button>
+        </form>
+
+        <!-- Location status message -->
+        <div id="locationStatus" class="mt-4 text-sm text-gray-600 text-center hidden"></div>
+
+        <p class="mt-4 text-center">
+            Already have an account? <a href="{% url 'business:business_login' %}" class="text-[#FF0000]">Login</a>
+        </p>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('business-register-form');
+        const locationStatus = document.getElementById('locationStatus');
+        const addressField = document.getElementById('address');
+        
+        // Function to show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-100 text-green-800' : 
+                type === 'error' ? 'bg-red-100 text-red-800' : 
+                'bg-blue-100 text-blue-800'
+            }`;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        // Function to get and update location
+        function updateLocation() {
+            if ("geolocation" in navigator) {
+                locationStatus.classList.remove('hidden');
+                locationStatus.textContent = "📍 Getting your location...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const { latitude, longitude } = position.coords;
+                        document.getElementById('latitude').value = latitude;
+                        document.getElementById('longitude').value = longitude;
+                        
+                        // Get address from coordinates
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const address = data.display_name || 'Unknown location';
+                                showNotification(`📍 Location detected: ${address}`, 'success');
+                                locationStatus.textContent = "✅ Location detected";
+                                
+                                // Pre-fill the address field if it's empty
+                                if (!addressField.value) {
+                                    addressField.value = address;
+                                }
+
+                                // Try to set the region based on the address
+                                const regionSelect = document.getElementById('region');
+                                const addressLower = address.toLowerCase();
+                                for (let option of regionSelect.options) {
+                                    if (addressLower.includes(option.text.toLowerCase())) {
+                                        regionSelect.value = option.value;
+                                        break;
+                                    }
+                                }
+                            })
+                            .catch(() => {
+                                showNotification(`📍 Location detected: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, 'success');
+                                locationStatus.textContent = "✅ Location detected";
+                            });
+                    },
+                    function(error) {
+                        let message = "Please enable location access for better service";
+                        if (error.code === error.TIMEOUT) {
+                            message = "Location request timed out. Please try again.";
+                        }
+                        showNotification(message, 'error');
+                        locationStatus.textContent = "⚠️ " + message;
+                    }
+                );
+            } else {
+                showNotification("Location services not available", 'error');
+                locationStatus.textContent = "⚠️ Location services not available";
+            }
+        }
+
+        // Get location when page loads
+        updateLocation();
+        
+        // Add event listener to form submission
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch("/business/register/", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCSRFToken()
+                    },
+                    body: formData
+                });
+
+                // Try to parse response as JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    // Handle non-JSON response
+                    if (response.ok) {
+                        window.location.href = "/business/login/";
+                        return;
+                    } else {
+                        throw new Error("Server returned an invalid response");
+                    }
+                }
+
+                if (response.ok) {
+                    window.location.href = data.redirect_url || "/business/login/";  // Redirect on success
+                } else {
+                    displayError(data.error || "Registration failed. Please try again.");
+                }
+            } catch (error) {
+                console.error("❌ Error:", error);
+                displayError("An error occurred. Please try again.");
+            }
+        });
+
+        // Function to get CSRF Token from cookies
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith("csrftoken=")) {
+                    return cookie.split("=")[1];
+                }
+            }
+            return "";
+        }
+
+        // Function to display error messages
+        function displayError(message) {
+            document.getElementById("error-messages").innerText = message;
+        }
+    });
+    </script>
+</body>
+</html>

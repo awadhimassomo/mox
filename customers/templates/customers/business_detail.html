@@ -1,0 +1,314 @@
+{% extends 'customers/base.html' %}
+
+{% block title %}{{ business.name }} | Mo-Express{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'customers:home' %}" class="text-gray-600 dark:text-gray-300">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+</a>
+{% endblock %}
+
+{% block header_title %}{{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="pb-6">
+    <!-- Business Header -->
+    <div class="relative h-48 mb-4">
+        {% if business.cover_image %}
+            <img src="{{ business.cover_image.url }}" 
+                 alt="{{ business.name }}" 
+                 class="w-full h-full object-cover">
+        {% else %}
+            <div class="w-full h-full bg-gradient-to-r from-red-600 to-red-800 flex items-center justify-center">
+                <h1 class="text-white text-3xl font-bold">{{ business.name }}</h1>
+            </div>
+        {% endif %}
+        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+            <h1 class="text-white text-xl font-bold">{{ business.name }}</h1>
+            <p class="text-gray-200">{{ business.description|truncatechars:100 }}</p>
+        </div>
+        <button data-business-id="{{ business.id }}" class="favorite-btn absolute top-4 right-4 p-2 rounded-full bg-white/80 dark:bg-gray-800/80">
+            <svg id="favoriteIcon" class="w-6 h-6 {% if business in request.user.customer_profile.favorite_businesses.all %}text-red-500{% else %}text-gray-400{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Business Banner (if available) -->
+    {% if business.banner %}
+    <div class="px-4 mb-6">
+        <img src="{{ business.banner.url }}" 
+             alt="{{ business.name }} Banner" 
+             class="w-full rounded-lg shadow-md">
+    </div>
+    {% endif %}
+
+    <!-- Business Info -->
+    <div class="px-4 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span class="ml-1">{{ business.rating|floatformat:1 }}</span>
+                <span class="mx-2">•</span>
+                <span>{{ business.review_count }} reviews</span>
+            </div>
+            <div class="flex items-center">
+                {% if business.is_open %}
+                <span class="text-green-500">Open</span>
+                {% else %}
+                <span class="text-red-500">Closed</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            {{ business.location }}
+        </div>
+        
+        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ business.delivery_time }} mins delivery time
+        </div>
+    </div>
+
+    <!-- Menu Categories -->
+    <div class="mb-4">
+        <div class="flex overflow-x-auto space-x-2 px-4 py-2 bg-white dark:bg-gray-800 sticky top-16 z-30">
+            {% for category, products in products_by_category.items %}
+            <button onclick="scrollToCategory('{{ category.id }}')"
+                    class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-sm whitespace-nowrap focus:outline-none hover:bg-primary dark:hover:bg-primary transition-colors">
+                {{ category.name }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Products by Category -->
+    {% for category, products in products_by_category.items %}
+    <div id="category-{{ category.id }}" class="mb-8">
+        <h2 class="text-lg font-semibold px-4 mb-4">{{ category.name }}</h2>
+        <div class="space-y-4">
+            {% for product in products %}
+            <div class="bg-white dark:bg-gray-800 p-4 flex items-start space-x-4">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="w-24 h-24 object-cover rounded-lg">
+                {% endif %}
+                <div class="flex-1">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-medium">{{ product.name }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ product.description|truncatechars:100 }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold">TZS {{ product.price|floatformat:0 }}</p>
+                            {% if product.is_available %}
+                            <button data-product-id="{{ product.id }}" class="add-to-cart-btn mt-2 px-4 py-2 bg-primary text-black rounded-lg text-sm hover:bg-yellow-400 transition-colors">
+                                Add to Cart
+                            </button>
+                            {% else %}
+                            <p class="mt-2 text-sm text-red-500">Out of Stock</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    <div class="mt-6 flex justify-end">
+        {% if cart_count > 0 %}
+            {% if business.is_featured %}
+                <a href="{% url 'customers:featured_business_checkout' business_id=business.id %}" class="bg-primary hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow transition duration-200">
+                    Proceed to Special Checkout ({{ cart_count }})
+                </a>
+            {% else %}
+                <a href="{% url 'customers:checkout_with_business' business_id=business.id %}" class="bg-primary hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow transition duration-200">
+                    Proceed to Checkout ({{ cart_count }})
+                </a>
+            {% endif %}
+        {% else %}
+            <button disabled class="bg-gray-400 cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg opacity-50">
+                Checkout
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quantity Modal -->
+<div id="quantityModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg p-6 w-80">
+        <h3 class="text-lg font-semibold mb-4">Select Quantity</h3>
+        <div class="flex items-center justify-center space-x-4 mb-6">
+            <button onclick="updateQuantity(-1)" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                </svg>
+            </button>
+            <span id="quantityValue" class="text-xl font-semibold">1</span>
+            <button onclick="updateQuantity(1)" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </button>
+        </div>
+        <div class="flex space-x-4">
+            <button onclick="closeQuantityModal()" 
+                    class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                Cancel
+            </button>
+            <button onclick="confirmAddToCart()" 
+                    class="flex-1 px-4 py-2 bg-primary text-black rounded-lg text-center hover:bg-yellow-400 transition-colors">
+                Add to Cart
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Favorite button event listeners
+        document.querySelectorAll('.favorite-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const businessId = this.dataset.businessId;
+                toggleFavorite(businessId);
+            });
+        });
+        
+        // Add to cart button event listeners
+        document.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                addToCart(productId);
+            });
+        });
+    });
+    
+    let selectedProductId = null;
+    let quantity = 1;
+
+    function scrollToCategory(categoryId) {
+        const element = document.getElementById(`category-${categoryId}`);
+        const headerOffset = 120;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
+    }
+
+    function toggleFavorite(businessId) {
+        fetch('{% url "customers:toggle_favorite_business" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ business_id: businessId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const icon = document.getElementById('favoriteIcon');
+                icon.classList.toggle('text-red-500');
+                icon.classList.toggle('text-gray-400');
+                showToast(data.is_favorite ? 'Added to favorites' : 'Removed from favorites');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to update favorites');
+        });
+    }
+
+    function addToCart(productId) {
+        selectedProductId = productId;
+        quantity = 1;
+        document.getElementById('quantityValue').textContent = quantity;
+        document.getElementById('quantityModal').classList.remove('hidden');
+    }
+
+    function updateQuantity(change) {
+        quantity = Math.max(1, quantity + change);
+        document.getElementById('quantityValue').textContent = quantity;
+    }
+
+    function closeQuantityModal() {
+        document.getElementById('quantityModal').classList.add('hidden');
+        selectedProductId = null;
+        quantity = 1;
+    }
+
+    function confirmAddToCart() {
+        if (!selectedProductId) {
+            console.error('No product selected');
+            showToast('No product selected');
+            return;
+        }
+
+        console.log('Adding product to cart:', selectedProductId);
+        
+        fetch(`{% url 'customers:add_to_cart' product_id=0 %}`.replace('0', selectedProductId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                product_id: selectedProductId,
+                quantity: quantity
+            })
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                updateCartCount(data.cart_total);
+                showToast('Added to cart');
+                
+                // Redirect to cart page after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || "{% url 'customers:cart' %}";
+                }, 500);
+            } else {
+                showToast(data.error || 'Failed to add to cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to add to cart');
+        })
+        .finally(() => {
+            closeQuantityModal();
+        });
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('quantityModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeQuantityModal();
+        }
+    });
+</script>
+{% endblock %}

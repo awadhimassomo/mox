@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Order Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Order #{{ order.tracking_number }}</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                    <p><strong>Status:</strong> {{ order.status }}</p>
+                    <p><strong>Created At:</strong> {{ order.created_at|date:"Y-m-d H:i" }}</p>
+                    <p><strong>Price:</strong> {{ order.price }}</p>
+                    <p><strong>Delivery Fee:</strong> {{ order.delivery_fee }}</p>
+                    <p><strong>Total Amount:</strong> {{ order.total_amount }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Pickup Location:</strong> {{ order.pickup_location }}</p>
+                    <p><strong>Delivery Location:</strong> {{ order.delivery_location }}</p>
+                    <p><strong>Rider:</strong> {{ order.rider|default:"Not assigned" }}</p>
+                    <p><strong>Business:</strong> {{ order.business }}</p>
+                    <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'operations:order_list' %}" class="btn btn-secondary">Back to Orders</a>
+    </div>
+</div>
+{% endblock %}

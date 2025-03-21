@@ -1,0 +1,180 @@
+{% extends 'customers/base.html' %}
+
+{% block title %}Order #{{ order.id }} | Mo-Express{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'orders:order_list' %}" class="text-gray-600 dark:text-gray-300">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+</a>
+{% endblock %}
+
+{% block header_title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mb-6">
+        <!-- Order Status -->
+        <div class="p-4 border-b dark:border-gray-700">
+            <div class="flex justify-between items-center">
+                <h3 class="font-semibold">Order Status</h3>
+                <span class="px-2 py-1 text-xs rounded-full 
+                    {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800{% endif %}
+                    {% if order.status == 'processing' %}bg-blue-100 text-blue-800{% endif %}
+                    {% if order.status == 'delivered' %}bg-green-100 text-green-800{% endif %}
+                    {% if order.status == 'cancelled' %}bg-red-100 text-red-800{% endif %}">
+                    {{ order.status|title }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Placed on {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+        </div>
+        
+        <!-- Order Progress -->
+        <div class="p-4 border-b dark:border-gray-700">
+            <div class="relative pt-8">
+                <!-- Progress Line -->
+                <div class="absolute top-0 left-0 w-full flex justify-between px-4">
+                    <div class="w-full h-1 bg-gray-200 dark:bg-gray-700 absolute top-3"></div>
+                    
+                    <!-- Step 1: Order Placed -->
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                            <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs mt-1">Placed</span>
+                    </div>
+                    
+                    <!-- Step 2: Processing -->
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div class="w-6 h-6 rounded-full {% if order.status == 'processing' or order.status == 'delivered' %}bg-primary{% else %}bg-gray-300 dark:bg-gray-600{% endif %} flex items-center justify-center">
+                            {% if order.status == 'processing' or order.status == 'delivered' %}
+                            <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <span class="text-xs mt-1">Processing</span>
+                    </div>
+                    
+                    <!-- Step 3: Delivered -->
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div class="w-6 h-6 rounded-full {% if order.status == 'delivered' %}bg-primary{% else %}bg-gray-300 dark:bg-gray-600{% endif %} flex items-center justify-center">
+                            {% if order.status == 'delivered' %}
+                            <svg class="w-4 h-4 text-black" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <span class="text-xs mt-1">Delivered</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery Information -->
+        <div class="p-4 border-b dark:border-gray-700">
+            <h3 class="font-semibold mb-2">Delivery Information</h3>
+            <div class="space-y-2">
+                <p class="text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Address:</span> 
+                    {{ order.delivery_address }}
+                </p>
+                <p class="text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Phone:</span> 
+                    {{ order.customer.user.phone }}
+                </p>
+                {% if order.delivery_notes %}
+                <p class="text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Notes:</span> 
+                    {{ order.delivery_notes }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Order Items -->
+        <div class="p-4">
+            <h3 class="font-semibold mb-3">Order Items</h3>
+            <div class="space-y-3">
+                {% for item in order.orderitem_set.all %}
+                <div class="flex justify-between items-center py-2 border-b dark:border-gray-700 last:border-0">
+                    <div class="flex items-center">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-12 h-12 object-cover rounded-md mr-3">
+                        {% else %}
+                        <div class="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md mr-3 flex items-center justify-center">
+                            <span class="text-gray-500 dark:text-gray-400 text-xs">No Image</span>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <p class="font-medium">{{ item.product.name }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ item.quantity }} x Tsh {{ item.unit_price|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <p class="font-medium">Tsh {{ item.price|floatformat:2 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="mt-4 pt-4 border-t dark:border-gray-700">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+                    <span>Tsh {{ order.total_price|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                    <span>Tsh {{ order.delivery_fee|default:"0.00"|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between font-semibold text-lg mt-2 pt-2 border-t dark:border-gray-700">
+                    <span>Total</span>
+                    <span>Tsh {{ order.total_price|add:order.delivery_fee|default:order.total_price|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex space-x-4">
+        {% if order.status == 'pending' %}
+        <button onclick="cancelOrder({{ order.id }})" class="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+            Cancel Order
+        </button>
+        {% endif %}
+        <a href="{% url 'customers:home' %}" class="flex-1 py-3 text-center bg-primary text-black rounded-lg hover:bg-yellow-400 transition-colors">
+            Continue Shopping
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function cancelOrder(orderId) {
+        if (confirm('Are you sure you want to cancel this order?')) {
+            fetch(`/orders/cancel/${orderId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.error || 'Failed to cancel order');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while canceling the order');
+            });
+        }
+    }
+</script>
+{% endblock %}

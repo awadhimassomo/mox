@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Kijiwe Details</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ kijiwe.name }}</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Address:</strong> {{ kijiwe.address }}</p>
+                    <p><strong>Created At:</strong> {{ kijiwe.created_at|date:"Y-m-d H:i" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Latitude:</strong> {{ kijiwe.latitude }}</p>
+                    <p><strong>Longitude:</strong> {{ kijiwe.longitude }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'operations:kijiwe_list' %}" class="btn btn-secondary">Back to Kijiwe Locations</a>
+    </div>
+</div>
+{% endblock %}

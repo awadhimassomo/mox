@@ -1,0 +1,564 @@
+{% extends 'operations/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Dashboard Header - Only total orders and active riders -->
+<div class="mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Orders Dashboard</h1>
+        <div class="flex space-x-4">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-600">Total Orders Today</p>
+                <p class="text-2xl font-bold text-red-600" id="total-orders">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-600">Active Riders</p>
+                <p class="text-2xl font-bold text-red-600" id="active-riders">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Filter Controls -->
+<div class="md:hidden mb-4">
+    <select id="mobile-filter" class="w-full p-2 border border-gray-300 rounded-md bg-white">
+        <option value="all">All Orders</option>
+        <option value="active">Active Orders</option>
+        <option value="pending">Pending Orders</option>
+        <option value="completed">Completed Orders</option>
+    </select>
+</div>
+
+<!-- Orders Table - Simple, unified view -->
+<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">From / To</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Amount</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Rider</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Orders will be loaded here, sorted by status: active first, then pending, then completed -->
+                <tr>
+                    <td colspan="7" class="px-4 py-4 text-center text-gray-500">
+                        Loading orders...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Hidden Rider Assignment Modal -->
+<div id="rider-assignment-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800">Assign Rider</h3>
+            <button id="close-modal" class="text-gray-400 hover:text-gray-500">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4 overflow-y-auto">
+            <div id="order-details-modal" class="mb-4">
+                <!-- Order details will be shown here -->
+            </div>
+            <div id="riders-list-modal" class="space-y-3 max-h-80 overflow-y-auto">
+                <!-- Available riders will be loaded here -->
+                <p class="text-center py-4 text-gray-500">Loading available riders...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store orders with their UUIDs and IDs
+let ordersMap = {};
+
+// Function to format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+}
+
+// Function to get status badge based on status
+function getStatusBadge(status) {
+    let bgColor, textColor;
+    
+    switch(status.toLowerCase()) {
+        case 'pending':
+            bgColor = 'bg-yellow-100';
+            textColor = 'text-yellow-800';
+            break;
+        case 'assigned':
+        case 'active':
+            bgColor = 'bg-blue-100';
+            textColor = 'text-blue-800';
+            break;
+        case 'in_progress':
+        case 'in progress':
+            bgColor = 'bg-indigo-100';
+            textColor = 'text-indigo-800';
+            break;
+        case 'delivered':
+        case 'completed':
+            bgColor = 'bg-green-100';
+            textColor = 'text-green-800';
+            break;
+        case 'cancelled':
+            bgColor = 'bg-red-100';
+            textColor = 'text-red-800';
+            break;
+        default:
+            bgColor = 'bg-gray-100';
+            textColor = 'text-gray-800';
+    }
+    
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor}">${status}</span>`;
+}
+
+// Function to get row class based on status (for row background color)
+function getRowClass(status) {
+    switch(status.toLowerCase()) {
+        case 'assigned':
+        case 'active':
+        case 'in_progress':
+        case 'in progress':
+            return 'bg-blue-50';
+        case 'pending':
+            return '';  // default white background
+        case 'completed':
+        case 'delivered':
+            return 'bg-gray-50';
+        default:
+            return '';
+    }
+}
+
+// Mobile-friendly truncation function
+function truncateText(text, length = 15) {
+    if (!text) return '';
+    return text.length > length ? text.substring(0, length) + '...' : text;
+}
+
+// Function to render orders in the table
+function renderOrdersTable(orders) {
+    // Reset ordersMap
+    ordersMap = {};
+    
+    // Store all orders in map with UUID and ID as keys
+    orders.forEach(order => {
+        // Store the uuid_tracking field or fall back to the numeric ID
+        const uuid = order.uuid_tracking || order.uuid || null;
+        const id = order.id;
+        
+        // Store both references
+        if (uuid) ordersMap[uuid] = order;
+        if (id) ordersMap[id] = order;
+        
+        // Also set the uuid property on the order object itself
+        order.uuid = uuid;
+    });
+    
+    // Sort orders: active first, then pending, then completed
+    const sortedOrders = [...orders].sort((a, b) => {
+        const statusOrder = {
+            'assigned': 0,
+            'active': 0,
+            'in_progress': 0,
+            'in progress': 0,
+            'pending': 1,
+            'completed': 2,
+            'delivered': 2,
+            'cancelled': 3
+        };
+        
+        const statusA = a.status.toLowerCase();
+        const statusB = b.status.toLowerCase();
+        
+        return (statusOrder[statusA] || 99) - (statusOrder[statusB] || 99);
+    });
+    
+    // Render the table rows
+    const tableBody = document.getElementById('orders-table-body');
+    
+    if (sortedOrders.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-4 py-4 text-center text-gray-500">
+                    No orders available
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = sortedOrders.map(order => {
+        const rowClass = getRowClass(order.status);
+        const hasRider = order.rider__user__first_name || order.rider__user__last_name;
+        const canAssign = order.status.toLowerCase() === 'pending';
+        
+        // Use UUID if available, otherwise use the numeric ID
+        const orderIdentifier = order.uuid || order.id;
+        
+        const statusClass = canAssign ? 'data-status="pending"' : '';
+        
+        return `
+            <tr class="${rowClass}" data-order-id="${orderIdentifier}" ${statusClass}>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">#${order.order_number}</div>
+                    <div class="text-xs text-gray-500">${formatDate(order.created_at)}</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${truncateText(order.customer_name, 20)}</div>
+                    <div class="text-xs text-gray-500 md:hidden">
+                        ${truncateText(order.business__name, 15)} → ${truncateText(order.delivery_location, 15)}
+                    </div>
+                </td>
+                <td class="px-4 py-3 hidden md:table-cell">
+                    <div class="text-sm text-gray-900">${order.business__name}</div>
+                    <div class="text-sm text-gray-500">→ ${order.delivery_location}</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                    <div class="text-sm text-gray-900">TZS ${order.total_amount}</div>
+                    <div class="text-xs text-gray-500">Fee: TZS ${order.delivery_fee}</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    ${getStatusBadge(order.status)}
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                    ${hasRider ? 
+                        `<div class="text-sm text-gray-900">${order.rider__user__first_name || ''} ${order.rider__user__last_name || ''}</div>
+                         <div class="text-xs text-gray-500">${order.rider__phone_number || ''}</div>` 
+                        : '<span class="text-sm text-gray-500">Not assigned</span>'
+                    }
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                    ${canAssign ? 
+                        `<button onclick="openAssignRiderModal('${orderIdentifier}')" class="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md text-sm">
+                            Assign
+                        </button>` 
+                        : ''
+                    }
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Set up mobile filter functionality
+    setupMobileFilter();
+}
+
+// Function to update dashboard data
+function updateDashboard() {
+    console.log('Fetching dashboard data...');
+    fetch('/operations/api/dashboard-data/')
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dashboard data:', data);
+            if (data.success) {
+                // Update statistics
+                document.getElementById('total-orders').textContent = data.total_orders_today;
+                document.getElementById('active-riders').textContent = data.active_riders_count;
+                
+                // Add uuid_tracking to order objects if it's not already there
+                function addUuidToOrders(orders) {
+                    return orders.map(order => {
+                        // If the UUID is in order.uuid, it's already set
+                        if (!order.uuid && order.uuid_tracking) {
+                            order.uuid = order.uuid_tracking;
+                        }
+                        return order;
+                    });
+                }
+                
+                // Combine all orders
+                const allOrders = [
+                    ...addUuidToOrders(data.active_orders || []),
+                    ...addUuidToOrders(data.pending_orders || []),
+                    ...addUuidToOrders(data.completed_orders || [])
+                ];
+                
+                // Render the orders table
+                renderOrdersTable(allOrders);
+            } else {
+                console.error('Error fetching dashboard data:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Variable to store current order identifier for assignment
+let currentOrderIdentifier = null;
+
+// Setup mobile filter functionality
+function setupMobileFilter() {
+    const mobileFilter = document.getElementById('mobile-filter');
+    if (!mobileFilter) return;
+    
+    mobileFilter.addEventListener('change', function() {
+        const value = this.value;
+        const rows = document.querySelectorAll('#orders-table-body tr');
+        
+        rows.forEach(row => {
+            if (value === 'all') {
+                row.style.display = '';
+            } else if (value === 'pending' && row.getAttribute('data-status') === 'pending') {
+                row.style.display = '';
+            } else if (value === 'active' && row.classList.contains('bg-blue-50')) {
+                row.style.display = '';
+            } else if (value === 'completed' && row.classList.contains('bg-gray-50')) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+}
+
+// Function to open the rider assignment modal
+function openAssignRiderModal(orderIdentifier) {
+    currentOrderIdentifier = orderIdentifier;
+    
+    // Show the modal
+    document.getElementById('rider-assignment-modal').classList.remove('hidden');
+    
+    // First check if this is a UUID format
+    const isUuid = typeof orderIdentifier === 'string' && 
+                  orderIdentifier.includes('-') && 
+                  orderIdentifier.length > 30;
+    
+    // Construct the URL based on whether this is a UUID or ID
+    const url = isUuid 
+        ? `/operations/api/orders/uuid/${orderIdentifier}/`
+        : `/operations/api/orders/${orderIdentifier}/`;
+    
+    // Fetch the order details
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const order = data.order;
+                document.getElementById('order-details-modal').innerHTML = `
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h3 class="font-medium text-lg mb-2">#${order.order_number} - ${order.customer_name}</h3>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <div>
+                                <p class="text-xs text-gray-500">From</p>
+                                <p class="text-sm font-medium">${order.business__name}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">To</p>
+                                <p class="text-sm font-medium">${order.delivery_location}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Total Amount</p>
+                                <p class="text-sm font-medium">TZS ${order.total_amount}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Created</p>
+                                <p class="text-sm font-medium">${formatDate(order.created_at)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Now fetch nearby riders
+                findNearbyRiders(orderIdentifier);
+            } else {
+                console.error('Error fetching order details:', data.error);
+                document.getElementById('order-details-modal').innerHTML = `
+                    <div class="bg-red-100 p-4 rounded-lg text-red-700">
+                        Error loading order details: ${data.error || 'Unknown error'}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('order-details-modal').innerHTML = `
+                <div class="bg-red-100 p-4 rounded-lg text-red-700">
+                    Error: ${error.message || 'Failed to load order details'}
+                </div>
+            `;
+        });
+}
+
+// Function to close the rider assignment modal
+function closeAssignRiderModal() {
+    document.getElementById('rider-assignment-modal').classList.add('hidden');
+    currentOrderIdentifier = null;
+}
+
+// Function to find nearby riders
+function findNearbyRiders(orderIdentifier) {
+    document.getElementById('riders-list-modal').innerHTML = '<p class="text-center py-4 text-gray-500">Loading available riders...</p>';
+    
+    // First check if this is a UUID format
+    const isUuid = typeof orderIdentifier === 'string' && 
+                  orderIdentifier.includes('-') && 
+                  orderIdentifier.length > 30;
+    
+    // Construct the URL based on whether this is a UUID or ID
+    const url = isUuid 
+        ? `/operations/api/orders/uuid/${orderIdentifier}/nearby-riders/`
+        : `/operations/api/orders/${orderIdentifier}/nearby-riders/`;
+    
+    // Fetch nearby riders
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Nearby riders data:', data);
+            if (data.success && data.nearby_riders && data.nearby_riders.length > 0) {
+                let html = '<div class="grid grid-cols-1 gap-3">';
+                
+                data.nearby_riders.forEach(rider => {
+                    // Use distance_text if available, otherwise format it
+                    const distanceText = rider.distance_text || 
+                                        (rider.distance < 1 ? 
+                                        `${(rider.distance * 1000).toFixed(0)}m` : 
+                                        `${rider.distance.toFixed(1)}km`);
+                                        
+                    html += `
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="mb-2">
+                                <p class="font-medium">${rider.first_name} ${rider.last_name}</p>
+                                <p class="text-sm text-gray-600">${rider.phone_number || 'No phone'}</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm text-gray-600">${distanceText} away</p>
+                                    <p class="text-sm text-gray-600">Kijiwe: ${rider.kijiwe || 'N/A'}</p>
+                                </div>
+                                <button onclick="assignRider('${orderIdentifier}', ${rider.id})" 
+                                        class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">
+                                    Assign
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                document.getElementById('riders-list-modal').innerHTML = html;
+            } else {
+                document.getElementById('riders-list-modal').innerHTML = `
+                    <p class="text-center py-4 text-gray-500">
+                        ${data.error || 'No riders available nearby'}
+                    </p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('riders-list-modal').innerHTML = `
+                <p class="text-center py-4 text-red-500">
+                    Error loading riders: ${error.message || 'Unknown error'}
+                </p>`;
+        });
+}
+
+// Function to assign rider
+function assignRider(orderIdentifier, riderId) {
+    console.log('Assigning rider', riderId, 'to order', orderIdentifier);
+    
+    // First check if this is a UUID format
+    const isUuid = typeof orderIdentifier === 'string' && 
+                  orderIdentifier.includes('-') && 
+                  orderIdentifier.length > 30;
+    
+    // Construct the URL based on whether this is a UUID or ID
+    const url = isUuid 
+        ? `/operations/api/orders/uuid/${orderIdentifier}/assign/${riderId}/`
+        : `/operations/api/orders/${orderIdentifier}/assign/${riderId}/`;
+    
+    // Assign rider
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Assignment response:', data);
+        if (data.success) {
+            // Close the modal
+            closeAssignRiderModal();
+            
+            // Update the dashboard
+            updateDashboard();
+            
+            // Show success message
+            alert(data.message || 'Rider assigned successfully');
+        } else {
+            alert(data.error || 'Failed to assign rider');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`Error assigning rider: ${error.message || 'Unknown error'}`);
+    });
+}
+
+// Function to get a cookie by name
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Set up event listeners
+document.getElementById('close-modal').addEventListener('click', closeAssignRiderModal);
+
+// Close modal if user clicks outside the modal content
+document.getElementById('rider-assignment-modal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeAssignRiderModal();
+    }
+});
+
+// Initial load
+updateDashboard();
+
+// Refresh every 30 seconds
+setInterval(updateDashboard, 30000);
+</script>
+{% endblock %}

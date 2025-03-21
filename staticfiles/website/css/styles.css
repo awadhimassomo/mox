@@ -1,0 +1,78 @@
+/* Custom styles for the website */
+
+/* Hero section */
+.hero {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    padding: 100px 0;
+}
+
+.hero h1 {
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+/* Features section */
+.features .card {
+    transition: transform 0.3s ease;
+}
+
+.features .card:hover {
+    transform: translateY(-10px);
+}
+
+.features .bi {
+    color: #007bff;
+}
+
+/* How it works section */
+.step-number {
+    width: 40px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+/* Call to action section */
+.cta {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Footer */
+.footer {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero {
+        padding: 60px 0;
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard - Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- ✅ Navbar -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+    
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'riders:dashboard' %}" class="text-xl font-bold text-gray-800">
+                        Mo-Express
+                    </a>
+                </div>
+    
+                <!-- ✅ Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-500 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+    
+                <!-- ✅ Navbar Links (Hidden on Mobile) -->
+                <div class="hidden md:flex md:space-x-6">
+                    <a href="{% url 'riders:dashboard' %}" class="text-sm font-medium text-gray-900 hover:text-gray-700">Dashboard</a>
+                    <a href="{% url 'riders:rider_earnings' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Earnings</a>
+                    <a href="{% url 'riders:rider_profile' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Profile</a>
+                </div>
+    
+                {% if user.is_authenticated %}
+                <!-- ✅ User Info + Logout (Desktop) -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <p class="text-gray-700 text-sm">Status: 
+                        <span id="riderStatus" class="text-gray-500">Checking...</span>
+                    </p>
+                    <button id="toggleStatusBtn" class="px-4 py-2 rounded-lg text-white font-semibold bg-gray-400">
+                        Offline
+                    </button>
+                    <a href="{% url 'riders:rider_logout' %}"
+                       class="px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                        Logout
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    
+        <!-- ✅ Status Section (Only visible in Mobile View) -->
+        <div class="md:hidden flex items-center justify-between p-4 bg-white shadow-md rounded-lg">
+            <p class="text-gray-700 font-semibold">Status: 
+                <span id="riderStatusMobile" class="text-gray-500">Checking...</span>
+            </p>
+            <button id="toggleStatusBtnMobile" class="px-4 py-2 rounded-lg text-white font-semibold bg-gray-400">
+                Offline
+            </button>
+        </div>
+    </nav>
+    
+
+
+
+
+        <!-- ✅ Mobile Menu (Hidden by Default) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
+            <a href="{% url 'riders:dashboard' %}" class="block py-2 px-4 text-sm text-gray-900">Dashboard</a>
+            <a href="{% url 'riders:rider_earnings' %}" class="block py-2 px-4 text-sm text-gray-500 hover:text-gray-900">Earnings</a>
+            <a href="{% url 'riders:rider_profile' %}" class="block py-2 px-4 text-sm text-gray-500 hover:text-gray-900">Profile</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'riders:rider_logout' %}" class="block py-2 px-4 text-sm text-red-600 hover:text-red-800">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- ✅ Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        {% for message in messages %}
+        <div class="rounded-md bg-{{ message.tags }}-50 p-4 mb-4">
+            <div class="flex">
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-{{ message.tags }}-800">{{ message }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ✅ Content Block -->
+    <div class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- ✅ JavaScript for Mobile Menu -->
+    <script>
+
+     
+document.addEventListener("DOMContentLoaded", function () {
+    // Check geolocation availability
+    if ("geolocation" in navigator) {
+        checkLocationStatus();
+    } else {
+        updateStatusUI(false);
+        showNotification("Location services are not available", "error");
+    }
+
+    // Function to check and update location status
+    function checkLocationStatus() {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                updateStatusUI(true);
+                const { latitude, longitude } = position.coords;
+                sendLocationToServer(latitude, longitude);
+                
+                // Get address from coordinates using reverse geocoding
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const address = data.display_name || 'Unknown location';
+                        showNotification(`📍 You are online at: ${address}`, "success");
+                    })
+                    .catch(() => {
+                        // Fallback to showing coordinates if geocoding fails
+                        showNotification(`📍 You are online at: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, "success");
+                    });
+            },
+            (error) => {
+                updateStatusUI(false);
+                let errorMessage = "Location access denied. Please enable location services to go online.";
+                if (error.code === error.TIMEOUT) {
+                    errorMessage = "Location request timed out. Please try again.";
+                }
+                showNotification(errorMessage, "error");
+            }
+        );
+    }
+
+    // Function to show notifications
+    function showNotification(message, type = "success") {
+        const notification = document.createElement("div");
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`;
+        notification.innerHTML = message;
+        document.body.appendChild(notification);
+
+        // Remove notification after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Function to update BOTH Desktop & Mobile UI
+    function updateStatusUI(isOnline) {
+        const statusText = document.getElementById("riderStatus");
+        const statusButton = document.getElementById("toggleStatusBtn");
+
+        // ✅ Mobile Elements
+        const statusTextMobile = document.getElementById("riderStatusMobile");
+        const statusButtonMobile = document.getElementById("toggleStatusBtnMobile");
+
+        if (isOnline) {
+            // ✅ Desktop Status Update
+            statusText.textContent = "Online";
+            statusText.classList.remove("text-gray-500");
+            statusText.classList.add("text-green-600");
+            statusButton.textContent = "Go Offline";
+            statusButton.classList.remove("bg-gray-400");
+            statusButton.classList.add("bg-green-500");
+
+            // ✅ Mobile Status Update
+            statusTextMobile.textContent = "Online";
+            statusTextMobile.classList.remove("text-gray-500");
+            statusTextMobile.classList.add("text-green-600");
+            statusButtonMobile.textContent = "Go Offline";
+            statusButtonMobile.classList.remove("bg-gray-400");
+            statusButtonMobile.classList.add("bg-green-500");
+        } else {
+            // ✅ Desktop Status Update
+            statusText.textContent = "Offline";
+            statusText.classList.remove("text-green-600");
+            statusText.classList.add("text-gray-500");
+            statusButton.textContent = "Go Online";
+            statusButton.classList.remove("bg-green-500");
+            statusButton.classList.add("bg-gray-400");
+
+            // ✅ Mobile Status Update
+            statusTextMobile.textContent = "Offline";
+            statusTextMobile.classList.remove("text-green-600");
+            statusTextMobile.classList.add("text-gray-500");
+            statusButtonMobile.textContent = "Go Online";
+            statusButtonMobile.classList.remove("bg-green-500");
+            statusButtonMobile.classList.add("bg-gray-400");
+        }
+    }
+
+    // Function to send location to the server
+    function sendLocationToServer(latitude, longitude) {
+        fetch("/riders/update-location/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify({ latitude: latitude, longitude: longitude })
+        })
+        .then(response => response.json())
+        .then(data => console.log("✅ Location updated:", data))
+        .catch(error => console.error("❌ Error updating location:", error));
+    }
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie) {
+            const cookies = document.cookie.split(";");
+            cookies.forEach(cookie => {
+                if (cookie.trim().startsWith(name + "=")) {
+                    cookieValue = cookie.split("=")[1];
+                }
+            });
+        }
+        return cookieValue;
+    }
+
+    // Auto-update location every 20 minutes
+    setInterval(() => {
+        checkLocationStatus();
+    }, 1200000);
+});
+
+
+    </script>
+
+</body>
+</html>

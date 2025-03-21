@@ -1,0 +1,258 @@
+{% extends "rider_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <!-- Filters -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <form id="filter-form" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select" name="date_range">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status">
+                            <option value="">All</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Sort By</label>
+                        <select class="form-select" name="sort">
+                            <option value="date">Date</option>
+                            <option value="amount">Amount</option>
+                            <option value="distance">Distance</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block">Apply Filters</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Delivery History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Business</th>
+                                <th>Distance</th>
+                                <th>Delivery Fee</th>
+                                <th>Status</th>
+                                <th>Rating</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center" id="pagination">
+                        <!-- Pagination will be populated here -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <p><strong>Order #:</strong> <span id="modal-order-number"></span></p>
+                        <p><strong>Date:</strong> <span id="modal-date"></span></p>
+                        <p><strong>Status:</strong> <span id="modal-status"></span></p>
+                        <p><strong>Customer:</strong> <span id="modal-customer"></span></p>
+                        <p><strong>Phone:</strong> <span id="modal-phone"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Delivery Information</h6>
+                        <p><strong>Business:</strong> <span id="modal-business"></span></p>
+                        <p><strong>Pickup:</strong> <span id="modal-pickup"></span></p>
+                        <p><strong>Delivery:</strong> <span id="modal-delivery"></span></p>
+                        <p><strong>Distance:</strong> <span id="modal-distance"></span></p>
+                        <p><strong>Fee:</strong> <span id="modal-fee"></span></p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h6>Timeline</h6>
+                    <ul class="list-group" id="modal-timeline">
+                        <!-- Timeline will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+
+function formatPrice(price) {
+    return new Intl.NumberFormat('en-US').format(price);
+}
+
+function loadHistory(page = 1) {
+    const formData = new FormData(document.getElementById('filter-form'));
+    const queryParams = new URLSearchParams(formData);
+    queryParams.append('page', page);
+    
+    fetch(`/api/rider/delivery-history/?${queryParams.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateHistoryTable(data.deliveries);
+                updatePagination(data.total_pages, page);
+            }
+        })
+        .catch(error => console.error('Error fetching history:', error));
+}
+
+function updateHistoryTable(deliveries) {
+    const tbody = document.getElementById('history-table');
+    tbody.innerHTML = '';
+    
+    deliveries.forEach(delivery => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(delivery.date).toLocaleDateString()}</td>
+            <td>${delivery.order_number}</td>
+            <td>${delivery.customer_name}</td>
+            <td>${delivery.business_name}</td>
+            <td>${delivery.distance.toFixed(1)} km</td>
+            <td>${formatPrice(delivery.delivery_fee)} TSH</td>
+            <td><span class="badge bg-${getStatusColor(delivery.status)}">${delivery.status}</span></td>
+            <td>${delivery.rating ? delivery.rating + ' ★' : '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="viewDetails('${delivery.id}')">
+                    <i class='bx bx-detail'></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function getStatusColor(status) {
+    switch (status.toLowerCase()) {
+        case 'completed': return 'success';
+        case 'cancelled': return 'danger';
+        case 'expired': return 'warning';
+        default: return 'secondary';
+    }
+}
+
+function updatePagination(totalPages, currentPage) {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    
+    // Previous button
+    pagination.innerHTML += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadHistory(${currentPage - 1})">Previous</a>
+        </li>
+    `;
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.innerHTML += `
+            <li class="page-item ${currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadHistory(${i})">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Next button
+    pagination.innerHTML += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadHistory(${currentPage + 1})">Next</a>
+        </li>
+    `;
+}
+
+function viewDetails(orderId) {
+    fetch(`/api/rider/order-details/${orderId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const order = data.order;
+                
+                // Update modal content
+                document.getElementById('modal-order-number').textContent = order.order_number;
+                document.getElementById('modal-date').textContent = new Date(order.date).toLocaleString();
+                document.getElementById('modal-status').textContent = order.status;
+                document.getElementById('modal-customer').textContent = order.customer_name;
+                document.getElementById('modal-phone').textContent = order.customer_phone;
+                document.getElementById('modal-business').textContent = order.business_name;
+                document.getElementById('modal-pickup').textContent = order.pickup_location;
+                document.getElementById('modal-delivery').textContent = order.delivery_location;
+                document.getElementById('modal-distance').textContent = order.distance.toFixed(1) + ' km';
+                document.getElementById('modal-fee').textContent = formatPrice(order.delivery_fee) + ' TSH';
+                
+                // Update timeline
+                const timeline = document.getElementById('modal-timeline');
+                timeline.innerHTML = '';
+                order.timeline.forEach(event => {
+                    timeline.innerHTML += `
+                        <li class="list-group-item">
+                            <small class="text-muted">${new Date(event.time).toLocaleString()}</small><br>
+                            ${event.description}
+                        </li>
+                    `;
+                });
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+            }
+        })
+        .catch(error => console.error('Error fetching order details:', error));
+}
+
+// Event listeners
+document.getElementById('filter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    loadHistory(1);
+});
+
+// Initial load
+loadHistory();
+</script>
+{% endblock %}
+{% endblock %}

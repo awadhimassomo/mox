@@ -1,0 +1,370 @@
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} | Mandood{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 pt-24 pb-16">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-5 text-gray-600 dark:text-gray-400">
+        <a href="{% url 'customers:home' %}" class="hover:text-primary">Home</a>
+        <span class="mx-2">/</span>
+        <a href="{% url 'customers:business_detail' product.business.id %}" class="hover:text-primary">{{ product.business.name }}</a>
+        <span class="mx-2">/</span>
+        {% if product.category %}
+        <a href="{% url 'customers:business_detail' product.business.id %}#category-{{ product.category.id }}" class="hover:text-primary">{{ product.category.name }}</a>
+        <span class="mx-2">/</span>
+        {% endif %}
+        <span class="text-primary">{{ product.name }}</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div class="md:flex">
+            <!-- Product Image -->
+            <div class="md:w-1/2 p-4">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-auto rounded-lg object-cover">
+                {% else %}
+                <div class="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Product Details -->
+            <div class="md:w-1/2 p-6">
+                <h1 class="text-2xl md:text-3xl font-bold mb-2">{{ product.name }}</h1>
+                
+                <!-- Product Badges -->
+                <div class="mb-4 flex flex-wrap items-center">
+                    {% if product.category %}
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-blue-900 dark:text-blue-200">
+                        {{ product.category.name }}
+                    </span>
+                    {% endif %}
+                    
+                    {% if is_gas_product %}
+                        {% if product.gas_type %}
+                        <span class="bg-green-100 text-green-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-200">
+                            {{ product.get_gas_type_display }}
+                        </span>
+                        {% endif %}
+                        {% if product.tank_size %}
+                        <span class="bg-purple-100 text-purple-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-purple-900 dark:text-purple-200">
+                            {{ product.tank_size }} KG
+                        </span>
+                        {% endif %}
+                    {% else %}
+                        {% if product.unit %}
+                        <span class="bg-purple-100 text-purple-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-purple-900 dark:text-purple-200">
+                            {{ product.get_unit_display }}
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if product.is_vegan %}
+                    <span class="bg-green-100 text-green-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-200">
+                        Vegan
+                    </span>
+                    {% endif %}
+                    
+                    {% if product.is_halal %}
+                    <span class="bg-teal-100 text-teal-800 text-sm font-medium mr-2 px-3 py-1 rounded-full dark:bg-teal-900 dark:text-teal-200">
+                        Halal
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center mb-4">
+                    <div class="text-yellow-500 flex items-center mr-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                        <span class="text-gray-700 dark:text-gray-300 ml-1">4.8</span>
+                    </div>
+                    <span class="text-gray-500 dark:text-gray-400">({{ product.business.name }})</span>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-3xl font-bold text-primary">TZS {{ product.price|floatformat:0 }}</p>
+                    {% if product.stock_quantity > 0 %}
+                    <p class="text-green-600 dark:text-green-400 mt-1">
+                        <span class="inline-flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            In Stock ({{ product.stock_quantity }} available)
+                        </span>
+                    </p>
+                    {% else %}
+                    <p class="text-red-600 dark:text-red-400 mt-1">
+                        <span class="inline-flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Out of Stock
+                        </span>
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium mb-2">Description</h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        {% if product.description %}
+                            {{ product.description }}
+                        {% else %}
+                            {% if is_gas_product %}
+                                {{ product.get_gas_type_display }} gas tank with {{ product.tank_size }}KG capacity for 
+                                residential and commercial use. Safe and reliable.
+                            {% else %}
+                                {{ product.name }} from {{ product.business.name }}. Quality product with fast delivery.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center space-x-2">
+                    {% if product.stock_quantity > 0 %}
+                    <form method="post" action="{% url 'customers:add_to_cart' product.id %}" class="flex">
+                        {% csrf_token %}
+                        <div class="border border-gray-300 dark:border-gray-700 rounded-l-lg flex">
+                            <button type="button" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-l-lg" onclick="decrementQuantity(); return false;">-</button>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}" class="w-12 text-center border-0 focus:ring-0 dark:bg-gray-800" aria-label="Quantity">
+                            <button type="button" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600" onclick="incrementQuantity(); return false;">+</button>
+                        </div>
+                        <button type="submit" class="px-6 py-2 bg-primary hover:bg-red-700 text-white rounded-r-lg">
+                            {% if in_cart %}
+                                Update Cart
+                            {% else %}
+                                Add to Cart
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <button disabled class="px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed">
+                        Out of Stock
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Specific Information -->
+    {% if is_gas_product %}
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Gas Delivery Information</h2>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="flex items-start">
+                <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-blue-500 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Fast Delivery</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Same-day delivery for orders placed before 2:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-green-500 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Safety Verified</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">All gas tanks are safety checked before delivery</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-yellow-500 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Exchange Service</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">We collect your empty tank when delivering a new one</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif is_food_product %}
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Food Information</h2>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="flex items-start">
+                <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-blue-500 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Fresh Preparation</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        {% if product.preparation_time %}
+                        Preparation time: {{ product.preparation_time }} minutes
+                        {% else %}
+                        Freshly prepared upon order
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            {% if product.is_vegan or product.is_halal %}
+            <div class="flex items-start">
+                <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-green-500 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Dietary Information</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        {% if product.is_vegan %}Vegan{% endif %}
+                        {% if product.is_vegan and product.is_halal %} • {% endif %}
+                        {% if product.is_halal %}Halal Certified{% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="flex items-start">
+                <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-yellow-500 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Fast Delivery</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Hot delivery within the city area</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Delivery Information</h2>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="flex items-start">
+                <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-blue-500 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Fast Delivery</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Same-day delivery for orders placed before 2:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-green-500 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Quality Guaranteed</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">All products are verified for quality before delivery</p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-full mr-4">
+                    <svg class="w-6 h-6 text-yellow-500 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium">Easy Returns</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Hassle-free return policy for all products</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold mb-4">Related Products</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for related in related_products %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <a href="{% url 'customers:product_detail' related.id %}">
+                    {% if related.image %}
+                    <img src="{{ related.image.url }}" alt="{{ related.name }}" class="w-full h-48 object-cover">
+                    {% else %}
+                    <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    {% endif %}
+                </a>
+                <div class="p-4">
+                    <h3 class="font-medium mb-1 truncate">{{ related.name }}</h3>
+                    <p class="text-primary font-bold mb-2">TZS {{ related.price|floatformat:0 }}</p>
+                    <a href="{% url 'customers:product_detail' related.id %}" class="block w-full text-center py-1 px-3 border border-primary text-primary hover:bg-primary hover:text-black rounded transition duration-200">
+                        View Details
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function incrementQuantity() {
+        var input = document.getElementById('quantity');
+        var max = parseInt(input.getAttribute('max'));
+        var currentValue = parseInt(input.value) || 1;
+        if (currentValue < max) {
+            input.value = currentValue + 1;
+        }
+    }
+    
+    function decrementQuantity() {
+        var input = document.getElementById('quantity');
+        var currentValue = parseInt(input.value) || 1;
+        if (currentValue > 1) {
+            input.value = currentValue - 1;
+        }
+    }
+
+    // Add event listeners when the document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Alternative way to handle the buttons
+        var incrementBtn = document.querySelector('button[onclick*="incrementQuantity"]');
+        var decrementBtn = document.querySelector('button[onclick*="decrementQuantity"]');
+        
+        if (incrementBtn) {
+            incrementBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                incrementQuantity();
+            });
+        }
+        
+        if (decrementBtn) {
+            decrementBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                decrementQuantity();
+            });
+        }
+    });
+</script>
+{% endblock %}

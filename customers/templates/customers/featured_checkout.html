@@ -1,0 +1,161 @@
+{% extends 'customers/base.html' %}
+
+{% block title %}Mo-Express - Checkout (Featured Business){% endblock %}
+
+{% block header_title %}Special Delivery Checkout{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    <div class="max-w-3xl mx-auto">
+        <!-- Featured Checkout Info Card -->
+        <div class="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900 rounded-lg p-6 mb-6 shadow-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 bg-yellow-400 rounded-full p-2 mr-4">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-2">Special Delivery Process</h3>
+                    <p class="text-gray-700 dark:text-gray-300 mb-2">
+                        Products from featured businesses outside your region will be:
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1 ml-2 mb-3">
+                        <li>Picked up from the supplier</li>
+                        <li>Delivered to our nearest office in {{ user_region_name }}</li>
+                        <li>Available for pickup or local delivery</li>
+                    </ul>
+                    <p class="text-gray-700 dark:text-gray-300 font-medium">
+                        This special process allows us to efficiently serve you with gas products from across Tanzania.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-semibold text-lg">Order Summary</h3>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden mr-4 flex-shrink-0">
+                        {% if cart.items.first.product.image %}
+                            <img src="{{ cart.items.first.product.image.url }}" alt="{{ cart.items.first.product.name }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <span class="text-gray-500">No Image</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="font-semibold">{{ business.name }}</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Featured Business</p>
+                        <div class="mt-1 flex items-center">
+                            <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">{{ business.rating|default:"0.0" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% for item in cart.items.all %}
+                <div class="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <span class="font-medium">{{ item.product.name }}</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">x{{ item.quantity }}</span>
+                    </div>
+                    <span class="font-medium">{{ item.get_total|floatformat:2 }} TZS</span>
+                </div>
+                {% endfor %}
+
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+                        <span class="font-medium">{{ cart.get_subtotal|floatformat:2 }} TZS</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">Special Delivery Fee</span>
+                        <span class="font-medium">{{ special_delivery_fee|floatformat:2 }} TZS</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <span>Total</span>
+                        <span>{{ total_amount|floatformat:2 }} TZS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-semibold text-lg">Contact Information</h3>
+            </div>
+            <div class="p-4">
+                {% if customer.phone_number %}
+                <div class="flex items-center mb-4">
+                    <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Phone Number</p>
+                        <p class="font-medium">{{ customer.phone_number }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if customer.email %}
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Email</p>
+                        <p class="font-medium">{{ customer.email|default:user.email }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pickup Location -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-semibold text-lg">Pickup Location</h3>
+            </div>
+            <div class="p-4">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-gray-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <div>
+                        <p class="font-medium">Mo-Express Office ({{ user_region_name }})</p>
+                        <p class="text-gray-600 dark:text-gray-400">{{ office_address }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            We'll notify you when your order arrives at this location.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Place Order Button -->
+        <form method="POST" action="{% url 'customers:place_featured_order' %}">
+            {% csrf_token %}
+            <input type="hidden" name="business_id" value="{{ business.id }}">
+            <input type="hidden" name="cart_id" value="{{ cart.id }}">
+            <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg transition duration-200">
+                Place Order
+            </button>
+        </form>
+
+        <div class="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
+            By placing this order, you agree to our 
+            <a href="#" class="text-primary hover:underline">Terms of Service</a> and 
+            <a href="#" class="text-primary hover:underline">Special Delivery Policy</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

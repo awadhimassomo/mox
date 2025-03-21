@@ -1,0 +1,202 @@
+{% extends 'business/base.html' %}
+{% load static %}
+
+{% block title %}Add New Product{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 pt-20 pb-10">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-6">➕ Add New Product</h2>
+        
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="p-4 mb-4 {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %} rounded-md">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'business:add_product' %}" enctype="multipart/form-data" id="productForm">
+            {% csrf_token %}
+            
+            <!-- Basic Product Information -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 mb-4">Basic Information</h3>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="id_name" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Product Name*</label>
+                        <input type="text" id="id_name" name="name" placeholder="Product Name" required 
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_category" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Category*</label>
+                        <select id="id_category" name="category" required
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="id_description" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Description</label>
+                    <textarea id="id_description" name="description" rows="3" placeholder="Product Description" 
+                        class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="mb-4">
+                        <label for="id_price" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Price (TZS)*</label>
+                        <input type="number" id="id_price" name="price" min="0" step="0.01" placeholder="Price in TZS" required 
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_stock_quantity" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Stock Quantity*</label>
+                        <input type="number" id="id_stock_quantity" name="stock_quantity" min="0" placeholder="Initial Stock" required 
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_unit" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Unit*</label>
+                        <select id="id_unit" name="unit" required
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="pcs">Pieces</option>
+                            <option value="kg">Kilograms</option>
+                            <option value="g">Grams</option>
+                            <option value="l">Liters</option>
+                            <option value="ml">Milliliters</option>
+                            <option value="pkg">Package</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="id_image" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Product Image</label>
+                    <input type="file" id="id_image" name="image" accept="image/*"
+                        class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload an image to make your product more appealing to customers</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="id_is_available" name="is_available" checked
+                            class="rounded text-primary focus:ring-primary">
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">Product is available for purchase</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Gas Product Specific Fields -->
+            <div id="gas_fields" class="mb-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 mb-4">Gas Tank Information</h3>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="id_gas_type" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Gas Type</label>
+                        <select id="id_gas_type" name="gas_type"
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Select gas type</option>
+                            <option value="lpg">LPG</option>
+                            <option value="natural">Natural Gas</option>
+                            <option value="propane">Propane</option>
+                            <option value="butane">Butane</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_tank_size" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Tank Size</label>
+                        <select id="id_tank_size" name="tank_size"
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Select tank size</option>
+                            <option value="6">6 KG</option>
+                            <option value="13">13 KG</option>
+                            <option value="15">15 KG</option>
+                            <option value="38">38 KG</option>
+                            <option value="45">45 KG</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Food Product Specific Fields -->
+            <div id="food_fields" class="mb-6 hidden">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2 mb-4">Food Information</h3>
+                
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="mb-4">
+                        <label for="id_preparation_time" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Preparation Time (minutes)</label>
+                        <input type="number" id="id_preparation_time" name="preparation_time" min="0" placeholder="Preparation time in minutes"
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div class="mb-4 flex items-center">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="id_is_vegan" name="is_vegan"
+                                class="rounded text-primary focus:ring-primary">
+                            <span class="ml-2 text-gray-700 dark:text-gray-300">Vegan</span>
+                        </label>
+                    </div>
+                    
+                    <div class="mb-4 flex items-center">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="id_is_halal" name="is_halal"
+                                class="rounded text-primary focus:ring-primary">
+                            <span class="ml-2 text-gray-700 dark:text-gray-300">Halal</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex flex-col sm:flex-row sm:justify-between">
+                <button type="submit" class="w-full sm:w-auto bg-primary hover:bg-yellow-500 text-black font-bold py-3 px-6 rounded-lg mb-2 sm:mb-0">
+                    Add Product
+                </button>
+                <a href="{% url 'business:business_dashboard' %}" class="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 px-6 rounded-lg text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('id_category');
+        const gasFields = document.getElementById('gas_fields');
+        const foodFields = document.getElementById('food_fields');
+        
+        // Function to toggle visibility of category-specific fields
+        function toggleCategoryFields() {
+            // Get the selected category text
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            const categoryName = selectedOption.text.toLowerCase();
+            
+            // Hide all category-specific fields first
+            gasFields.classList.add('hidden');
+            foodFields.classList.add('hidden');
+            
+            // Show relevant fields based on category
+            if (categoryName === 'gas') {
+                gasFields.classList.remove('hidden');
+            } else if (categoryName === 'food') {
+                foodFields.classList.remove('hidden');
+            }
+        }
+        
+        // Set initial state
+        toggleCategoryFields();
+        
+        // Add event listener for category changes
+        categorySelect.addEventListener('change', toggleCategoryFields);
+    });
+</script>
+{% endblock %}

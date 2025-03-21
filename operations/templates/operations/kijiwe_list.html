@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Kijiwe Locations</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addKijiweModal">
+                Add New Kijiwe
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Coordinates</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for kijiwe in kijiwe_locations %}
+                <tr>
+                    <td>{{ kijiwe.name }}</td>
+                    <td>{{ kijiwe.address }}</td>
+                    <td>{{ kijiwe.latitude }}, {{ kijiwe.longitude }}</td>
+                    <td>{{ kijiwe.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{% url 'operations:kijiwe_detail' kijiwe.pk %}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No kijiwe locations found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Kijiwe Modal -->
+<div class="modal fade" id="addKijiweModal" tabindex="-1" aria-labelledby="addKijiweModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'operations:kijiwe_create' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addKijiweModalLabel">Add New Kijiwe Location</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Please correct the errors below.
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_address" class="form-label">Address</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <div class="invalid-feedback d-block">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_latitude" class="form-label">Latitude</label>
+                                {{ form.latitude }}
+                                {% if form.latitude.errors %}
+                                <div class="invalid-feedback d-block">{{ form.latitude.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_longitude" class="form-label">Longitude</label>
+                                {{ form.longitude }}
+                                {% if form.longitude.errors %}
+                                <div class="invalid-feedback d-block">{{ form.longitude.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Kijiwe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

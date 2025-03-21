@@ -1,0 +1,179 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Login | Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold text-center text-[#FF0000] mb-6">Business Login</h2>
+
+        <form class="space-y-6" method="POST" id="loginForm">
+            {% csrf_token %}
+            <!-- Hidden location fields -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Phone Number:</label>
+                <input type="tel" name="phone" id="phone" required
+                    placeholder="Enter your phone number"
+                    title="Enter your phone number"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <div>
+                <label class="block text-gray-700 mb-2">Password:</label>
+                <input type="password" name="password" id="password" required
+                    placeholder="Enter your password"
+                    title="Enter your password"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-[#FF0000] text-white py-3 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Sign in
+            </button>
+        </form>
+
+        <!-- Location status message -->
+        <div id="locationStatus" class="mt-4 text-sm text-gray-600 text-center hidden"></div>
+
+        <p class="mt-4 text-center">
+            Don't have an account? <a href="{% url 'business:business_register' %}" class="text-[#FF0000] hover:text-red-700">Register here</a>
+        </p>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('loginForm');
+        const locationStatus = document.getElementById('locationStatus');
+        
+        // Function to show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-100 text-green-800' : 
+                type === 'error' ? 'bg-red-100 text-red-800' : 
+                'bg-blue-100 text-blue-800'
+            }`;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+        }
+
+        // Function to get and update location
+        function updateLocation() {
+            if ("geolocation" in navigator) {
+                locationStatus.classList.remove('hidden');
+                locationStatus.textContent = "📍 Getting your location...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const { latitude, longitude } = position.coords;
+                        document.getElementById('latitude').value = latitude;
+                        document.getElementById('longitude').value = longitude;
+                        
+                        // Get address from coordinates
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const address = data.display_name || 'Unknown location';
+                                showNotification(`📍 Location detected: ${address}`, 'success');
+                                locationStatus.textContent = "✅ Location detected";
+                            })
+                            .catch(() => {
+                                showNotification(`📍 Location detected: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, 'success');
+                                locationStatus.textContent = "✅ Location detected";
+                            });
+                    },
+                    function(error) {
+                        let message = "Please enable location access for better service";
+                        if (error.code === error.TIMEOUT) {
+                            message = "Location request timed out. Please try again.";
+                        }
+                        showNotification(message, 'error');
+                        locationStatus.textContent = "⚠️ " + message;
+                    }
+                );
+            } else {
+                showNotification("Location services not available", 'error');
+                locationStatus.textContent = "⚠️ Location services not available";
+            }
+        }
+
+        // Get location when page loads
+        updateLocation();
+        
+        // Add event listener to form submission
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            if (!phone || !password) {
+                showNotification("Phone number and password are required", 'error');
+                return;
+            }
+
+            const requestData = {
+                phone: phone,
+                password: password,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value
+            };
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Signing in...';
+
+            try {
+                const response = await fetch("/business/login/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification("Login successful!", 'success');
+                    window.location.href = data.redirect;
+                } else {
+                    showNotification(data.error || "Login failed", 'error');
+                }
+            } catch (error) {
+                console.error("❌ Error:", error);
+                showNotification("An error occurred. Please try again.", 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Sign in';
+            }
+        });
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+    </script>
+</body>
+</html>

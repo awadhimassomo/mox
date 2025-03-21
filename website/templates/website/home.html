@@ -1,0 +1,354 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo-Express | Gas, Groceries & Packages Delivery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <meta name="description" content="Mo-Express: Your trusted delivery partner in Tanzania for gas, groceries, and packages">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mo-Express">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="{% static 'website/images/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{% static 'website/images/icons/icon-192x192.png' %}">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% static 'website/manifest.webmanifest' %}">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF0000',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .scroll-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Mobile menu animation */
+        .mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .mobile-menu.open {
+            max-height: 300px;
+        }
+        
+        /* Hamburger menu styles */
+        .hamburger {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            transition: all 0.25s;
+            position: relative;
+        }
+        
+        .hamburger-top,
+        .hamburger-middle,
+        .hamburger-bottom {
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            top: 0;
+            left: 0;
+            background: #ffffff;
+            transform: rotate(0);
+            transition: all 0.5s;
+        }
+        
+        .hamburger-middle {
+            transform: translateY(7px);
+        }
+        
+        .hamburger-bottom {
+            transform: translateY(14px);
+        }
+        
+        .open .hamburger-top {
+            transform: rotate(45deg) translateY(6px) translateX(6px);
+        }
+        
+        .open .hamburger-middle {
+            display: none;
+        }
+        
+        .open .hamburger-bottom {
+            transform: rotate(-45deg) translateY(6px) translateX(-6px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Navbar with Navigation Links -->
+    <nav class="bg-red-600 shadow-md py-4 px-6 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-white mr-10">Mo-Express</h1>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#why-choose" class="text-white hover:text-gray-200 font-medium">Why Choose Mo</a>
+                    <a href="#how-it-works" class="text-white hover:text-gray-200 font-medium">How It Works</a>
+                    <a href="#business-register" class="text-white hover:text-gray-200 font-medium">Register Your Business</a>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                   
+                    <select id="language" class="border p-1 rounded-md text-sm">
+                        <option value="en">EN</option>
+                        <option value="sw">SW</option>
+                    </select>
+                </div>
+                <!-- Hamburger Button for Mobile -->
+                <button id="menu-btn" class="hamburger md:hidden focus:outline-none" type="button" title="Toggle menu" aria-label="Toggle navigation menu">
+                    <span class="hamburger-top"></span>
+                    <span class="hamburger-middle"></span>
+                    <span class="hamburger-bottom"></span>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile menu (hidden by default) -->
+        <div id="mobile-menu" class="mobile-menu md:hidden mt-4 bg-red-700 rounded-lg">
+            <div class="flex flex-col space-y-2 p-4">
+                <a href="#why-choose" class="text-white hover:text-gray-200 font-medium py-2">Why Choose Mo</a>
+                <a href="#how-it-works" class="text-white hover:text-gray-200 font-medium py-2">How It Works</a>
+                <a href="#business-register" class="text-white hover:text-gray-200 font-medium py-2">Register Business</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative bg-cover bg-center h-screen flex items-center justify-center text-white" 
+    style="background-image: url('{% static "website/images/bg.jpg" %}');">
+    <div class="absolute inset-0 bg-black opacity-50"></div>
+    <div class="relative z-10 text-center px-4">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">Mo-Express: Your Trusted Delivery Partner in Tanzania</h1>
+        <p class="text-lg md:text-2xl mb-6">Fast, reliable, and secure deliveries for gas, groceries, packages, and more.</p>
+        <div class="flex flex-col md:flex-row gap-4 justify-center">
+            <a href="{% url 'customers:home' %}" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-lg">Order Now</a>
+            <a href="{% url 'riders:rider_register' %}" class="bg-transparent border border-red-600 hover:bg-red-600 hover:text-white text-white font-semibold py-3 px-8 rounded-lg">
+                Become a Rider
+            </a>
+            
+        </div>
+    </div>
+</section>
+
+
+    <!-- Features Section -->
+    <section id="why-choose" class="py-12 px-4 scroll-mt-20">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-8">Why Choose Mo-Express?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">Gas Delivery</h3>
+                    <p>Get cooking gas delivered safely and quickly to your home.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">Groceries Delivery</h3>
+                    <p>Fresh groceries delivered straight to your doorstep.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">Package Delivery</h3>
+                    <p>Send and receive packages securely anywhere in Tanzania.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="bg-gray-200 py-12 px-4">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-8">How It Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">1. Sign Up</h3>
+                    <p>Register as a customer, rider, or business.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">2. Place Order</h3>
+                    <p>Choose gas, groceries, or packages for delivery.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">3. Track Delivery</h3>
+                    <p>Monitor your delivery in real-time.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">4. Receive Order</h3>
+                    <p>Get your items delivered safely and quickly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Register a Business -->
+    <section id="business-register" class="py-12 px-4">
+        <div class="container mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-8">How to Register Your Business</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">1. Sign Up</h3>
+                    <p>Create a business account and upload your details.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">2. List Your Products</h3>
+                    <p>Add your available gas, groceries, or package services.</p>
+                </div>
+                <div class="p-6 bg-white shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3">3. Start Selling</h3>
+                    <p>Receive and fulfill orders from customers in your area.</p>
+                </div>
+            </div>
+            <a href="{% url 'business:business_register' %}" class="mt-6 bg-red-600 text-white py-3 px-8 rounded-lg hover:bg-red-700 inline-block">
+                Register Now
+            </a>
+            
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="bg-red-600 py-12 text-center text-white">
+        <h2 class="text-3xl font-bold mb-4">Join Mo-Express Today!</h2>
+        <p class="text-lg mb-6">Order gas, groceries, and packages. Or become a rider and start earning.</p>
+        <a href="#" class="bg-white text-red-600 py-3 px-8 rounded-lg hover:bg-gray-100">Get Started</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 px-4">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Mo-Express</h3>
+                <p>Your trusted delivery partner in Tanzania.</p>
+                <!-- Social Media Icons -->
+                <div class="flex space-x-4 mt-4">
+                    <a href="#" class="text-white hover:text-red-400" aria-label="Facebook" title="Follow us on Facebook">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-white hover:text-red-400" aria-label="Twitter" title="Follow us on Twitter">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-white hover:text-red-400" aria-label="Instagram" title="Follow us on Instagram">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-white hover:text-red-400" aria-label="LinkedIn" title="Connect with us on LinkedIn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.68 1.68 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="#why-choose" class="hover:text-red-400">Why Choose Mo</a></li>
+                    <li><a href="#how-it-works" class="hover:text-red-400">How It Works</a></li>
+                    <li><a href="#business-register" class="hover:text-red-400">Register Your Business</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Resources</h3>
+                <ul class="space-y-2">
+                    <li><a href="/faq" class="hover:text-red-400">FAQ</a></li>
+                    <li><a href="/privacy-policy" class="hover:text-red-400">Privacy Policy</a></li>
+                    <li><a href="/terms" class="hover:text-red-400">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Contact Us</h3>
+                <p>Phone: +255 782 611 776</p>
+                <p>Email: info@mo-express.co.tz</p>
+                <p class="mt-2">Dar es Salaam, Tanzania</p>
+            </div>
+        </div>
+        <div class="mt-8 text-center border-t border-gray-700 pt-6">
+            <p>&copy; 2025 Mo-Express. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="scroll-to-top bg-red-600 text-white rounded-full p-3 shadow-lg" aria-label="Scroll to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        // Toggle mobile menu
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        menuBtn.addEventListener('click', function() {
+            menuBtn.classList.toggle('open');
+            mobileMenu.classList.toggle('open');
+        });
+        
+        // Close menu when a link is clicked
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                menuBtn.classList.remove('open');
+                mobileMenu.classList.remove('open');
+            });
+        });
+        
+        // Scroll to top functionality
+        const scrollToTopButton = document.getElementById('scrollToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollToTopButton.classList.add('show');
+            } else {
+                scrollToTopButton.classList.remove('show');
+            }
+        });
+        
+        scrollToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('{% static "website/sw.js" %}').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

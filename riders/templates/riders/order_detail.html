@@ -1,0 +1,151 @@
+{% extends 'theme/base.html' %}
+{% load static %}
+
+{% block title %}Order Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Order #{{ order.order_number }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Order Status</h5>
+                            <p class="badge 
+                                {% if order.status == 'pending' %}bg-warning{% endif %}
+                                {% if order.status == 'confirmed' %}bg-info{% endif %}
+                                {% if order.status == 'assigned' %}bg-primary{% endif %}
+                                {% if order.status == 'preparing' %}bg-secondary{% endif %}
+                                {% if order.status == 'ready' %}bg-info{% endif %}
+                                {% if order.status == 'in_transit' %}bg-primary{% endif %}
+                                {% if order.status == 'delivered' %}bg-success{% endif %}
+                                {% if order.status == 'cancelled' %}bg-danger{% endif %}">
+                                {{ order.get_status_display }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Date</h5>
+                            <p>{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Business</h5>
+                            <p>{{ order.business.name }}</p>
+                            <p>{{ order.business.address }}</p>
+                            <p>{{ order.business.phone_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Customer</h5>
+                            <p>{{ order.customer_name }}</p>
+                            <p>{{ order.delivery_location }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Order Items</h5>
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>TZS {{ item.unit_price|floatformat:2 }}</td>
+                                    <td>TZS {{ item.total_price|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5>Payment Information</h5>
+                            <p><strong>Method:</strong> {{ order.get_payment_method_display }}</p>
+                            <p><strong>Status:</strong> {{ order.get_payment_status_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Order Summary</h5>
+                            <p><strong>Subtotal:</strong> TZS {{ order.subtotal|floatformat:2 }}</p>
+                            <p><strong>Delivery Fee:</strong> TZS {{ order.delivery_fee|floatformat:2 }}</p>
+                            {% if order.surge_fee > 0 %}
+                            <p><strong>Surge Fee:</strong> TZS {{ order.surge_fee|floatformat:2 }}</p>
+                            {% endif %}
+                            {% if order.bulk_discount > 0 %}
+                            <p><strong>Discount:</strong> -TZS {{ order.bulk_discount|floatformat:2 }}</p>
+                            {% endif %}
+                            <p class="fw-bold">Total: TZS {{ order.total|floatformat:2 }}</p>
+                        </div>
+                    </div>
+
+                    {% if order.status == 'assigned' and not order.rider %}
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'riders:accept_order' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg w-100">Accept Order</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if order.rider == request.user.rider and order.status == 'preparing' %}
+                    <div class="d-grid gap-2 mt-3">
+                        <form method="post" action="{% url 'riders:update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="ready">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Mark as Ready for Delivery</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if order.rider == request.user.rider and order.status == 'ready' %}
+                    <div class="d-grid gap-2 mt-3">
+                        <form method="post" action="{% url 'riders:update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="in_transit">
+                            <button type="submit" class="btn btn-info btn-lg w-100">Start Delivery</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    {% if order.rider == request.user.rider and order.status == 'in_transit' %}
+                    <div class="d-grid gap-2 mt-3">
+                        <form method="post" action="{% url 'riders:update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="delivered">
+                            <button type="submit" class="btn btn-success btn-lg w-100">Complete Delivery</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'riders:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

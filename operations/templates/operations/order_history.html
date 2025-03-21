@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Order History</h2>
+        <div class="flex space-x-2">
+            <button id="export-csv" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <select name="date_range" class="form-select">
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="picked_up">Picked Up</option>
+                    <option value="in_transit">In Transit</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Business</label>
+                <select name="business" class="form-select">
+                    <option value="">All Businesses</option>
+                    <!-- Will be populated dynamically -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                <select name="region" class="form-select">
+                    <option value="">All Regions</option>
+                    {% for region_code, region_name in regions %}
+                        <option value="{{ region_code }}">{{ region_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="md:col-span-4 flex justify-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <h3 class="text-sm text-gray-600">Total Orders</h3>
+            <p class="text-2xl font-bold text-blue-600" id="total-orders">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <h3 class="text-sm text-gray-600">Total Revenue</h3>
+            <p class="text-2xl font-bold text-green-600" id="total-revenue">TZS 0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <h3 class="text-sm text-gray-600">Average Delivery Time</h3>
+            <p class="text-2xl font-bold text-purple-600" id="avg-delivery-time">0 min</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4">
+            <h3 class="text-sm text-gray-600">Completion Rate</h3>
+            <p class="text-2xl font-bold text-orange-600" id="completion-rate">0%</p>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rider</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table" class="bg-white divide-y divide-gray-200">
+                    <!-- Orders will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <button id="prev-page-mobile" class="btn btn-outline-primary">Previous</button>
+                <button id="next-page-mobile" class="btn btn-outline-primary">Next</button>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700" id="pagination-info">
+                        Showing <span id="items-range">0-0</span> of <span id="total-items">0</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" id="pagination">
+                        <!-- Pagination will be populated here -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Order Info -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <h6 class="font-medium">Order Information</h6>
+                        <p><strong>Order #:</strong> <span id="modal-order-number"></span></p>
+                        <p><strong>Date:</strong> <span id="modal-date"></span></p>
+                        <p><strong>Status:</strong> <span id="modal-status"></span></p>
+                        <p><strong>Customer:</strong> <span id="modal-customer"></span></p>
+                        <p><strong>Phone:</strong> <span id="modal-phone"></span></p>
+                    </div>
+                    <div>
+                        <h6 class="font-medium">Delivery Information</h6>
+                        <p><strong>Business:</strong> <span id="modal-business"></span></p>
+                        <p><strong>Pickup:</strong> <span id="modal-pickup"></span></p>
+                        <p><strong>Delivery:</strong> <span id="modal-delivery"></span></p>
+                        <p><strong>Distance:</strong> <span id="modal-distance"></span></p>
+                        <p><strong>Fee:</strong> <span id="modal-fee"></span></p>
+                    </div>
+                </div>
+                <!-- Timeline -->
+                <div class="mt-4">
+                    <h6 class="font-medium mb-3">Order Timeline</h6>
+                    <div class="space-y-4" id="modal-timeline">
+                        <!-- Timeline will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-TZ', {
+        style: 'currency',
+        currency: 'TZS',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleString('en-TZ', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function getStatusBadgeClass(status) {
+    const classes = {
+        'pending': 'bg-yellow-100 text-yellow-800',
+        'processing': 'bg-blue-100 text-blue-800',
+        'picked_up': 'bg-purple-100 text-purple-800',
+        'in_transit': 'bg-indigo-100 text-indigo-800',
+        'delivered': 'bg-green-100 text-green-800',
+        'cancelled': 'bg-red-100 text-red-800'
+    };
+    return classes[status] || 'bg-gray-100 text-gray-800';
+}
+
+function loadOrders(page = 1) {
+    console.log('Loading orders for page:', page);
+    const formData = new FormData(document.getElementById('filter-form'));
+    const queryParams = new URLSearchParams();
+    
+    // Add form data to query params
+    for (const [key, value] of formData.entries()) {
+        if (value) {  // Only add non-empty values
+            queryParams.append(key, value);
+        }
+    }
+    queryParams.append('page', page);
+    
+    console.log('Query params:', queryParams.toString());
+    
+    // Show loading state
+    document.getElementById('orders-table').innerHTML = `
+        <tr>
+            <td colspan="8" class="px-6 py-4 text-center">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-gray-500">Loading orders...</span>
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    // Include query parameters in the URL
+    const url = `/operations/api/orders/history/?${queryParams.toString()}`;
+    console.log('Fetching from URL:', url);
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received data:', data);
+        if (data.success) {
+            if (data.orders && data.orders.length > 0) {
+                console.log('Updating table with orders:', data.orders);
+                updateOrdersTable(data.orders);
+                updateStats(data.stats);
+                updatePagination(data.total_pages, page);
+            } else {
+                document.getElementById('orders-table').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                            No orders found for the selected filters
+                        </td>
+                    </tr>
+                `;
+            }
+        } else {
+            throw new Error(data.error || 'Failed to load orders');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading orders:', error);
+        document.getElementById('orders-table').innerHTML = `
+            <tr>
+                <td colspan="8" class="px-6 py-4 text-center">
+                    <div class="text-red-500">
+                        <svg class="mx-auto h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p class="mt-2">Error loading orders: ${error.message}</p>
+                        <p class="mt-1 text-sm">Please try again or contact support if the problem persists.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function updateOrdersTable(orders) {
+    console.log('Updating orders table with:', orders);
+    const container = document.getElementById('orders-table');
+    
+    container.innerHTML = orders.map(order => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${formatDate(order.created_at)}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer" 
+                     onclick="viewOrderDetails(${order.id})">
+                    ${order.tracking_number}
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${order.business_name}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-gray-900">${order.customer_name}</div>
+                <div class="text-xs text-gray-500">${order.delivery_location}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${order.rider_name ? `
+                    <div class="text-sm text-gray-900">${order.rider_name}</div>
+                    <div class="text-xs text-gray-500">${order.rider_phone || 'No phone'}</div>
+                ` : '<div class="text-sm text-gray-500">Not assigned</div>'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="text-sm font-medium text-gray-900">${formatCurrency(order.total_amount)}</div>
+                <div class="text-xs text-gray-500">
+                    Fee: ${formatCurrency(order.delivery_fee)}
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}">
+                    ${order.status.replace('_', ' ').toUpperCase()}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button onclick="viewOrderDetails(${order.id})" 
+                        class="text-blue-600 hover:text-blue-900">
+                    Details
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats(stats) {
+    console.log('Updating stats:', stats);
+    document.getElementById('total-orders').textContent = stats.total_orders.toLocaleString();
+    document.getElementById('total-revenue').textContent = formatCurrency(stats.total_revenue);
+    document.getElementById('avg-delivery-time').textContent = `${stats.avg_delivery_time} min`;
+    document.getElementById('completion-rate').textContent = `${stats.completion_rate}%`;
+}
+
+function updatePagination(totalPages, currentPage) {
+    console.log('Updating pagination:', { totalPages, currentPage });
+    const pagination = document.getElementById('pagination');
+    let html = '';
+
+    // Previous button
+    html += `
+        <button onclick="loadOrders(${currentPage - 1})" 
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                ${currentPage === 1 ? 'disabled' : ''}>
+            Previous
+        </button>
+    `;
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `
+                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                    ${i}
+                </button>
+            `;
+        } else {
+            html += `
+                <button onclick="loadOrders(${i})" 
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    ${i}
+                </button>
+            `;
+        }
+    }
+
+    // Next button
+    html += `
+        <button onclick="loadOrders(${currentPage + 1})" 
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                ${currentPage === totalPages ? 'disabled' : ''}>
+            Next
+        </button>
+    `;
+
+    pagination.innerHTML = html;
+}
+
+function viewOrderDetails(orderId) {
+    fetch(`/operations/api/orders/${orderId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateOrderModal(data.order);
+                new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+            }
+        })
+        .catch(error => console.error('Error fetching order details:', error));
+}
+
+function populateOrderModal(order) {
+    document.getElementById('modal-order-number').textContent = `#${order.tracking_number}`;
+    document.getElementById('modal-date').textContent = formatDate(order.created_at);
+    document.getElementById('modal-status').textContent = order.status;
+    document.getElementById('modal-customer').textContent = order.customer_name;
+    document.getElementById('modal-phone').textContent = order.customer_phone || 'N/A';
+    document.getElementById('modal-business').textContent = order.business_name;
+    document.getElementById('modal-pickup').textContent = order.pickup_location || 'N/A';
+    document.getElementById('modal-delivery').textContent = order.delivery_location;
+    document.getElementById('modal-distance').textContent = order.distance ? `${order.distance.toFixed(1)} km` : 'N/A';
+    document.getElementById('modal-fee').textContent = formatCurrency(order.delivery_fee);
+    
+    // Update timeline
+    const timeline = document.getElementById('modal-timeline');
+    timeline.innerHTML = order.timeline ? order.timeline.map(event => `
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-circle text-blue-600 text-sm"></i>
+                </div>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">${event.status}</p>
+                <p class="text-sm text-gray-500">${formatDate(event.timestamp)}</p>
+            </div>
+        </div>
+    `).join('') : '<p class="text-sm text-gray-500">No timeline available</p>';
+}
+
+// Call loadOrders when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded, initializing...');
+    
+    // Load initial data
+    loadOrders();
+    
+    // Set up form submission
+    const filterForm = document.getElementById('filter-form');
+    filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        console.log('Filter form submitted');
+        loadOrders(1);  // Reset to first page when filters change
+    });
+    
+    // Set up date range change handler
+    const dateRangeSelect = document.querySelector('select[name="date_range"]');
+    dateRangeSelect.addEventListener('change', () => {
+        console.log('Date range changed');
+        loadOrders(1);  // Reset to first page when date range changes
+    });
+    
+    // Load businesses for filter
+    fetch('/business/api/businesses/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.querySelector('select[name="business"]');
+                data.businesses.forEach(business => {
+                    const option = document.createElement('option');
+                    option.value = business.id;
+                    option.textContent = business.name;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading businesses:', error));
+});
+</script>
+{% endblock %}

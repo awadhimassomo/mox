@@ -1,0 +1,72 @@
+{% extends 'customers/base.html' %}
+
+{% block title %}My Orders | Mo-Express{% endblock %}
+
+{% block header_title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6">
+    {% if orders %}
+    <div class="space-y-4">
+        {% for order in orders %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+            <div class="p-4 border-b dark:border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-semibold">Order #{{ order.id }}</h3>
+                    <span class="px-2 py-1 text-xs rounded-full 
+                        {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800{% endif %}
+                        {% if order.status == 'processing' %}bg-blue-100 text-blue-800{% endif %}
+                        {% if order.status == 'delivered' %}bg-green-100 text-green-800{% endif %}
+                        {% if order.status == 'cancelled' %}bg-red-100 text-red-800{% endif %}">
+                        {{ order.status|title }}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-4">
+                    <p class="text-sm font-medium">Delivery Address:</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.delivery_address }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-sm font-medium">Items:</p>
+                    <ul class="mt-2 space-y-2">
+                        {% for item in order.orderitem_set.all %}
+                        <li class="flex justify-between">
+                            <span>{{ item.quantity }} x {{ item.product.name }}</span>
+                            <span>Tsh {{ item.price|floatformat:2 }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="flex justify-between pt-4 border-t dark:border-gray-700">
+                    <span class="font-semibold">Total:</span>
+                    <span class="font-semibold">Tsh {{ order.total_price|floatformat:2 }}</span>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-gray-50 dark:bg-gray-700">
+                <a href="{% url 'orders:order_detail' order.id %}" class="block w-full py-2 text-center bg-primary text-black rounded-lg hover:bg-yellow-400 transition-colors">
+                    View Details
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <h3 class="text-lg font-semibold mb-2">No Orders Yet</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">You haven't placed any orders yet.</p>
+        <a href="{% url 'customers:home' %}" class="px-6 py-2 bg-primary text-black rounded-lg hover:bg-yellow-400 transition-colors">
+            Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

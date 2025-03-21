@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Business Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF0000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background">
+    <nav class="bg-[#FF0000] text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{% url 'business:business_dashboard' %}" class="text-lg font-bold text-white">🏪 Business Dashboard</a>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none">
+                ☰
+            </button>
+
+            <!-- Desktop Menu -->
+            <ul class="hidden md:flex space-x-4 text-white">
+                <li><a href="{% url 'business:business_dashboard' %}" class="hover:underline">Dashboard</a></li>
+                <li><a href="{% url 'business:add_product' %}" class="hover:underline">Add Product</a></li>
+                <li><a href="{% url 'business:sales_history' %}" class="hover:underline">Sales History</a></li>
+                <li><a href="{% url 'business:earnings' %}" class="hover:underline">Earnings</a></li>
+                <li><a href="{% url 'business:profile' %}" class="hover:underline">Profile</a></li>
+            </ul>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-[#FF0000] shadow-lg p-4">
+            <ul class="flex flex-col space-y-2 text-white">
+                <li><a href="{% url 'business:business_dashboard' %}" class="hover:underline block">Dashboard</a></li>
+                <li><a href="{% url 'business:add_product' %}" class="hover:underline block">Add Product</a></li>
+                <li><a href="{% url 'business:sales_history' %}" class="hover:underline block">Sales History</a></li>
+                <li><a href="{% url 'business:earnings' %}" class="hover:underline block">Earnings</a></li>
+                <li><a href="{% url 'business:profile' %}" class="hover:underline block">Profile</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        document.getElementById("mobile-menu-button").addEventListener("click", function () {
+            var menu = document.getElementById("mobile-menu");
+            menu.classList.toggle("hidden");
+        });
+    </script>
+</body>
+</html>

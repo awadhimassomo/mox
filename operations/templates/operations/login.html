@@ -1,0 +1,121 @@
+{% extends 'operations/auth_base.html' %}
+{% load static %}
+
+{% block title %}Login - Mo Delivery Management{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6 sm:p-8">
+        <div class="text-center mb-8">
+            <!-- Logo could be added here -->
+            <img src="{% static 'img/logo.png' %}" alt="Mo Delivery" class="h-12 mx-auto mb-3" onerror="this.style.display='none'">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-red-600 mb-3">
+                Sign in to your account
+            </h2>
+            <p class="text-sm text-gray-600">
+                Or
+                <a href="{% url 'operations:dashboard_register' %}" class="font-medium text-red-600 hover:text-red-500 transition-colors duration-150">
+                    create a new account
+                </a>
+            </p>
+        </div>
+        
+        <form class="space-y-6" action="{% url 'operations:loginapi' %}" method="POST">
+            {% csrf_token %}
+            
+            {% if messages %}
+            <div class="rounded-md bg-red-50 p-4 mb-6 border-l-4 border-red-500">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <!-- Error icon -->
+                        <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="space-y-5">
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 pointer-events-none">+255</span>
+                        <input id="phone" name="phone" type="tel" required
+                            class="appearance-none block w-full pl-14 pr-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="712345678"
+                            inputmode="numeric"
+                            pattern="[0-9]*">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Enter 9 digits after 255 (e.g., 712345678)</p>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative rounded-md shadow-sm">
+                        <input id="password" name="password" type="password" required
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="••••••••">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <button type="button" id="togglePassword" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" id="eyeIcon">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-150">
+                    Sign in
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format phone number input
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function(e) {
+        // Remove non-numeric characters
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        // Limit to 9 digits
+        if (this.value.length > 9) {
+            this.value = this.value.slice(0, 9);
+        }
+    });
+    
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    togglePassword.addEventListener('click', function() {
+        // Toggle type between password and text
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        // Toggle eye icon
+        if (type === 'text') {
+            eyeIcon.innerHTML = '<path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />';
+        } else {
+            eyeIcon.innerHTML = '<path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />';
+        }
+    });
+});
+</script>
+{% endblock %}

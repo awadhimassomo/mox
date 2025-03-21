@@ -1,0 +1,229 @@
+{% extends 'operations/auth_base.html' %}
+
+{% load static %}
+
+
+{% block title %}Rider Registration{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <img class="mx-auto h-12 w-auto" src="{% static 'img/logo.png' %}" alt="Mo -Express">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-red-600">
+            Register as a Rider
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Join our gas delivery team in Tanzania
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-2">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            {% else %}
+                            <svg class="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                {{ message }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form class="space-y-6" action="{% url 'riders:rider_register' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="first_name" class="block text-sm font-medium text-gray-700">
+                        First Name
+                    </label>
+                    <div class="mt-1">
+                        <input id="first_name" name="first_name" type="text" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="last_name" class="block text-sm font-medium text-gray-700">
+                        Last Name
+                    </label>
+                    <div class="mt-1">
+                        <input id="last_name" name="last_name" type="text" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700">
+                        Phone Number
+                    </label>
+                    <div class="mt-1">
+                        <input id="phone" name="phone" type="tel" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="+255 XXX XXX XXX">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email (Optional)
+                    </label>
+                    <div class="mt-1">
+                        <input id="email" name="email" type="email"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">
+                        Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="password" name="password" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700">
+                        Confirm Password
+                    </label>
+                    <div class="mt-1">
+                        <input id="confirm_password" name="confirm_password" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="region" class="block text-sm font-medium text-gray-700">
+                        Region
+                    </label>
+                    <div class="mt-1">
+                        <select id="region" name="region" required
+                            class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md">
+                            <option value="">Select a region</option>
+                            <option value="dar_es_salaam">Dar es Salaam</option>
+                            <option value="arusha">Arusha</option>
+                            <option value="mwanza">Mwanza</option>
+                            <option value="dodoma">Dodoma</option>
+                            <option value="tanga">Tanga</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_photo" class="block text-sm font-medium text-gray-700">
+                        ID Photo
+                    </label>
+                    <div class="mt-1 flex items-center">
+                        <input id="id_photo" name="id_photo" type="file" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            accept="image/*">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Upload a clear photo of your ID card or driver's license</p>
+                </div>
+
+                <div>
+                    <label for="vehicle_photo" class="block text-sm font-medium text-gray-700">
+                        Vehicle Photo
+                    </label>
+                    <div class="mt-1 flex items-center">
+                        <input id="vehicle_photo" name="vehicle_photo" type="file" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            accept="image/*">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Upload a clear photo of your delivery vehicle</p>
+                </div>
+
+                <div>
+                    <label for="license_photo" class="block text-sm font-medium text-gray-700">
+                        License Photo (If applicable)
+                    </label>
+                    <div class="mt-1 flex items-center">
+                        <input id="license_photo" name="license_photo" type="file"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                            accept="image/*">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">If using a motorbike or car, upload a photo of your driver's license</p>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Register as Rider
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Already registered?</span>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <a href="{% url 'riders:login' %}" class="font-medium text-red-600 hover:text-red-500">
+                        Log in to your account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#region").change(function() {
+            // Clear area select box when region changes
+            $("#area").empty().append('<option value="">Select an area</option>');
+            
+            /* AJAX call removed - URL doesn't exist yet
+            const region = $(this).val();
+            if(region) {
+                // Get areas for the selected region
+                $.ajax({
+                    url: "{% url 'riders:get_areas' %}",
+                    data: {
+                        'region': region
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        // Populate area select box
+                        if(response.areas.length > 0) {
+                            $.each(response.areas, function(key, area) {
+                                $("#area").append('<option value="' + area.id + '">' + area.name + '</option>');
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading areas: " + error);
+                    }
+                });
+            }
+            */
+        });
+    });
+</script>
+{% endblock %}

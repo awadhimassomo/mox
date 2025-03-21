@@ -1,0 +1,111 @@
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block title %}Search Results - {{ query }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Search Results for "{{ query }}"</h1>
+    
+    <!-- Search form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{% url 'customers:search' %}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="Search for businesses or products...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <select name="category" class="form-control">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Businesses section -->
+    {% if businesses %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2>Businesses</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for business in businesses %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if business.logo %}
+                        <img src="{{ business.logo.url }}" class="card-img-top" alt="{{ business.name }}">
+                        {% else %}
+                        <img src="{% static 'img/default-business.png' %}" class="card-img-top" alt="{{ business.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ business.name }}</h5>
+                            <p class="card-text">{{ business.description|truncatechars:100 }}</p>
+                            <a href="{% url 'customers:business_detail' business.id %}" class="btn btn-primary">View Business</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Products section -->
+    {% if products %}
+    <div class="card">
+        <div class="card-header">
+            <h2>Products</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                        {% else %}
+                        <img src="{% static 'img/default-product.png' %}" class="card-img-top" alt="{{ product.name }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                            <p class="card-text"><strong>Price:</strong> {{ product.price }} TZS</p>
+                            <p class="card-text"><small class="text-muted">From: {{ product.business.name }}</small></p>
+                            <a href="{% url 'customers:business_detail' product.business.id %}" class="btn btn-primary">View Business</a>
+                            {% if user.is_authenticated %}
+                            <form method="POST" action="{% url 'customers:add_to_cart' product.id %}" class="mt-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">Add to Cart</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not businesses and not products %}
+    <div class="alert alert-info">
+        <h3>No results found for "{{ query }}"</h3>
+        <p>Try different keywords or browse by category.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

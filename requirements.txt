@@ -1,0 +1,11 @@
+Django>=3.2.0,<4.0.0
+psycopg2-binary>=2.9.1
+python-decouple>=3.6
+djangorestframework>=3.12.0
+django-cors-headers>=3.10.0
+Pillow>=8.3.2
+django-filter>=21.1
+django-getx>=0.1.0  # For GetX state management integration
+django-browser-reload>=1.6.0  # For development auto-reload
+django-registration>=3.3  # For user registration
+django-crispy-forms>=1.14.0  # For better form rendering

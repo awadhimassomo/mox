@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Businesses - MoExpress</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <h1 class="text-3xl font-bold text-center mb-6">🏢 Registered Businesses</h1>
+
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow-lg">
+        <table class="w-full border-collapse border border-gray-300 shadow-sm">
+            <thead class="bg-gray-200 text-gray-700 uppercase text-sm">
+                <tr>
+                    <th class="py-3 px-4 border">Business Name</th>
+                    <th class="py-3 px-4 border">Address</th>
+                    <th class="py-3 px-4 border">Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for business in businesses %}
+                <tr class="border-b">
+                    <td class="py-3 px-4 text-center">{{ business.name }}</td>
+                    <td class="py-3 px-4 text-center">{{ business.address }}</td>
+                    <td class="py-3 px-4 text-center">{{ business.contact }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="py-4 text-center text-gray-500">No businesses registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
