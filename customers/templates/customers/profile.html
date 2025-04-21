@@ -1,0 +1,238 @@
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container py-8 max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-6 px-4">My Account</h1>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4">
+        <!-- User Profile Information -->
+        <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-purple-700 p-4 text-white">
+                    <h5 class="font-semibold text-lg">My Profile</h5>
+                </div>
+                
+                <div class="p-5">
+                    <div class="text-center mb-6">
+                        {% if customer.profile_image %}
+                            <img src="{{ customer.profile_image.url }}" alt="Profile" class="rounded-full mx-auto" width="120" height="120" style="object-fit: cover;">
+                        {% else %}
+                            <div class="bg-gradient-to-r from-primary to-purple-700 rounded-full d-inline-flex align-items-center justify-content-center text-white mx-auto" style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+                                <span style="font-size: 40px;">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <h4 class="mt-4 font-semibold text-lg text-gray-800 dark:text-white">{{ request.user.get_full_name }}</h4>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Member since {{ request.user.date_joined|date:"F Y" }}</p>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="id_first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                            <input type="text" name="first_name" value="{{ request.user.first_name }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white" id="id_first_name">
+                        </div>
+                        <div>
+                            <label for="id_last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                            <input type="text" name="last_name" value="{{ request.user.last_name }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white" id="id_last_name">
+                        </div>
+                        <div>
+                            <label for="id_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                            <input type="email" name="email" value="{{ request.user.email }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-600 cursor-not-allowed text-gray-600 dark:text-gray-400" id="id_email" readonly>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Email address cannot be changed</p>
+                        </div>
+                        <div>
+                            <label for="id_phone_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                            <input type="text" name="phone_number" value="{{ customer.phone_number }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white" id="id_phone_number">
+                        </div>
+                        <div>
+                            <label for="id_profile_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profile Image</label>
+                            <div class="flex items-center">
+                                <label class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Choose Image
+                                    <input type="file" name="profile_image" class="hidden" id="id_profile_image">
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-primary hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+                            Update Profile
+                        </button>
+                    </form>
+                    
+                    <!-- Logout Button -->
+                    <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <a href="{% url 'customers:logout' %}" class="flex justify-center items-center py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Address and Orders Information -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Addresses -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-purple-700 p-4 text-white flex justify-between items-center">
+                    <h5 class="font-semibold text-lg">My Addresses</h5>
+                    <a href="{% url 'customers:add_address' %}" class="bg-white text-primary hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Address
+                    </a>
+                </div>
+                <div class="p-5">
+                    {% if addresses %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% for address in addresses %}
+                                <div class="border {% if customer.default_address == address %}border-primary{% else %}border-gray-200 dark:border-gray-700{% endif %} rounded-lg overflow-hidden h-full">
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <h6 class="font-medium text-gray-800 dark:text-white">{{ address.label }}</h6>
+                                            {% if customer.default_address == address %}
+                                                <span class="bg-primary bg-opacity-20 text-primary text-xs px-2 py-1 rounded-full">Default</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-gray-600 dark:text-gray-400 mb-4">
+                                            {{ address.street }}<br>
+                                            {{ address.city }}, {{ address.get_region_display }}<br>
+                                            {% if address.additional_info %}{{ address.additional_info }}{% endif %}
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            {% if customer.default_address != address %}
+                                                <form method="post" action="{% url 'customers:set_default_address' %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="address_id" value="{{ address.id }}">
+                                                    <button type="submit" class="px-3 py-1.5 border border-primary text-primary text-sm rounded-lg hover:bg-primary hover:text-white transition-colors">Set Default</button>
+                                                </form>
+                                            {% endif %}
+                                            <a href="{% url 'customers:edit_address' address_id=address.id %}" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Edit</a>
+                                            <a href="{% url 'customers:delete_address' address_id=address.id %}" class="px-3 py-1.5 border border-red-500 text-red-500 text-sm rounded-lg hover:bg-red-500 hover:text-white transition-colors" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <p class="text-blue-700 dark:text-blue-400">You don't have any saved addresses yet.</p>
+                                <a href="{% url 'customers:add_address' %}" class="text-blue-800 dark:text-blue-300 hover:underline font-medium">Add your first address</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Orders -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-purple-700 p-4 text-white flex justify-between items-center">
+                    <h5 class="font-semibold text-lg">Recent Orders</h5>
+                    <a href="{% url 'customers:order_history' %}" class="bg-white text-primary hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium">View All</a>
+                </div>
+                <div class="p-5">
+                    {% if recent_orders %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order #</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Business</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {% for order in recent_orders %}
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ order.id }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ order.created_at|date:"M d, Y" }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ order.business.name }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    {% if order.status == 'completed' %}
+                                                        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                                    {% elif order.status == 'cancelled' %}
+                                                        bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                                    {% elif order.status == 'processing' %}
+                                                        bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                                    {% elif order.status == 'pending' %}
+                                                        bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                                    {% else %}
+                                                        bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                                                    {% endif %}">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">TZS {{ order.total|floatformat:0 }}</td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                <a href="{% url 'customers:order_detail' order_id=order.id %}" class="text-primary hover:text-purple-700">View</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <p class="text-blue-700 dark:text-blue-400">You don't have any orders yet.</p>
+                                <a href="{% url 'customers:home' %}" class="text-blue-800 dark:text-blue-300 hover:underline font-medium">Browse businesses to place your first order</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Favorite Businesses -->
+            {% if favorite_businesses %}
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-primary to-purple-700 p-4 text-white">
+                        <h5 class="font-semibold text-lg">Favorite Businesses</h5>
+                    </div>
+                    <div class="p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for favorite in favorite_businesses %}
+                                <a href="{% url 'customers:business_detail' business_id=favorite.business.id %}" class="block group">
+                                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden h-full transition-all hover:shadow-md">
+                                        <div class="h-32 bg-gray-200 dark:bg-gray-700 relative">
+                                            {% if favorite.business.cover_image %}
+                                                <img src="{{ favorite.business.cover_image.url }}" class="w-full h-full object-cover" alt="{{ favorite.business.name }}">
+                                            {% else %}
+                                                <div class="flex items-center justify-center h-full bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
+                                                    No Image
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="p-4">
+                                            <h6 class="font-medium text-gray-800 dark:text-white group-hover:text-primary transition-colors">{{ favorite.business.name }}</h6>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ favorite.business.address }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -11,6 +11,9 @@
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <link rel="apple-touch-icon" href="{% static 'icons/icon-192x192.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Mo-Express">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -73,10 +76,56 @@
             opacity: 1;
             visibility: visible;
         }
+        
+        /* PWA Install Banner */
+        #installBanner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #8A2BE2;
+            color: white;
+            padding: 12px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        #installBanner .banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #installBanner .text {
+            flex: 1;
+            margin-right: 16px;
+        }
+        #installBanner button {
+            white-space: nowrap;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background: white;
+            color: #8A2BE2;
+            font-weight: bold;
+            border: none;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- PWA Install Banner -->
+    <div id="installBanner">
+        <div class="banner-content">
+            <div class="text">
+                <strong>Install Mo-Express App</strong>
+                <p>Install this app on your home screen for quick and easy access.</p>
+            </div>
+            <div class="actions">
+                <button id="installBtn">Install</button>
+                <button id="closeInstallBanner" class="ml-2 bg-transparent text-white">Later</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Top Navigation -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md">
         <nav class="px-4 py-3">
@@ -236,6 +285,79 @@
                 }, 3000);
             }
         }
+        
+        // PWA install banner
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const closeInstallBanner = document.getElementById('closeInstallBanner');
+        
+        // Check if user has already dismissed the banner
+        const installBannerDismissed = localStorage.getItem('installBannerDismissed');
+        
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{% static 'sw.js' %}")
+                    .then(reg => console.log('Service Worker registered successfully:', reg))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+        
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show the install banner if not dismissed before
+            if (installBannerDismissed !== 'true') {
+                installBanner.style.display = 'block';
+            }
+        });
+        
+        // Install button click handler
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the installation prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                // We no longer need the prompt regardless of outcome
+                deferredPrompt = null;
+                
+                // Hide the banner
+                installBanner.style.display = 'none';
+                
+                // Log the outcome
+                console.log(`User ${outcome} the A2HS prompt`);
+                
+                if (outcome === 'accepted') {
+                    showToast('Thank you for installing our app!');
+                }
+            }
+        });
+        
+        // Close button click handler
+        closeInstallBanner.addEventListener('click', () => {
+            installBanner.style.display = 'none';
+            // Remember user's choice for 7 days
+            localStorage.setItem('installBannerDismissed', 'true');
+            setTimeout(() => {
+                localStorage.removeItem('installBannerDismissed');
+            }, 7 * 24 * 60 * 60 * 1000); // 7 days
+        });
+        
+        // Listen for app installed event
+        window.addEventListener('appinstalled', (evt) => {
+            // Log install to analytics
+            console.log('INSTALL: Success');
+            // Hide the banner after successful installation
+            installBanner.style.display = 'none';
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

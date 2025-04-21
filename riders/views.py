@@ -97,6 +97,7 @@ def rider_register(request):
             phone = request.POST.get('phone')
             password = request.POST.get('password')
             region = request.POST.get('region')
+            transport_type = request.POST.get('transport_type')
             kijiwe_id = request.POST.get('kijiwe_id')  # match the name in the HTML form
             
             print(f"📋 Form Data - First Name: {first_name}, Last Name: {last_name}, Phone: {phone}, Password: {'YES' if password else 'NO'}")  # Debugging
@@ -150,6 +151,7 @@ def rider_register(request):
                 phone_number=cleaned_phone,
                 password=make_password(password),  # Hash password
                 region=region,  # Save the region
+                transport_type=transport_type,  # Save transport type
                 kijiwe=kijiwe_instance,  # Save Kijiwe if applicable
             )
             print(f"✅ Rider Profile Created: {rider}")
@@ -1659,7 +1661,9 @@ def decline_order_api(request, order_id):
         
     except Exception as e:
         logger.error(f"Error in decline order API: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)@login_required
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 def start_delivery_api(request, order_id):
     """API endpoint for riders to mark gas tank order as in-transit (collected from business)"""
     if request.method != 'POST':
@@ -2309,3 +2313,273 @@ def manually_assign_orders(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+@api_view(['GET'])
+def get_areas(request):
+    """Fetch areas based on the selected region"""
+    region = request.GET.get('region')
+    if not region:
+        return JsonResponse({'error': 'Region parameter is required'}, status=400)
+    
+    try:
+        # Import necessary models
+        from operations.models import Area
+        
+        # Query areas by region
+        areas = Area.objects.filter(region=region).values('id', 'name')
+        
+        # Return the areas as JSON
+        return JsonResponse({'areas': list(areas)})
+    
+    except Exception as e:
+        logger.error(f"Error fetching areas: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+# Password reset views
+@csrf_exempt
+def forgot_password(request):
+    """Handle forgot password requests"""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            phone_number = data.get('phone_number', '').strip()
+            
+            # Validate phone number
+            if not phone_number:
+                return JsonResponse({"error": "Phone number is required"}, status=400)
+            
+            # Normalize phone number if needed
+            normalized_phone = normalize_phone(phone_number)
+            
+            # Check if user exists
+            try:
+                user = CustomUser.objects.get(phone=normalized_phone)
+            except CustomUser.DoesNotExist:
+                return JsonResponse({"error": "No account found with this phone number"}, status=404)
+            
+            # Check if user is a rider
+            try:
+                rider = Rider.objects.get(user=user)
+            except Rider.DoesNotExist:
+                return JsonResponse({"error": "This phone number is not associated with a rider account"}, status=404)
+            
+            # Generate OTP
+            otp = str(random.randint(10000, 99999))
+            expiry_time = timezone.now() + timedelta(minutes=10)  # 10 minutes expiry
+            
+            # Save OTP
+            otp_record, created = OTPCredit.objects.update_or_create(
+                user=user,
+                defaults={
+                    "otp": otp,
+                    "otp_timestamp": timezone.now(),
+                    "otp_expiry": expiry_time
+                }
+            )
+            
+            # Send OTP via SMS
+            otp_sent = send_otp_via_sms(normalized_phone, otp)
+            if not otp_sent:
+                return JsonResponse({"error": "Failed to send OTP. Please try again."}, status=500)
+            
+            # Store phone number in session for use in subsequent requests
+            request.session['reset_phone_number'] = normalized_phone
+            
+            return JsonResponse({
+                "success": True,
+                "message": "OTP sent successfully",
+                "phone_number": normalized_phone
+            })
+                
+        except Exception as e:
+            logger.error(f"Error in forgot_password: {str(e)}")
+            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def reset_password_verify(request):
+    """Render the OTP verification page for password reset"""
+    if request.method == "GET":
+        phone_number = request.session.get('reset_phone_number', '')
+        return render(request, "riders/reset_password_verify.html", {"phone": phone_number})
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def verify_reset_otp(request):
+    """Verify the OTP for password reset"""
+    if request.method == "POST":
+        try:
+            # Handle both JSON and form data requests
+            if request.content_type == 'application/json':
+                try:
+                    data = json.loads(request.body)
+                    otp = data.get('otp', '')
+                    phone_number = data.get('phone_number', '')
+                except json.JSONDecodeError:
+                    return JsonResponse({"error": "Invalid JSON data"}, status=400)
+            else:
+                otp = request.POST.get('otp', '')
+                phone_number = request.POST.get('phone_number', '')
+            
+            # Ensure we have valid data
+            if not otp:
+                return JsonResponse({"error": "OTP is required"}, status=400)
+            
+            if not phone_number:
+                phone_number = request.session.get('reset_phone_number', '')
+                
+            if not phone_number:
+                return JsonResponse({"error": "Phone number is required"}, status=400)
+            
+            normalized_phone = normalize_phone(phone_number)
+            
+            try:
+                user = CustomUser.objects.get(phone=normalized_phone)
+                otp_record = OTPCredit.objects.filter(user=user).order_by('-otp_timestamp').first()
+                
+                if not otp_record:
+                    return JsonResponse({"error": "OTP not found. Please request a new one."}, status=400)
+                
+                current_time = timezone.now()
+                if current_time > otp_record.otp_expiry:
+                    return JsonResponse({"error": "OTP has expired. Please request a new one."}, status=400)
+                
+                if str(otp_record.otp) != str(otp):
+                    return JsonResponse({"error": "Invalid OTP. Please try again."}, status=400)
+                
+                # OTP is verified - store verification in session
+                request.session['otp_verified'] = True
+                request.session['reset_user_id'] = user.id
+                
+                return JsonResponse({"success": True, "message": "OTP verified successfully"})
+                
+            except CustomUser.DoesNotExist:
+                return JsonResponse({"error": "User not found"}, status=404)
+                
+        except Exception as e:
+            logger.error(f"Error in verify_reset_otp: {str(e)}")
+            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def resend_reset_otp(request):
+    """Resend OTP for password reset"""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            phone_number = data.get('phone_number', '').strip()
+            
+            if not phone_number:
+                phone_number = request.session.get('reset_phone_number', '')
+                
+            if not phone_number:
+                return JsonResponse({"error": "Phone number is required"}, status=400)
+            
+            normalized_phone = normalize_phone(phone_number)
+            
+            try:
+                user = CustomUser.objects.get(phone=normalized_phone)
+                otp_record = OTPCredit.objects.filter(user=user).order_by('-otp_timestamp').first()
+                
+                # Check if we can send a new OTP (prevent spamming)
+                if otp_record and (timezone.now() - otp_record.otp_timestamp).seconds < 60:
+                    return JsonResponse({"error": "Please wait 60 seconds before requesting a new OTP."}, status=400)
+                
+                # Generate new OTP
+                otp = str(random.randint(10000, 99999))
+                expiry_time = timezone.now() + timedelta(minutes=10)
+                
+                # Save OTP
+                otp_record, created = OTPCredit.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "otp": otp,
+                        "otp_timestamp": timezone.now(),
+                        "otp_expiry": expiry_time
+                    }
+                )
+                
+                # Send OTP via SMS
+                otp_sent = send_otp_via_sms(normalized_phone, otp)
+                if not otp_sent:
+                    return JsonResponse({"error": "Failed to send OTP. Please try again."}, status=500)
+                
+                return JsonResponse({"success": True, "message": "OTP resent successfully"})
+                
+            except CustomUser.DoesNotExist:
+                return JsonResponse({"error": "User not found"}, status=404)
+                
+        except Exception as e:
+            logger.error(f"Error in resend_reset_otp: {str(e)}")
+            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def reset_password(request):
+    """Reset user password after OTP verification"""
+    if request.method == "POST":
+        try:
+            # Handle both JSON and form data requests
+            if request.content_type == 'application/json':
+                try:
+                    data = json.loads(request.body)
+                    new_password = data.get('new_password', '')
+                    phone_number = data.get('phone_number', '')
+                except json.JSONDecodeError:
+                    return JsonResponse({"error": "Invalid JSON data"}, status=400)
+            else:
+                new_password = request.POST.get('new_password', '')
+                phone_number = request.POST.get('phone_number', '')
+            
+            # Validate required fields
+            if not new_password:
+                return JsonResponse({"error": "New password is required"}, status=400)
+            
+            if not phone_number:
+                phone_number = request.session.get('reset_phone_number', '')
+                
+            if not phone_number:
+                return JsonResponse({"error": "Phone number is required"}, status=400)
+            
+            # Check if OTP was verified
+            otp_verified = request.session.get('otp_verified', False)
+            reset_user_id = request.session.get('reset_user_id')
+            
+            if not otp_verified:
+                return JsonResponse({"error": "OTP verification required before resetting password"}, status=400)
+            
+            normalized_phone = normalize_phone(phone_number)
+            
+            try:
+                user = CustomUser.objects.get(phone=normalized_phone)
+                
+                # Extra security check - ensure user_id matches the one from OTP verification
+                if reset_user_id != user.id:
+                    return JsonResponse({"error": "Unauthorized password reset attempt"}, status=403)
+                
+                # Update password
+                user.password = make_password(new_password)
+                user.save()
+                
+                # Clear the OTP record
+                OTPCredit.objects.filter(user=user).delete()
+                
+                # Clear session data
+                request.session.pop('otp_verified', None)
+                request.session.pop('reset_user_id', None)
+                request.session.pop('reset_phone_number', None)
+                
+                return JsonResponse({"success": True, "message": "Password reset successfully"})
+                
+            except CustomUser.DoesNotExist:
+                return JsonResponse({"error": "User not found"}, status=404)
+                
+        except Exception as e:
+            logger.error(f"Error in reset_password: {str(e)}")
+            return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)

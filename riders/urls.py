@@ -25,6 +25,14 @@ urlpatterns = [
     path('order/<int:order_id>/in-transit/', views.mark_order_in_transit, name='mark_order_in_transit'),
     path('order/<int:order_id>/delivered/', views.mark_order_delivered, name='mark_order_delivered'),
     path('api/get-kijiwe-locations/', views.get_kijiwe_locations, name='get_kijiwe_locations'),  # URL for kijiwe locations
+    path('api/get-areas/', views.get_areas, name='get_areas'),  # Add the missing URL for areas
+    
+    # Password reset paths
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password-verify/', views.reset_password_verify, name='reset_password_verify'),
+    path('verify-reset-otp/', views.verify_reset_otp, name='verify_reset_otp'),
+    path('resend-reset-otp/', views.resend_reset_otp, name='resend_reset_otp'),
+    path('reset-password/', views.reset_password, name='reset_password'),
     
     # API endpoints
     path('api/update-location/', views.UpdateRiderLocation.as_view(), name='update_location'),

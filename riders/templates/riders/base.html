@@ -89,20 +89,83 @@
                     <p class="text-sm font-medium text-{{ message.tags }}-800">{{ message }}</p>
                 </div>
             </div>
-        </div>
         {% endfor %}
     </div>
     {% endif %}
 
     <!-- ✅ Content Block -->
     <div class="container mx-auto px-4 py-6">
-        {% block content %}{% endblock %}
+        {% block content %}
+        <!-- Install Button for PWA -->
+        <div class="fixed bottom-4 right-4 z-50">
+            <button id="install-button" class="hidden bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full shadow-lg">
+                Install App
+            </button>
+        </div>
+
+        {{ block.super }}
+        {% endblock %}
     </div>
 
     {% block extra_js %}{% endblock %}
 
-    <!-- ✅ JavaScript for Mobile Menu -->
+    <!-- ✅ JavaScript for Mobile Menu and PWA Installation -->
     <script>
+        // Show/hide mobile menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // PWA Installation
+        let deferredPrompt;
+        const installButton = document.getElementById('install-button');
+
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installButton.classList.remove('hidden');
+        });
+
+        // Setup install button click handler
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We no longer need the prompt. Clear it up
+            deferredPrompt = null;
+            // Hide the install button
+            installButton.classList.add('hidden');
+        });
+
+        // When the app is successfully installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('Mo-Express has been installed');
+            // Hide the install button after successful installation
+            installButton.classList.add('hidden');
+        });
+
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
 
      
 document.addEventListener("DOMContentLoaded", function () {

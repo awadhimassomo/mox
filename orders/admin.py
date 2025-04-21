@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderAssignmentGroup, OrderRiderAction
+from .models import Order, OrderAssignmentGroup, OrderRiderAction, TransportMode
 
 # Register your models here.
 
@@ -28,6 +28,13 @@ class OrderRiderActionAdmin(admin.ModelAdmin):
         return qs.select_related('order', 'rider', 'rider__user')
 
 
+class TransportModeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'base_price', 'price_per_km', 'max_distance', 'max_weight', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'description')
+
+
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderAssignmentGroup, OrderAssignmentGroupAdmin)
 admin.site.register(OrderRiderAction, OrderRiderActionAdmin)
+admin.site.register(TransportMode, TransportModeAdmin)

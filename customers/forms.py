@@ -21,9 +21,36 @@ class CustomerRegistrationForm(forms.ModelForm):
             )
 
 class CustomerProfileForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    email = forms.EmailField(required=True, disabled=True)
+    phone_number = forms.CharField(max_length=15, required=True)
+    profile_image = forms.ImageField(required=False)
+    
     class Meta:
-        model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'phone']
+        model = CustomerProfile
+        fields = ['phone_number', 'profile_image']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate user fields if instance exists
+        if self.instance and self.instance.pk and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['email'].initial = self.instance.user.email
+            
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        # Update user model fields
+        if profile.user:
+            profile.user.first_name = self.cleaned_data['first_name']
+            profile.user.last_name = self.cleaned_data['last_name']
+            if commit:
+                profile.user.save()
+        
+        if commit:
+            profile.save()
+        return profile
 
 class CustomerSignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)

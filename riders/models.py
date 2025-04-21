@@ -21,6 +21,14 @@ REGION_CHOICES = [
 ]
 
 class Rider(models.Model):
+    # Transport type choices
+    TRANSPORT_CHOICES = [
+        ('boda', 'Boda'),
+        ('guta', 'Guta'),
+        ('kirikuu', 'Kirikuu'),
+        ('kenta', 'Kenta'),
+    ]
+    
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='rider', null=True, blank=True)
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
@@ -28,6 +36,7 @@ class Rider(models.Model):
     email = models.EmailField(blank=True, null=True)
     password = models.CharField(max_length=128, null=True, blank=True)  # For storing hashed password
     region = models.CharField(max_length=50, choices=REGION_CHOICES, null=True, blank=True)
+    transport_type = models.CharField(max_length=10, choices=TRANSPORT_CHOICES, null=True, blank=True, help_text='Type of transport vehicle used by the rider',default='boda')
     kijiwe = models.ForeignKey('operations.Kijiwe', on_delete=models.SET_NULL, null=True, blank=True)
     is_available = models.BooleanField(default=True, null=True, blank=True)
     consecutive_declines = models.IntegerField(default=0, null=True, blank=True)

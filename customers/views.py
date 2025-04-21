@@ -1,10 +1,10 @@
 from django.db import connection
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required 
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -31,7 +31,7 @@ from django.db.models.functions import Abs
 from business.models import Business, Product, Category, REGION_CHOICES
 from riders.utils import calculate_distance
 from .models import CustomerProfile, DeliveryAddress, Cart, CartItem, Favorite
-from orders.models import Order, OrderAssignmentGroup, OrderItem
+from orders.models import Order, OrderAssignmentGroup, OrderItem, TransportMode
 from .forms import CustomerProfileForm, DeliveryAddressForm, CustomerSignUpForm
 from operations.models import CustomUser as User
 from riders.models import Rider as RiderProfile
@@ -40,14 +40,14 @@ import logging
 
 
 
-def calculate_delivery_fee(business, delivery_address):
+def calculate_delivery_fee(business, delivery_address, transport_mode=None):
     """
     Calculate delivery fee based on distance between business and delivery address.
-    Rate is 1200 TZS per kilometer, with a minimum fee of 1200 TZS.
+    If transport_mode is provided, use its pricing model. Otherwise, use default rate.
     """
     # Ensure both business and delivery address have coordinates
     if not all([business.latitude, business.longitude, delivery_address.latitude, delivery_address.longitude]):
-        return Decimal('2000')  # Default delivery fee if coordinates are missing
+        return Decimal('2000'), 0  # Default delivery fee if coordinates are missing
 
     # Calculate distance in **meters**, then convert to **kilometers**
     distance_km = calculate_distance(
@@ -57,14 +57,94 @@ def calculate_delivery_fee(business, delivery_address):
         float(delivery_address.longitude)
     ) / 1000  # Convert meters to kilometers
 
-    # Calculate the delivery fee (1200 TZS per km, minimum 1200 TZS)
-    fee = max(round(distance_km * 1200), 1200)
+    # If transport mode is provided, use its pricing
+    if transport_mode:
+        fee = transport_mode.base_price + (transport_mode.price_per_km * distance_km)
+        fee = max(round(fee), float(transport_mode.base_price))
+    else:
+        # Default calculation (1200 TZS per km, minimum 1200 TZS)
+        fee = max(round(distance_km * 1200), 1200)
 
-    return Decimal(fee)  # Return as Decimal for consistency with Django models
+    return Decimal(fee), distance_km  # Return fee and distance
 
 
 
 logger = logging.getLogger(__name__)
+
+@login_required
+def select_transport_mode(request):
+    """View to select a transport mode for delivery"""
+    try:
+        # Get customer profile
+        if not hasattr(request.user, 'customer_profile'):
+            messages.error(request, 'Customer profile not found.')
+            return redirect('customers:home')
+        
+        customer = request.user.customer_profile
+        
+        # Get customer's cart
+        try:
+            cart = Cart.objects.get(customer=customer)
+            cart_items = cart.items.all()
+            
+            if not cart_items.exists():
+                messages.info(request, 'Your cart is empty.')
+                return redirect('customers:cart')
+                
+            # Calculate cart subtotal
+            subtotal = sum(item.product.price * item.quantity for item in cart_items)
+            cart.subtotal = subtotal
+            
+        except Cart.DoesNotExist:
+            messages.error(request, 'No active cart found.')
+            return redirect('customers:home')
+        
+        # Get available transport modes
+        transport_modes = TransportMode.objects.filter(is_active=True)
+        
+        # Calculate initial delivery fee with the first transport mode
+        initial_delivery_fee = 0
+        if transport_modes.exists() and hasattr(customer, 'default_address') and customer.default_address:
+            first_transport = transport_modes.first()
+            initial_fee, _ = calculate_delivery_fee(cart.business, customer.default_address, first_transport)
+            initial_delivery_fee = initial_fee
+        
+        context = {
+            'transport_modes': transport_modes,
+            'cart': cart,
+            'initial_delivery_fee': initial_delivery_fee
+        }
+        
+        return render(request, 'customers/transport_selection.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error selecting transport mode: {str(e)}')
+        return redirect('customers:cart')
+
+@login_required
+def save_transport_mode(request):
+    """Save the selected transport mode and redirect to checkout"""
+    if request.method != 'POST':
+        return redirect('customers:select_transport_mode')
+    
+    try:
+        transport_mode_id = request.POST.get('transport_mode')
+        
+        if not transport_mode_id:
+            messages.error(request, 'Please select a transport mode.')
+            return redirect('customers:select_transport_mode')
+        
+        # Get transport mode
+        transport_mode = get_object_or_404(TransportMode, id=transport_mode_id)
+        
+        # Store in session for checkout process
+        request.session['selected_transport_mode_id'] = transport_mode.id
+        
+        return redirect('customers:checkout')
+        
+    except Exception as e:
+        messages.error(request, f'Error saving transport mode: {str(e)}')
+        return redirect('customers:select_transport_mode')
 
 def calculate_delivery_fee_view(request):
     try:
@@ -332,999 +412,9 @@ def add_to_cart(request, product_id):
     except Exception as e:
         # Log the error
         print(f"Error adding to cart: {str(e)}")
-        
-        # Return error response for AJAX requests
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
-            return JsonResponse({
-                'success': False,
-                'error': f"Error adding to cart: {str(e)}"
-            })
-        
-        # For regular requests, add error message and redirect
         messages.error(request, f"Error adding to cart: {str(e)}")
-        return redirect('customers:business_detail', business_id=product.business.id)
-
-@login_required
-def cart_view(request):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-            
-        cart = Cart.objects.get(customer=customer)
-        cart_items = cart.items.all()
-        
-        # Calculate subtotal
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        
-        # Initialize delivery fee with default value
-        delivery_fee = Decimal('2000')  # Default fee
-        
-        # If user has a default address and cart has a business, calculate dynamic delivery fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee = calculate_delivery_fee(cart.business, customer.default_address)
-        # If no default address but user has addresses, use the first one
-        elif DeliveryAddress.objects.filter(customer=customer).exists() and cart.business:
-            default_address = DeliveryAddress.objects.filter(customer=customer).first()
-            delivery_fee = calculate_delivery_fee(cart.business, default_address)
-        
-        # Calculate total
-        total = subtotal + delivery_fee
-        
-        # Update cart count for the navbar
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        context = {
-            'cart': cart,
-            'cart_items': cart_items,
-            'subtotal': subtotal,
-            'delivery_fee': delivery_fee,
-            'total': total,
-            'cart_count': cart_count
-        }
-        
-    except Cart.DoesNotExist:
-        context = {
-            'cart_items': [],
-            'subtotal': 0,
-            'delivery_fee': 0,
-            'total': 0,
-            'cart_count': 0
-        }
-    
-    return render(request, 'customers/cart.html', context)
-
-@login_required
-def update_cart_item(request, item_id):
-    if request.method != 'POST':
-        return redirect('customers:cart')
-    
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            messages.error(request, "You don't have permission to update this item.")
-            return redirect('customers:cart')
-        
-        # Update quantity
-        quantity = int(request.POST.get('quantity', 1))
-        if quantity < 1:
-            quantity = 1
-        
-        cart_item.quantity = quantity
-        cart_item.save()
-        
-        messages.success(request, "Cart updated.")
-        return redirect('customers:cart')
-    
-    except Exception as e:
-        messages.error(request, f"Error updating cart: {str(e)}")
         return redirect('customers:cart')
 
-@login_required
-def remove_from_cart(request, item_id):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            messages.error(request, "You don't have permission to remove this item.")
-            return redirect('customers:cart')
-        
-        # Remove item
-        cart_item.delete()
-        
-        messages.success(request, "Item removed from cart.")
-        return redirect('customers:cart')
-    
-    except Exception as e:
-        messages.error(request, f"Error removing item: {str(e)}")
-        return redirect('customers:cart')
-
-@login_required
-def checkout(request, business_id=None):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart and items
-        cart = Cart.objects.get(customer=customer)
-        
-        # If business_id is provided, filter items to only show from that business
-        if business_id:
-            business = get_object_or_404(Business, id=business_id)
-            cart_items = cart.items.filter(product__business=business)
-            # Update the cart's business if it's from a specific business
-            if not cart.business:
-                cart.business = business
-                cart.save()
-        else:
-            cart_items = cart.items.all()
-        
-        if not cart_items.exists():
-            messages.warning(request, "Your cart is empty.")
-            return redirect('customers:cart')
-        
-        # Get delivery addresses
-        delivery_addresses = DeliveryAddress.objects.filter(customer=customer)
-        
-        # Initialize delivery fee and total
-        delivery_fee = Decimal('2000')  # Default fee
-        
-        # If we have a default address and business has coordinates, calculate fee
-        if delivery_addresses.filter(is_default=True).exists() and cart.business:
-            default_address = delivery_addresses.get(is_default=True)
-            delivery_fee = calculate_delivery_fee(cart.business, default_address)
-        
-        total = sum(item.product.price * item.quantity for item in cart_items) + delivery_fee
-        
-        context = {
-            'cart': cart,
-            'cart_items': cart_items,
-            'subtotal': sum(item.product.price * item.quantity for item in cart_items),
-            'delivery_fee': delivery_fee,
-            'total': total,
-            'delivery_addresses': delivery_addresses,
-            'cart_count': sum(item.quantity for item in cart_items)
-        }
-        
-        return render(request, 'customers/checkout.html', context)
-    
-    except Cart.DoesNotExist:
-        messages.warning(request, "Your cart is empty.")
-        return redirect('customers:cart')
-
-@login_required
-def place_order(request):
-    if request.method != 'POST':
-        return redirect('customers:checkout')
-
-    try:
-        logger.info("📌 Starting Order Placement")
-
-        # Ensure user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            customer = CustomerProfile.objects.get_or_create(user=request.user)[0]
-        else:
-            customer = request.user.customer_profile
-
-        logger.info(f"✅ Customer Profile Found: {customer}")
-
-        # Get cart and items
-        cart = Cart.objects.get(customer=customer)
-        cart_items = cart.items.all()
-
-        if not cart_items.exists():
-            messages.warning(request, "Your cart is empty.")
-            return redirect('customers:cart')
-
-        logger.info(f"🛒 Cart Found: {cart_items.count()} items")
-
-        # Get delivery address
-        address_id = request.POST.get('delivery_address')
-        if not address_id:
-            messages.error(request, "Please select a delivery address.")
-            return redirect('customers:checkout')
-
-        delivery_address = get_object_or_404(DeliveryAddress, id=address_id, customer=customer)
-        logger.info(f"📍 Delivery Address Selected: {delivery_address}")
-
-        # Get payment method (default to cash)
-        payment_method = request.POST.get('payment_method', 'cash')
-
-        # Fetch the correct business instance
-        business = get_object_or_404(Business, id=cart.business.id)
-        logger.info(f"🏢 Business Found: {business.name}")
-
-        # Generate a unique order number that starts with "MO-"
-        timestamp = timezone.now().strftime('%y%m%d%H%M')
-        random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-        order_number = f"MO-{timestamp}{random_chars}"
-        logger.info(f"🔢 Generated Order Number: {order_number}")
-
-        # Calculate subtotal first
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        
-        # Calculate delivery fee based on the selected address
-        delivery_fee = calculate_delivery_fee(business, delivery_address)
-        logger.info(f"💰 Calculated Delivery Fee: {delivery_fee}")
-
-        # Step 1: Create the Order with all required fields
-        order = Order(
-            order_number=order_number,
-            customer=customer,  # Link to customer profile
-            business=business,  # Link to business
-            customer_name=f"{customer.user.first_name or 'Guest'} {customer.user.last_name or 'Customer'}",
-            pickup_location=business,
-            delivery_address=delivery_address,  # Link to delivery address object
-            delivery_location=f"{delivery_address.street}, {delivery_address.area}, {delivery_address.city}",
-            subtotal=subtotal,
-            delivery_fee=delivery_fee,
-            total=subtotal + delivery_fee,
-            payment_method=payment_method.upper(),
-            payment_status='PENDING',
-            status='PENDING'
-        )
-        
-        # Set delivery coordinates
-        if delivery_address.latitude and delivery_address.longitude:
-            order.delivery_latitude = delivery_address.latitude
-            order.delivery_longitude = delivery_address.longitude
-            
-        # Save the order to get a primary key
-        order.save()
-        logger.info(f"✅ Order Successfully Saved with ID: {order.id}")
-
-        # Step 2: Add Order Items AFTER Order Has a Primary Key
-        for cart_item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                product=cart_item.product,
-                quantity=cart_item.quantity,
-                unit_price=cart_item.product.price,
-                total_price=cart_item.product.price * cart_item.quantity,
-                notes=cart_item.notes if hasattr(cart_item, 'notes') else ''
-            )
-
-        logger.info(f"📦 Order Items Added: {cart_items.count()} items")
-
-        # Clear cart after order is placed
-        cart_items.delete()
-        logger.info("🛒 Cart Cleared After Order Placement")
-
-        return redirect('customers:order_confirmation', order_id=order.id)
-
-    except Exception as e:
-        logger.error(f"⚠️ ERROR placing order: {str(e)}")
-        messages.error(request, f"ERROR placing order: {str(e)}")
-        return redirect('customers:checkout')
-
-
-@login_required
-def order_confirmation(request, order_id):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get order
-        order = get_object_or_404(Order, id=order_id, customer=customer)
-        order_items = order.items.all()
-        
-        # Check if there's an active rider assignment
-        rider_assignment = None
-        assigned_rider = None
-        
-        try:
-            # Get the latest active assignment group
-            from orders.models import OrderAssignmentGroup
-            assignment_group = OrderAssignmentGroup.objects.filter(
-                order=order,
-                is_active=True
-            ).latest('created_at')
-            
-            if assignment_group and not assignment_group.is_expired():
-                rider_assignment = assignment_group
-        except OrderAssignmentGroup.DoesNotExist:
-            pass
-        
-        # Check if a rider has been assigned - safely check if rider attribute exists
-        assigned_rider = None
-        try:
-            if hasattr(order, 'rider') and order.rider:
-                assigned_rider = order.rider
-        except Exception as e:
-            print(f"Error checking rider: {str(e)}")
-            # Continue execution even if rider check fails
-        
-        context = {
-            'order': order,
-            'order_items': order_items,
-            'rider_assignment': rider_assignment,
-            'assigned_rider': assigned_rider,
-            'cart_count': 0  # Cart should be empty after order
-        }
-        
-        return render(request, 'customers/order_confirmation.html', context)
-    
-    except Exception as e:
-        messages.error(request, f"Error retrieving order: {str(e)}")
-        return redirect('customers:order_history')
-
-@login_required
-def order_history(request):
-    customer = request.user.customer_profile
-    orders = Order.objects.filter(customer=customer).order_by('-created_at')
-    
-    context = {
-        'orders': orders
-    }
-    return render(request, 'customers/order_history.html', context)
-
-@login_required
-def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    
-    # Ensure user owns this order
-    if order.customer.user != request.user:
-        messages.error(request, "You don't have permission to view this order.")
-        return redirect('order_history')
-    
-    context = {
-        'order': order,
-        'items': order.items.all()
-    }
-    return render(request, 'customers/order_detail.html', context)
-
-def customer_signup(request):
-    if request.method == 'POST':
-        form = CustomerSignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            
-            # Create customer profile
-            CustomerProfile.objects.create(
-                user=user,
-                phone=user.phone
-            )
-            
-            login(request, user)
-            messages.success(request, "Account created successfully!")
-            return redirect('home')
-    else:
-        form = CustomerSignUpForm()
-    
-    return render(request, 'customers/signup.html', {'form': form})
-
-@login_required
-def profile(request):
-    customer = request.user.customer_profile
-    addresses = DeliveryAddress.objects.filter(customer=customer)
-    
-    context = {
-        'customer': customer,
-        'addresses': addresses
-    }
-    return render(request, 'customers/profile.html', context)
-
-@login_required
-def edit_profile(request):
-    customer = request.user.customer_profile
-    
-    if request.method == 'POST':
-        form = CustomerProfileForm(request.POST, request.FILES, instance=customer)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile updated successfully!")
-            return redirect('profile')
-    else:
-        form = CustomerProfileForm(instance=customer)
-    
-    return render(request, 'customers/edit_profile.html', {'form': form})
-
-@login_required
-def add_address(request):
-    if request.method == 'POST':
-        form = DeliveryAddressForm(request.POST)
-        if form.is_valid():
-            address = form.save(commit=False)
-            address.customer = request.user.customer_profile
-            address.save()
-            messages.success(request, "Address added successfully!")
-            return redirect('profile')
-    else:
-        form = DeliveryAddressForm()
-    
-    return render(request, 'customers/add_address.html', {'form': form})
-
-@login_required
-def edit_address(request, address_id):
-    """View to edit a customer address"""
-    try:
-        # Get the address
-        address = get_object_or_404(DeliveryAddress, id=address_id)
-        
-        # Verify ownership
-        if address.customer.user != request.user:
-            messages.error(request, "You don't have permission to edit this address.")
-            return redirect('customers:manage_addresses')
-        
-        if request.method == 'POST':
-            # Process form data
-            street = request.POST.get('street')
-            area = request.POST.get('area')
-            city = request.POST.get('city')
-            notes = request.POST.get('notes')
-            latitude = request.POST.get('latitude')
-            longitude = request.POST.get('longitude')
-            
-            # Update address
-            address.street = street
-            address.area = area
-            address.city = city
-            address.notes = notes
-            
-            # Update coordinates if provided
-            if latitude and longitude:
-                address.latitude = latitude
-                address.longitude = longitude
-                
-            address.save()
-            messages.success(request, "Address updated successfully.")
-            return redirect('customers:manage_addresses')
-        
-        # Render form with current data
-        return render(request, 'customers/edit_address.html', {'address': address})
-    
-    except Exception as e:
-        messages.error(request, f"Error editing address: {str(e)}")
-        return redirect('customers:manage_addresses')
-
-@login_required
-def delete_address(request, address_id):
-    """View to delete a customer address"""
-    try:
-        # Get the address
-        address = get_object_or_404(DeliveryAddress, id=address_id)
-        
-        # Verify ownership
-        if address.customer.user != request.user:
-            messages.error(request, "You don't have permission to delete this address.")
-            return redirect('customers:manage_addresses')
-        
-        # Check if this is the default address
-        is_default = address.is_default
-        
-        # Delete the address
-        address.delete()
-        
-        # If we deleted the default address, set another one as default if available
-        if is_default:
-            other_address = DeliveryAddress.objects.filter(customer=address.customer).first()
-            if other_address:
-                other_address.is_default = True
-                other_address.save()
-        
-        messages.success(request, "Address deleted successfully.")
-        
-    except Exception as e:
-        messages.error(request, f"Error deleting address: {str(e)}")
-    
-    return redirect('customers:manage_addresses')
-
-@login_required
-def update_cart(request):
-    """Update cart item quantity"""
-    if request.method == 'POST':
-        item_id = request.POST.get('item_id')
-        quantity = int(request.POST.get('quantity', 0))
-        
-        cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer_profile)
-        
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        messages.success(request, "Cart updated successfully.")
-    
-    return redirect('cart_view')
-
-@login_required
-def manage_addresses(request):
-    """View to manage all delivery addresses for a customer"""
-    customer = request.user.customer_profile
-    addresses = DeliveryAddress.objects.filter(customer=customer)
-    
-    context = {
-        'addresses': addresses
-    }
-    return render(request, 'customers/manage_addresses.html', context)
-
-@login_required
-def set_default_address(request):
-    """Set an address as the default for a customer"""
-    if request.method == 'POST':
-        address_id = request.POST.get('address_id')
-        if address_id:
-            address = get_object_or_404(DeliveryAddress, id=address_id, customer=request.user.customer_profile)
-            address.is_default = True
-            address.save()
-            messages.success(request, "Default address updated successfully.")
-        else:
-            messages.error(request, "No address selected.")
-    
-    return redirect('customers:manage_addresses')
-
-@login_required
-def toggle_favorite_business(request):
-    """Toggle a business as favorite for the customer"""
-    if request.method == 'POST':
-        business_id = request.POST.get('business_id')
-        if business_id:
-            business = get_object_or_404(Business, id=business_id)
-            customer = request.user.customer_profile
-            
-            if business in customer.favorite_businesses.all():
-                customer.favorite_businesses.remove(business)
-                is_favorite = False
-                message = f"Removed {business.name} from favorites."
-            else:
-                customer.favorite_businesses.add(business)
-                is_favorite = True
-                message = f"Added {business.name} to favorites."
-                
-            if request.is_ajax():
-                return JsonResponse({
-                    'success': True,
-                    'is_favorite': is_favorite,
-                    'message': message
-                })
-            else:
-                messages.success(request, message)
-                return redirect('customers:business_detail', business_id=business.id)
-    
-    if request.is_ajax():
-        return JsonResponse({'success': False, 'message': 'Invalid request'})
-    return redirect('customers:home')
-
-def login_view(request):
-    """User login view"""
-    if request.user.is_authenticated:
-        return redirect('customers:home')
-        
-    if request.method == 'POST':
-        phone = request.POST.get('phone')
-        password = request.POST.get('password')
-        
-        user = authenticate(request, username=phone, password=password)
-        
-        if user is not None:
-            login(request, user)
-            next_url = request.GET.get('next', 'customers:home')
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Invalid phone number or password')
-    
-    return render(request, 'customers/login.html')
-
-def register_view(request):
-    """User registration view"""
-    if request.user.is_authenticated:
-        return redirect('customers:home')
-        
-    if request.method == 'POST':
-        form = CustomerSignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            # Create customer profile
-            CustomerProfile.objects.create(user=user)
-            # Log the user in
-            login(request, user)
-            return redirect('customers:home')
-    else:
-        form = CustomerSignUpForm()
-    
-    return render(request, 'customers/register.html', {'form': form})
-
-def logout_view(request):
-    """User logout view"""
-    logout(request)
-    return redirect('customers:home')
-
-def nearby_businesses_api(request):
-    """API endpoint for nearby businesses based on geolocation"""
-    lat = request.GET.get('lat')
-    lng = request.GET.get('lng')
-    
-    if not lat or not lng:
-        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
-    
-    try:
-        lat = float(lat)
-        lng = float(lng)
-    except ValueError:
-        return JsonResponse({'error': 'Invalid latitude or longitude'}, status=400)
-    
-    # Define regions with their approximate center coordinates
-    regions = {
-        'dar_es_salaam': {'lat': -6.7924, 'lng': 39.2083},
-        'arusha': {'lat': -3.3869, 'lng': 36.6830},
-        'mwanza': {'lat': -2.5164, 'lng': 32.9175},
-        'dodoma': {'lat': -6.1630, 'lng': 35.7516},
-        'tanga': {'lat': -5.0705, 'lng': 39.1089},
-        'mbeya': {'lat': -8.9000, 'lng': 33.4500},
-        'morogoro': {'lat': -6.8222, 'lng': 37.6616},
-        'zanzibar': {'lat': -6.1659, 'lng': 39.1988},
-    }
-    
-    # More accurate distance calculation using Haversine formula
-    def calculate_distance(lat1, lng1, lat2, lng2):
-        # Haversine formula for more accurate distance calculation
-        R = 6371  # Earth radius in kilometers
-        
-        # Convert latitude and longitude from degrees to radians
-        lat1_rad = math.radians(float(lat1))
-        lng1_rad = math.radians(float(lng1))
-        lat2_rad = math.radians(float(lat2))
-        lng2_rad = math.radians(float(lng2))
-        
-        # Differences in coordinates
-        dlat = lat2_rad - lat1_rad
-        dlng = lng2_rad - lng1_rad
-        
-        # Haversine formula
-        a = math.sin(dlat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng/2)**2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-        distance = R * c
-        
-        return distance
-    
-    # Determine user's region based on proximity to region centers
-    user_region = None
-    min_distance = float('inf')
-    
-    for region_code, coords in regions.items():
-        distance = calculate_distance(lat, lng, coords['lat'], coords['lng'])
-        
-        if distance < min_distance:
-            min_distance = distance
-            user_region = region_code
-    
-    # Get ALL active businesses, not just from the user's region
-    businesses_data = []
-    nearby_businesses = []
-    regional_businesses = []
-    featured_businesses = []
-    
-    # Get all active businesses
-    all_businesses = Business.objects.filter(is_active=True)
-    
-    # Process all businesses
-    for business in all_businesses:
-        try:
-            # Calculate distance if business has coordinates
-            distance = None
-            if business.latitude and business.longitude:
-                business_lat = float(business.latitude)
-                business_lng = float(business.longitude)
-                distance = calculate_distance(lat, lng, business_lat, business_lng)
-            
-            business_data = {
-                'id': business.id,
-                'name': business.name,
-                'description': business.address,
-                'region': business.get_region_display() if business.region else None,
-                'distance': round(distance, 1) if distance else None,  # Already in km from Haversine formula
-                'image': business.cover_image.url if hasattr(business, 'cover_image') and business.cover_image else None,
-                'rating': business.rating if hasattr(business, 'rating') else 0,
-                'is_featured': business.is_featured,
-                'same_region': business.region == user_region,
-            }
-            
-            # Categorize businesses
-            if business.is_featured:
-                featured_businesses.append(business_data)
-                
-            if business.region == user_region:
-                regional_businesses.append(business_data)
-            
-            # Add to main list - all businesses sorted by distance
-            businesses_data.append(business_data)
-        except Exception as e:
-            # Skip businesses that cause errors
-            continue
-    
-    # Sort all businesses by distance
-    businesses_data = sorted(businesses_data, key=lambda x: x['distance'] if x['distance'] else float('inf'))
-    
-    # Get businesses in same region, sorted by distance
-    regional_businesses = sorted(regional_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
-    
-    # Sort featured businesses by distance
-    featured_businesses = sorted(featured_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
-    
-    # Limit to nearest 20 businesses and 10 featured businesses
-    businesses_data = businesses_data[:20]
-    featured_businesses = featured_businesses[:10]
-    
-    # Get the region display name
-    region_display_name = dict(REGION_CHOICES).get(user_region, user_region) if user_region else None
-    
-    return JsonResponse({
-        'all_businesses': businesses_data,
-        'regional_businesses': regional_businesses,
-        'featured_businesses': featured_businesses,
-        'user_region': user_region,
-        'region_name': region_display_name
-    })
-
-
-
-@login_required
-def add_address_from_coordinates(request):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-    try:
-        # Parse JSON data
-        data = json.loads(request.body)
-        latitude = data.get('latitude')
-        longitude = data.get('longitude')
-        
-        if not latitude or not longitude:
-            return JsonResponse({'success': False, 'error': 'Latitude and longitude are required'})
-        
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Try to get address information from coordinates using reverse geocoding
-        import requests
-        
-        # Using Nominatim for reverse geocoding (free and doesn't require API key)
-        # In production, consider using a paid service with better reliability
-        nominatim_url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}&zoom=18&addressdetails=1"
-        headers = {
-            'User-Agent': 'Mo GasDelivery/1.0'  # Required by Nominatim
-        }
-        
-        response = requests.get(nominatim_url, headers=headers)
-        location_data = response.json()
-        
-        # Extract address components
-        address = location_data.get('address', {})
-        
-        # Create a meaningful address name
-        address_name = "Current Location"
-        if address.get('road'):
-            address_name = address.get('road')
-        
-        # Create street address
-        street = address.get('road', '')
-        if address.get('house_number'):
-            street = f"{address.get('house_number')} {street}"
-        
-        # Get area/neighborhood
-        area = address.get('suburb') or address.get('neighbourhood') or address.get('district') or ''
-        
-        # Get city
-        city = address.get('city') or address.get('town') or address.get('state') or 'Dar es Salaam'
-        
-        # Create the address
-        new_address = DeliveryAddress.objects.create(
-            customer=customer,
-            name=address_name,
-            street=street or "Unknown Street",
-            area=area or "Unknown Area",
-            city=city,
-            latitude=latitude,
-            longitude=longitude,
-            is_default=not DeliveryAddress.objects.filter(customer=customer).exists()  # Make default if first address
-        )
-        
-        return JsonResponse({
-            'success': True, 
-            'address_id': new_address.id,
-            'message': 'Address created successfully'
-        })
-    
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-def featured_business_checkout(request, business_id):
-    # Get the business
-    business = get_object_or_404(Business, id=business_id)
-    
-    # Get the customer profile
-    customer = request.user.customer_profile
-    
-    # Get the cart for this business
-    try:
-        cart = Cart.objects.get(customer=customer, business=business)
-    except Cart.DoesNotExist:
-        messages.error(request, "Cart is empty. Please add products before checkout.")
-        return redirect('customers:business_detail', business_id=business_id)
-    
-    # Calculate special delivery fee (flat fee for now - could be dynamic in future)
-    special_delivery_fee = 5000  # Example: 5000 TZS
-    
-    # Get the user's region
-    user_region = None
-    user_region_name = "Your Area"
-    
-    # If customer has a default address, use its region
-    if customer.addresses.filter(is_default=True).exists():
-        default_address = customer.addresses.get(is_default=True)
-        user_region = default_address.region
-        # Map region code to display name
-        region_display_names = {
-            'dar_es_salaam': 'Dar es Salaam',
-            'arusha': 'Arusha',
-            'mwanza': 'Mwanza',
-            'zanzibar': 'Zanzibar',
-            'dodoma': 'Dodoma',
-            'mbeya': 'Mbeya',
-            'tanga': 'Tanga',
-            'morogoro': 'Morogoro',
-            # Add more regions as needed
-        }
-        user_region_name = region_display_names.get(user_region, user_region.replace('_', ' ').title())
-    
-    # Example office address (could come from a database in a real implementation)
-    office_addresses = {
-        'dar_es_salaam': 'Msasani Peninsula, Plot 18, Dar es Salaam',
-        'arusha': 'Njiro Complex, Block C, Arusha',
-        'mwanza': 'Ilemela District, Mwanza',
-        'zanzibar': 'Stone Town, Zanzibar',
-        'dodoma': 'Area D, Dodoma',
-        # Add more office locations as needed
-        'default': 'Main Office, Tanzania'
-    }
-    
-    office_address = office_addresses.get(user_region, office_addresses['default'])
-    
-    # Calculate total
-    total_amount = cart.get_subtotal() + special_delivery_fee
-    
-    context = {
-        'business': business,
-        'customer': customer,
-        'cart': cart,
-        'special_delivery_fee': special_delivery_fee,
-        'total_amount': total_amount,
-        'user_region_name': user_region_name,
-        'office_address': office_address
-    }
-    
-    return render(request, 'customers/featured_checkout.html', context)
-
-@login_required
-def place_featured_order(request):
-    if request.method == 'POST':
-        business_id = request.POST.get('business_id')
-        cart_id = request.POST.get('cart_id')
-        
-        # Get the business and cart
-        business = get_object_or_404(Business, id=business_id)
-        customer = request.user.customer_profile
-        cart = get_object_or_404(Cart, id=cart_id, customer=customer)
-        
-        # Special delivery fee
-        special_delivery_fee = 5000  # Same as in featured_business_checkout
-        
-        # Create a new order
-        order = Order.objects.create(
-            customer=customer,
-            business=business,
-            status='pending',
-            delivery_fee=special_delivery_fee,
-            subtotal=cart.get_subtotal(),
-            total=cart.get_subtotal() + special_delivery_fee,
-            special_delivery=True,  # Flag to indicate this is a special delivery order
-            order_type='pickup'  # Set to pickup since customer will pick up from the local office
-        )
-        
-        # Create order items
-        for cart_item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product=cart_item.product,
-                quantity=cart_item.quantity,
-                price=cart_item.price,
-                total=cart_item.get_total()
-            )
-        
-        # Clear the cart
-        cart.delete()
-        
-        # Send notification to customer
-        # (This would typically involve sending an SMS or email)
-        
-        messages.success(request, "Your order has been placed successfully! We will notify you when it arrives at our office.")
-        return redirect('customers:order_details', order_id=order.id)
-    
-    # If not POST, redirect to home
-    return redirect('customers:home')
 
 @login_required
 def update_cart_item_ajax(request, item_id):
@@ -1375,6 +465,402 @@ def update_cart_item_ajax(request, item_id):
         # Calculate delivery fee
         delivery_fee = Decimal('2000')  # Default fee
         if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+    except Exception as e:
+        # Log the error
+        print(f"Error adding to cart: {str(e)}")
+        
+        # Return error response for AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({
+                'success': False,
+                'error': f"Error adding to cart: {str(e)}"
+            })
+        
+        # For regular requests, add error message and redirect
+        messages.error(request, f"Error adding to cart: {str(e)}")
+        return redirect('customers:business_detail', business_id=product.business.id)
+
+@login_required
+def cart_view(request):
+    try:
+        # Check if user has a customer profile
+        if not hasattr(request.user, 'customer_profile'):
+            # Try to get an existing profile first
+            from customers.models import CustomerProfile
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                # Create a customer profile for the user only if it doesn't exist
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
+                )
+        else:
+            customer = request.user.customer_profile
+            
+        cart = Cart.objects.get(customer=customer)
+        cart_items = cart.items.all()
+        
+        # Calculate subtotal
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        
+        # Initialize delivery fee with default value
+        delivery_fee = Decimal('2000')  # Default fee
+        
+        # If user has a default address and cart has a business, calculate dynamic delivery fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        # If no default address but user has addresses, use the first one
+        elif DeliveryAddress.objects.filter(customer=customer).exists() and cart.business:
+            default_address = DeliveryAddress.objects.filter(customer=customer).first()
+            delivery_fee, _ = calculate_delivery_fee(cart.business, default_address)
+        
+        # Calculate total
+        total = subtotal + delivery_fee
+        
+        # Update cart count for the navbar
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        context = {
+            'cart': cart,
+            'cart_items': cart_items,
+            'subtotal': subtotal,
+            'delivery_fee': delivery_fee,
+            'total': total,
+            'cart_count': cart_count
+        }
+        
+    except Cart.DoesNotExist:
+        context = {
+            'cart_items': [],
+            'subtotal': 0,
+            'delivery_fee': 0,
+            'total': 0,
+            'cart_count': 0
+        }
+    
+    return render(request, 'customers/cart.html', context)
+
+@login_required
+def update_cart_item(request, item_id):
+    if request.method != 'POST':
+        return redirect('customers:cart')
+
+
+@login_required
+def update_cart_item_ajax(request, item_id):
+    """Handle AJAX requests to update cart item quantity"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Get the data from the request
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        
+        # Ensure customer profile exists
+        if not hasattr(request.user, 'customer_profile'):
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have permission to update this item."
+            })
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+    
+    try:
+        # Check if user has a customer profile
+        if not hasattr(request.user, 'customer_profile'):
+            # Try to get an existing profile first
+            from customers.models import CustomerProfile
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                # Create a customer profile for the user only if it doesn't exist
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            messages.error(request, "You don't have permission to update this item.")
+            return redirect('customers:cart')
+            
+        # Update quantity
+        quantity = int(request.POST.get('quantity', 1))
+        cart_item.quantity = quantity
+        cart_item.save()
+        
+        messages.success(request, "Cart updated.")
+        return redirect('customers:cart')
+        
+    except Exception as e:
+        messages.error(request, f"Error updating cart: {str(e)}")
+        return redirect('customers:cart')
+
+
+@login_required
+def update_cart_item_ajax(request, item_id):
+    """Handle AJAX requests to update cart item quantity"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Get the data from the request
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        
+        # Ensure customer profile exists
+        if not hasattr(request.user, 'customer_profile'):
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have permission to update this item."
+            })
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+        
+        # Update quantity
+        quantity = int(request.POST.get('quantity', 1))
+        if quantity < 1:
+            quantity = 1
+        
+        cart_item.quantity = quantity
+        cart_item.save()
+        
+        messages.success(request, "Cart updated.")
+        return redirect('customers:cart')
+
+
+@login_required
+def update_cart_item_ajax(request, item_id):
+    """Handle AJAX requests to update cart item quantity"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Get the data from the request
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        
+        # Ensure customer profile exists
+        if not hasattr(request.user, 'customer_profile'):
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have permission to update this item."
+            })
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+    
+    except Exception as e:
+        messages.error(request, f"Error updating cart: {str(e)}")
+        return redirect('customers:cart')
+
+
+@login_required
+def remove_from_cart(request, item_id):
+    try:
+        # Check if user has a customer profile
+        if not hasattr(request.user, 'customer_profile'):
+            # Try to get an existing profile first
+            from customers.models import CustomerProfile
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                # Create a customer profile for the user only if it doesn't exist
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
             delivery_fee = calculate_delivery_fee(cart.business, customer.default_address)
         
         total = subtotal + delivery_fee
@@ -1394,3 +880,841 @@ def update_cart_item_ajax(request, item_id):
         return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+
+
+def login_view(request):
+    """User login view"""
+    if request.user.is_authenticated:
+        return redirect('customers:home')
+        
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, username=phone, password=password)
+        
+        if user is not None:
+            login(request, user)
+            next_url = request.GET.get('next', 'customers:home')
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Invalid phone number or password')
+    
+    return render(request, 'customers/login.html')
+
+
+def register_view(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('customers:home')
+        
+    if request.method == 'POST':
+        form = CustomerSignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Create customer profile
+            CustomerProfile.objects.create(user=user)
+            # Log the user in
+            login(request, user)
+            return redirect('customers:home')
+    else:
+        form = CustomerSignUpForm()
+    
+    return render(request, 'customers/register.html', {'form': form})
+
+
+def logout_view(request):
+    """User logout view"""
+    logout(request)
+    return redirect('customers:home')
+
+
+def select_transport_mode(request):
+    """View to select transportation mode before final checkout"""
+    if not hasattr(request.user, 'customer_profile'):
+        messages.error(request, 'Please complete your profile before checkout.')
+        return redirect('customers:edit_profile')
+
+    customer = request.user.customer_profile
+    try:
+        cart = Cart.objects.get(customer=customer)
+    except Cart.DoesNotExist:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('customers:home')
+    
+    if cart.items.count() == 0:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('customers:home')
+    
+    # Get customer's default address or first address
+    delivery_address = None
+    if customer.default_address:
+        delivery_address = customer.default_address
+    elif customer.addresses.exists():
+        delivery_address = customer.addresses.first()
+    
+    # Calculate distance if we have both business and delivery address
+    distance_km = 0
+    initial_delivery_fee = Decimal('2000')  # Default fee
+    
+    if cart.business and delivery_address and all([cart.business.latitude, cart.business.longitude, 
+                                                  delivery_address.latitude, delivery_address.longitude]):
+        initial_delivery_fee, distance_km = calculate_delivery_fee(cart.business, delivery_address)
+    
+    # Get active transport modes
+    transport_modes = TransportMode.objects.filter(is_active=True).order_by('base_price')
+    
+    # Calculate total with default delivery fee
+    total = cart.subtotal + initial_delivery_fee
+    
+    return render(request, 'customers/transport_selection.html', {
+        'cart': cart,
+        'transport_modes': transport_modes,
+        'distance_km': distance_km,
+        'initial_delivery_fee': initial_delivery_fee,
+        'total': total
+    })
+
+
+@login_required
+def save_transport_mode(request):
+    """Save selected transport mode and redirect to checkout"""
+    if request.method != 'POST':
+        return redirect('customers:select_transport_mode')
+    
+    transport_mode_id = request.POST.get('transport_mode')
+    distance_km = request.POST.get('distance_km', 0)
+    delivery_fee = request.POST.get('delivery_fee', 2000)
+    
+    # Store in session
+    request.session['selected_transport_mode_id'] = transport_mode_id
+    request.session['calculated_distance_km'] = float(distance_km)
+    request.session['calculated_delivery_fee'] = float(delivery_fee)
+    
+    return redirect('customers:checkout')
+
+
+def checkout(request, business_id=None):
+    if not hasattr(request.user, 'customer_profile'):
+        messages.error(request, 'Please complete your profile before checkout.')
+        return redirect('customers:edit_profile')
+
+    customer = request.user.customer_profile
+    try:
+        cart = Cart.objects.get(customer=customer)
+    except Cart.DoesNotExist:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('customers:home')
+    
+    if cart.items.count() == 0:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('customers:home')
+        
+    # Check if transport mode has been selected
+    if 'selected_transport_mode_id' not in request.session:
+        return redirect('customers:select_transport_mode')
+    
+    # Get delivery fee from session (calculated during transport selection)
+    delivery_fee = Decimal(str(request.session.get('calculated_delivery_fee', 2000)))
+    
+    # Get delivery addresses
+    delivery_addresses = customer.addresses.all()
+    
+    # Get selected transport mode
+    transport_mode = None
+    transport_mode_id = request.session.get('selected_transport_mode_id')
+    if transport_mode_id:
+        try:
+            transport_mode = TransportMode.objects.get(id=transport_mode_id)
+        except TransportMode.DoesNotExist:
+            pass
+
+    total = cart.subtotal + delivery_fee
+    
+    return render(request, 'customers/checkout.html', {
+        'cart': cart,
+        'delivery_addresses': delivery_addresses,
+        'delivery_fee': delivery_fee,
+        'total': total,
+        'transport_mode': transport_mode
+    })
+
+
+@login_required
+def place_order(request):
+    if request.method != 'POST':
+        return redirect('customers:checkout')
+
+    if not hasattr(request.user, 'customer_profile'):
+        messages.error(request, 'Please complete your profile before placing an order.')
+        return redirect('customers:edit_profile')
+
+    customer = request.user.customer_profile
+
+    # Get cart
+    try:
+        cart = Cart.objects.get(customer=customer)
+    except Cart.DoesNotExist:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('customers:home')
+    
+    # Get selected transport mode
+    transport_mode = None
+    transport_mode_id = request.session.get('selected_transport_mode_id')
+    if transport_mode_id:
+        try:
+            transport_mode = TransportMode.objects.get(id=transport_mode_id)
+        except TransportMode.DoesNotExist:
+            pass
+    
+    # Get delivery address
+    address_id = request.POST.get('delivery_address')
+    if not address_id:
+        messages.error(request, 'Please select a delivery address.')
+        return redirect('customers:checkout')
+    
+    delivery_address = get_object_or_404(DeliveryAddress, id=address_id, customer=customer)
+    
+    # Get payment method
+    payment_method = request.POST.get('payment_method', 'cash')
+    
+    # Calculate delivery fee
+    delivery_fee = Decimal(str(request.session.get('calculated_delivery_fee', 2000)))
+    
+    # Additional fees
+    surge_fee = Decimal('0')
+    bulk_discount = Decimal('0')
+    
+    # Notes
+    notes = request.POST.get('notes', '')
+    
+    # Create order
+    order = Order.objects.create(
+        customer=customer,
+        business=cart.business,
+        delivery_address=delivery_address,
+        payment_method=payment_method,
+        subtotal=cart.subtotal,
+        delivery_fee=delivery_fee,
+        transport_mode=transport_mode,  # Add the selected transport mode
+        total=cart.subtotal + delivery_fee + surge_fee - bulk_discount,
+        notes=notes,
+        status='pending'
+    )
+    
+    # Create order items
+    for item in cart.items.all():
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            quantity=item.quantity,
+            unit_price=item.unit_price,
+            total_price=item.total_price,
+            notes=item.notes if hasattr(item, 'notes') else ''
+        )
+    
+    # Clear cart
+    cart.items.all().delete()
+    
+    # Clear session data
+    if 'selected_transport_mode_id' in request.session:
+        del request.session['selected_transport_mode_id']
+    if 'calculated_delivery_fee' in request.session:
+        del request.session['calculated_delivery_fee']
+    if 'calculated_distance_km' in request.session:
+        del request.session['calculated_distance_km']
+    
+    return redirect('customers:order_confirmation', order_id=order.id)
+
+
+@login_required
+def order_confirmation(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer=request.user.customer_profile)
+    return render(request, 'customers/order_confirmation.html', {'order': order})
+
+
+@login_required
+def order_history(request):
+    customer = request.user.customer_profile
+    orders = Order.objects.filter(customer=customer).order_by('-created_at')
+    
+    context = {
+        'orders': orders
+    }
+    return render(request, 'customers/order_history.html', context)
+
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    # Ensure user owns this order
+    if order.customer.user != request.user:
+        messages.error(request, "You don't have permission to view this order.")
+        return redirect('order_history')
+    
+    context = {
+        'order': order,
+        'items': order.items.all()
+    }
+    return render(request, 'customers/order_detail.html', context)
+
+
+@login_required
+def set_default_address(request):
+    """Set an address as the default for a customer"""
+    if request.method == 'POST':
+        address_id = request.POST.get('address_id')
+        if address_id:
+            address = get_object_or_404(DeliveryAddress, id=address_id, customer=request.user.customer_profile)
+            address.is_default = True
+            address.save()
+            messages.success(request, "Default address updated successfully.")
+        else:
+            messages.error(request, "No address selected.")
+    
+    return redirect('customers:manage_addresses')
+
+
+@login_required
+def toggle_favorite_business(request):
+    """Toggle a business as favorite for the customer"""
+    if request.method == 'POST':
+        business_id = request.POST.get('business_id')
+        if business_id:
+            business = get_object_or_404(Business, id=business_id)
+            customer = request.user.customer_profile
+            
+            if business in customer.favorite_businesses.all():
+                customer.favorite_businesses.remove(business)
+                is_favorite = False
+                message = f"Removed {business.name} from favorites."
+            else:
+                customer.favorite_businesses.add(business)
+                is_favorite = True
+                message = f"Added {business.name} to favorites."
+                
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'is_favorite': is_favorite,
+                    'message': message
+                })
+            else:
+                messages.success(request, message)
+                return redirect('customers:business_detail', business_id=business.id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request'})
+    return redirect('customers:home')
+
+
+@login_required
+def manage_addresses(request):
+    """View to manage all delivery addresses for a customer"""
+    customer = request.user.customer_profile
+    addresses = DeliveryAddress.objects.filter(customer=customer)
+    
+    context = {
+        'addresses': addresses
+    }
+    return render(request, 'customers/manage_addresses.html', context)
+
+
+def featured_business_checkout(request, business_id):
+    # Get the business
+    business = get_object_or_404(Business, id=business_id)
+    
+    # Get the customer profile
+    customer = request.user.customer_profile
+    
+    # Get the cart for this business
+    try:
+        cart = Cart.objects.get(customer=customer, business=business)
+    except Cart.DoesNotExist:
+        messages.error(request, "Cart is empty. Please add products before checkout.")
+        return redirect('customers:business_detail', business_id=business_id)
+    
+    # Calculate special delivery fee (flat fee for now - could be dynamic in future)
+    special_delivery_fee = 5000  # Example: 5000 TZS
+    
+    # Calculate total
+    total_amount = cart.subtotal + special_delivery_fee
+    
+    context = {
+        'business': business,
+        'customer': customer,
+        'cart': cart,
+        'special_delivery_fee': special_delivery_fee,
+        'total_amount': total_amount
+    }
+    
+    return render(request, 'customers/featured_checkout.html', context)
+
+
+@login_required
+def place_featured_order(request):
+    if request.method == 'POST':
+        business_id = request.POST.get('business_id')
+        
+        # Get the business
+        business = get_object_or_404(Business, id=business_id)
+        customer = request.user.customer_profile
+        
+        try:
+            cart = Cart.objects.get(customer=customer, business=business)
+        except Cart.DoesNotExist:
+            messages.error(request, "Cart is empty. Please add products before checkout.")
+            return redirect('customers:business_detail', business_id=business_id)
+        
+        # Special delivery fee
+        special_delivery_fee = 5000  # Same as in featured_business_checkout
+        
+        # Create a new order
+        order = Order.objects.create(
+            customer=customer,
+            business=business,
+            status='pending',
+            delivery_fee=special_delivery_fee,
+            subtotal=cart.subtotal,
+            total=cart.subtotal + special_delivery_fee,
+            special_delivery=True,  # Flag to indicate this is a special delivery order
+            order_type='pickup'  # Set to pickup since customer will pick up from the local office
+        )
+        
+        # Create order items
+        for cart_item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                unit_price=cart_item.unit_price,
+                total_price=cart_item.total_price
+            )
+        
+        # Clear the cart
+        cart.items.all().delete()
+        
+        messages.success(request, "Your order has been placed successfully! We will notify you when it arrives at our office.")
+        return redirect('customers:order_detail', order_id=order.id)
+    
+    # If not POST, redirect to home
+    return redirect('customers:home')
+
+
+@login_required
+def add_address(request):
+    if request.method == 'POST':
+        form = DeliveryAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.customer = request.user.customer_profile
+            address.save()
+            messages.success(request, "Address added successfully!")
+            
+            # If next parameter is provided, redirect to that URL
+            next_url = request.GET.get('next')
+            if next_url == 'checkout':
+                return redirect('customers:checkout')
+            
+            return redirect('customers:manage_addresses')
+    else:
+        form = DeliveryAddressForm()
+    
+    return render(request, 'customers/add_address.html', {'form': form})
+
+
+@login_required
+def edit_address(request, address_id):
+    """View to edit a customer address"""
+    address = get_object_or_404(DeliveryAddress, id=address_id, customer=request.user.customer_profile)
+    
+    if request.method == 'POST':
+        form = DeliveryAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Address updated successfully.")
+            return redirect('customers:manage_addresses')
+    else:
+        form = DeliveryAddressForm(instance=address)
+    
+    return render(request, 'customers/edit_address.html', {'form': form, 'address': address})
+
+
+@login_required
+def delete_address(request, address_id):
+    """View to delete a customer address"""
+    address = get_object_or_404(DeliveryAddress, id=address_id, customer=request.user.customer_profile)
+    
+    was_default = address.is_default
+    address.delete()
+    
+    # If we deleted the default address, set another one as default
+    if was_default:
+        other_address = DeliveryAddress.objects.filter(customer=request.user.customer_profile).first()
+        if other_address:
+            other_address.is_default = True
+            other_address.save()
+    
+    messages.success(request, "Address deleted successfully.")
+    return redirect('customers:manage_addresses')
+
+
+@login_required
+def add_address_from_coordinates(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Parse JSON data
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if not latitude or not longitude:
+            return JsonResponse({'success': False, 'error': 'Latitude and longitude are required'})
+        
+        # Create a basic address with the coordinates
+        customer = request.user.customer_profile
+        new_address = DeliveryAddress.objects.create(
+            customer=customer,
+            name="Current Location",
+            street="Auto-detected location",
+            area="Unknown",
+            city="Unknown",
+            latitude=latitude,
+            longitude=longitude,
+            is_default=not DeliveryAddress.objects.filter(customer=customer).exists()  # Make default if first address
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'address_id': new_address.id,
+            'message': 'Address created successfully'
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+def nearby_businesses_api(request):
+    """API endpoint for nearby businesses based on geolocation"""
+    lat = request.GET.get('lat')
+    lng = request.GET.get('lng')
+    
+    if not lat or not lng:
+        return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+    
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid latitude or longitude'}, status=400)
+    
+    # Define regions with their approximate center coordinates
+    regions = {
+        'dar_es_salaam': {'lat': -6.7924, 'lng': 39.2083},
+        'arusha': {'lat': -3.3869, 'lng': 36.6830},
+        'mwanza': {'lat': -2.5164, 'lng': 32.9175},
+        'dodoma': {'lat': -6.1630, 'lng': 35.7516},
+        'tanga': {'lat': -5.0705, 'lng': 39.1089},
+        'mbeya': {'lat': -8.9000, 'lng': 33.4500},
+        'morogoro': {'lat': -6.8222, 'lng': 37.6616},
+        'zanzibar': {'lat': -6.1659, 'lng': 39.1988},
+    }
+    
+    # Determine user's region based on proximity to region centers
+    user_region = None
+    min_distance = float('inf')
+    
+    for region_code, coords in regions.items():
+        # Calculate rough distance using Pythagorean distance for quick comparison
+        dist = math.sqrt((lat - coords['lat'])**2 + (lng - coords['lng'])**2)
+        
+        if dist < min_distance:
+            min_distance = dist
+            user_region = region_code
+    
+    # Get active businesses
+    businesses_data = []
+    featured_businesses = []
+    regional_businesses = []
+    
+    # Get all active businesses
+    all_businesses = Business.objects.filter(is_active=True)
+    
+    # Process businesses
+    for business in all_businesses:
+        try:
+            # Calculate distance if business has coordinates
+            distance = None
+            if business.latitude and business.longitude:
+                distance = calculate_distance(
+                    lat, 
+                    lng, 
+                    float(business.latitude), 
+                    float(business.longitude)
+                ) / 1000  # Convert meters to kilometers
+            
+            business_data = {
+                'id': business.id,
+                'name': business.name,
+                'description': business.address,
+                'region': business.get_region_display() if hasattr(business, 'get_region_display') else None,
+                'distance': round(distance, 1) if distance else None,
+                'image': business.cover_image.url if hasattr(business, 'cover_image') and business.cover_image else None,
+                'rating': business.rating if hasattr(business, 'rating') else 0,
+                'is_featured': business.is_featured if hasattr(business, 'is_featured') else False,
+                'same_region': business.region == user_region if hasattr(business, 'region') else False,
+            }
+            
+            # Categorize businesses
+            if hasattr(business, 'is_featured') and business.is_featured:
+                featured_businesses.append(business_data)
+                
+            if hasattr(business, 'region') and business.region == user_region:
+                regional_businesses.append(business_data)
+            
+            businesses_data.append(business_data)
+            
+        except Exception as e:
+            # Skip businesses that cause errors
+            logger.error(f"Error processing business {business.id}: {str(e)}")
+            continue
+    
+    # Sort all businesses by distance
+    businesses_data = sorted(businesses_data, key=lambda x: x['distance'] if x['distance'] else float('inf'))
+    
+    # Sort regional businesses by distance
+    regional_businesses = sorted(regional_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
+    
+    # Sort featured businesses by distance
+    featured_businesses = sorted(featured_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
+    
+    # Limit to nearest 20 businesses and 10 featured businesses
+    businesses_data = businesses_data[:20]
+    featured_businesses = featured_businesses[:10]
+    
+    # Get the region display name
+    region_display_name = dict(REGION_CHOICES).get(user_region, user_region.title() if user_region else None)
+    
+    return JsonResponse({
+        'all_businesses': businesses_data,
+        'regional_businesses': regional_businesses,
+        'featured_businesses': featured_businesses,
+        'user_region': user_region,
+        'region_name': region_display_name
+    })
+
+
+@login_required
+def update_cart(request):
+    """Update cart item quantity"""
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity', 0))
+        
+        if not item_id:
+            messages.error(request, "No item specified.")
+            return redirect('customers:cart')
+
+
+@login_required
+def update_cart_item_ajax(request, item_id):
+    """Handle AJAX requests to update cart item quantity"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Get the data from the request
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        
+        # Ensure customer profile exists
+        if not hasattr(request.user, 'customer_profile'):
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have permission to update this item."
+            })
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+        
+        try:
+            cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer_profile)
+            
+            if quantity > 0:
+                cart_item.quantity = quantity
+                cart_item.save()
+            else:
+                cart_item.delete()
+            
+            messages.success(request, "Cart updated successfully.")
+        except Exception as e:
+            messages.error(request, f"Error updating cart: {str(e)}")
+    
+    return redirect('customers:cart')
+
+
+@login_required
+def update_cart_item_ajax(request, item_id):
+    """Handle AJAX requests to update cart item quantity"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Get the data from the request
+        data = json.loads(request.body)
+        quantity = int(data.get('quantity', 1))
+        
+        # Ensure customer profile exists
+        if not hasattr(request.user, 'customer_profile'):
+            try:
+                customer = CustomerProfile.objects.get(user=request.user)
+            except CustomerProfile.DoesNotExist:
+                customer = CustomerProfile.objects.create(
+                    user=request.user,
+                    phone_number=f"temp_{request.user.id}"
+                )
+        else:
+            customer = request.user.customer_profile
+        
+        # Get cart item
+        cart_item = get_object_or_404(CartItem, id=item_id)
+        
+        # Check if item belongs to user's cart
+        if cart_item.cart.customer != customer:
+            return JsonResponse({
+                'success': False,
+                'error': "You don't have permission to update this item."
+            })
+        
+        # Update quantity or remove if quantity is 0
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+        else:
+            cart_item.delete()
+        
+        # Calculate new cart totals
+        cart = cart_item.cart
+        cart_items = cart.items.all()
+        subtotal = sum(item.product.price * item.quantity for item in cart_items)
+        cart_count = sum(item.quantity for item in cart_items)
+        
+        # Calculate delivery fee
+        delivery_fee = Decimal('2000')  # Default fee
+        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        
+        total = subtotal + delivery_fee
+        
+        # Return success response with updated data
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart updated successfully',
+            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
+            'subtotal': float(subtotal),
+            'delivery_fee': float(delivery_fee),
+            'total': float(total),
+            'cart_count': cart_count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+
+
+@login_required
+def profile(request):
+    """View to display and update user profile information"""
+    try:
+        # Check if user has a customer profile
+        if not hasattr(request.user, 'customer_profile'):
+            # Create a customer profile for the user if it doesn't exist
+            from customers.models import CustomerProfile
+            customer = CustomerProfile.objects.create(
+                user=request.user,
+                phone_number=f"temp_{request.user.id}"  # Temporary phone number
+            )
+        else:
+            customer = request.user.customer_profile
+            
+        # Initialize form with user data
+        if request.method == 'POST':
+            form = CustomerProfileForm(request.POST, request.FILES, instance=customer)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Profile updated successfully.')
+                return redirect('customers:profile')
+        else:
+            form = CustomerProfileForm(instance=customer)
+        
+        # Get user orders for profile view
+        orders = Order.objects.filter(customer=customer).order_by('-created_at')[:5]
+        addresses = DeliveryAddress.objects.filter(customer=customer)
+        favorite_businesses = Favorite.objects.filter(customer=customer).select_related('business')
+        
+        context = {
+            'profile_form': form,
+            'customer': customer,
+            'recent_orders': orders,
+            'addresses': addresses,
+            'favorite_businesses': favorite_businesses,
+        }
+        
+        return render(request, 'customers/profile.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading profile: {str(e)}')
+        return redirect('customers:home')
+

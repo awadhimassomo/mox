@@ -69,6 +69,55 @@
         .register-link a:hover {
             text-decoration: underline;
         }
+        .forgot-password {
+            text-align: right;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .forgot-password a {
+            color: #dc2626;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-header {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 {% block content %}
@@ -83,11 +132,32 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
+            <div class="forgot-password">
+                <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+            </div>
             <button type="submit">Login</button>
             <div id="error-message" class="error-message"></div>
         </form>
         <div class="register-link">
             Don't have an account? <a href="/riders/register/">Register here</a>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="resetPhone">Phone Number</label>
+                    <input type="tel" id="resetPhone" name="resetPhone" required placeholder="+255xxxxxxxxx">
+                </div>
+                <button type="submit">Send OTP</button>
+                <div id="reset-error-message" class="error-message"></div>
+            </form>
         </div>
     </div>
     {% endblock %}
@@ -121,6 +191,57 @@
             .catch(error => {
                 document.getElementById('error-message').textContent = 
                     'An error occurred. Please try again.';
+            });
+        });
+
+        // Forgot password modal functionality
+        const modal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const closeModal = document.getElementById('closeModal');
+
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Forgot password form submission
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('resetPhone').value;
+            const errorElement = document.getElementById('reset-error-message');
+            
+            fetch('/riders/forgot-password/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    phone_number: phone
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to OTP verification page for password reset
+                    window.location.href = '/riders/reset-password-verify/';
+                } else {
+                    errorElement.textContent = data.error || 'Failed to process request';
+                }
+            })
+            .catch(error => {
+                errorElement.textContent = 'An error occurred. Please try again.';
             });
         });
 

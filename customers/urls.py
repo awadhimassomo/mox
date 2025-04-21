@@ -1,5 +1,9 @@
-from django.urls import path
+
+
 from . import views
+from django.urls import path
+
+
 
 app_name = 'customers'
 
@@ -22,6 +26,8 @@ urlpatterns = [
     path('update_cart/<int:item_id>/', views.update_cart_item_ajax, name='update_cart_item_ajax'),
     
     # Checkout Process
+    path('select-transport-mode/', views.select_transport_mode, name='select_transport_mode'),
+    path('save-transport-mode/', views.save_transport_mode, name='save_transport_mode'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/<int:business_id>/', views.checkout, name='checkout_with_business'),
     path('place-order/', views.place_order, name='place_order'),
