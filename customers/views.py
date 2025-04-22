@@ -911,6 +911,17 @@ def register_view(request):
     if request.method == 'POST':
         form = CustomerSignUpForm(request.POST)
         if form.is_valid():
+            # Check if a user with this email already exists
+            email = form.cleaned_data.get('email')
+            if User.objects.filter(email=email).exists():
+                # User is already registered
+                messages.info(request, 'An account with this email already exists. Please log in.')
+                return render(request, 'customers/already_registered.html', {
+                    'email': email,
+                    'login_url': reverse('customers:login')
+                })
+                
+            # If no existing user, create new account
             user = form.save()
             # Create customer profile
             CustomerProfile.objects.create(user=user)
@@ -1691,11 +1702,30 @@ def profile(request):
             
         # Initialize form with user data
         if request.method == 'POST':
+            # Debug print statement to check files in request
+            print(f"FILES in request: {request.FILES}")
+            
+            # Make sure request.FILES is passed to the form
             form = CustomerProfileForm(request.POST, request.FILES, instance=customer)
             if form.is_valid():
-                form.save()
+                # Debug: Track profile image
+                if 'profile_image' in request.FILES:
+                    print(f"Profile image found: {request.FILES['profile_image']}")
+                
+                # Save the form with the image
+                profile = form.save(commit=False)
+                
+                # Explicitly handle the profile image if it's in the request
+                if 'profile_image' in request.FILES:
+                    profile.profile_image = request.FILES['profile_image']
+                
+                profile.save()
                 messages.success(request, 'Profile updated successfully.')
                 return redirect('customers:profile')
+            else:
+                # Log form errors for debugging
+                print(f"Form errors: {form.errors}")
+                messages.error(request, f"Error updating profile: {form.errors}")
         else:
             form = CustomerProfileForm(instance=customer)
         
@@ -1705,7 +1735,7 @@ def profile(request):
         favorite_businesses = Favorite.objects.filter(customer=customer).select_related('business')
         
         context = {
-            'profile_form': form,
+            'form': form,  # Changed from profile_form to form to match template
             'customer': customer,
             'recent_orders': orders,
             'addresses': addresses,

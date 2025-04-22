@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification | Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-8">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+        <h2 class="text-2xl font-bold text-center text-[#FF0000] mb-6">Verify Your Phone Number</h2>
+        <p class="text-center text-gray-600 mb-6">Enter the 6-digit code sent to your phone</p>
+
+        <!-- Error messages -->
+        <div id="error-messages" class="text-red-500 text-center mb-4">
+            {% if error %}
+                {{ error }}
+            {% endif %}
+        </div>
+
+        <form class="space-y-6" method="POST" action="{% url 'business:verify_otp' user_id=user_id %}">
+            {% csrf_token %}
+            
+            <!-- Hidden user_id field -->
+            <input type="hidden" name="user_id" id="user_id" value="{{ user_id }}">
+
+            <div class="flex justify-center">
+                <div class="flex space-x-2 w-full max-w-xs">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp1" id="otp1" required
+                        placeholder="0" title="First digit of OTP code" aria-label="First digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp2" id="otp2" required
+                        placeholder="0" title="Second digit of OTP code" aria-label="Second digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp3" id="otp3" required
+                        placeholder="0" title="Third digit of OTP code" aria-label="Third digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp4" id="otp4" required
+                        placeholder="0" title="Fourth digit of OTP code" aria-label="Fourth digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp5" id="otp5" required
+                        placeholder="0" title="Fifth digit of OTP code" aria-label="Fifth digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <input type="text" inputmode="numeric" maxlength="1" pattern="[0-9]" name="otp6" id="otp6" required
+                        placeholder="0" title="Sixth digit of OTP code" aria-label="Sixth digit of OTP code"
+                        class="w-full h-14 text-center text-xl font-bold border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                </div>
+            </div>
+
+            <div class="text-center text-gray-600">
+                <p>Didn't receive the code? <button type="button" id="resend-otp" class="text-[#FF0000] font-medium">Resend Code</button></p>
+                <p class="mt-2 text-sm" id="countdown">Resend available in <span id="timer">60</span> seconds</p>
+            </div>
+
+            <button type="submit" class="w-full bg-[#FF0000] text-white py-3 rounded-lg hover:bg-red-700">
+                Verify
+            </button>
+        </form>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus and navigation for OTP inputs
+        const otpInputs = document.querySelectorAll('input[id^="otp"]');
+        
+        otpInputs.forEach((input, index) => {
+            // Auto-focus on first input
+            if (index === 0) input.focus();
+            
+            // Handle input
+            input.addEventListener('input', function(e) {
+                if (this.value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            
+            // Handle backspace
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+        
+        // Handle countdown for resend
+        let secondsLeft = 60;
+        const timerElement = document.getElementById('timer');
+        const resendButton = document.getElementById('resend-otp');
+        const countdown = document.getElementById('countdown');
+        
+        resendButton.disabled = true;
+        
+        const timer = setInterval(() => {
+            secondsLeft--;
+            timerElement.textContent = secondsLeft;
+            
+            if (secondsLeft <= 0) {
+                clearInterval(timer);
+                resendButton.disabled = false;
+                countdown.classList.add('hidden');
+            }
+        }, 1000);
+        
+        // Handle resend button
+        resendButton.addEventListener('click', async function() {
+            if (this.disabled) return;
+            
+            // Disable the button and show countdown again
+            this.disabled = true;
+            countdown.classList.remove('hidden');
+            secondsLeft = 60;
+            timerElement.textContent = secondsLeft;
+            
+            // Restart timer
+            const newTimer = setInterval(() => {
+                secondsLeft--;
+                timerElement.textContent = secondsLeft;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(newTimer);
+                    resendButton.disabled = false;
+                    countdown.classList.add('hidden');
+                }
+            }, 1000);
+            
+            // Send request to resend OTP
+            const userId = document.getElementById('user_id').value;
+            try {
+                const response = await fetch("{% url 'business:resend_otp' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                if (response.ok) {
+                    document.getElementById("error-messages").innerHTML = 
+                        '<div class="text-green-500">New code sent successfully!</div>';
+                } else {
+                    document.getElementById("error-messages").innerHTML = 
+                        '<div class="text-red-500">Failed to send new code. Please try again.</div>';
+                }
+            } catch (error) {
+                document.getElementById("error-messages").innerHTML = 
+                    '<div class="text-red-500">Network error. Please check your connection.</div>';
+            }
+        });
+    });
+    </script>
+</body>
+</html>

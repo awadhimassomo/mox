@@ -17,4 +17,6 @@ urlpatterns = [
     path('add-product/', views.add_product, name='add_product'),
     path('create-business/', views.create_business, name='create_business'),
     path('mark-order-ready/', views.mark_order_ready, name='mark_order_ready'),
+    path('verify-otp/<int:user_id>/', views.verify_otp, name='verify_otp'),  # OTP verification
+    path('resend-otp/', views.resend_otp, name='resend_otp'),  # Resend OTP
 ]

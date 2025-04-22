@@ -1,0 +1,4 @@
+This is a placeholder file to ensure the icons directory exists.
+Please replace the icon files with proper PNG images of the corresponding sizes:
+- icon-192x192.png (192x192 pixels)
+- icon-512x512.png (512x512 pixels)

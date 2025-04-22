@@ -1,0 +1,53 @@
+{% extends 'customers/base.html' %}
+
+{% block title %}Already Registered | Mo-Express{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div class="p-6">
+            <div class="flex justify-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Account Already Exists</h2>
+            </div>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-3 bg-blue-100 text-blue-700 rounded">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="mb-6 text-center">
+                <div class="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <p class="text-gray-700 dark:text-gray-300">
+                        An account with the email <span class="font-semibold">{{ email }}</span> is already registered.
+                    </p>
+                </div>
+                
+                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                    Please use your existing account credentials to sign in to Mo-Express delivery management system.
+                </p>
+                
+                <div class="mt-6">
+                    <a href="{{ login_url }}" class="w-full inline-block bg-primary text-black font-semibold py-2 px-4 rounded-lg hover:bg-yellow-400 transition-colors text-center">
+                        Go to Login Page
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center border-t pt-4 border-gray-200 dark:border-gray-700">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Forgot your password? 
+                    <a href="#" class="text-primary hover:underline">Reset it here</a>
+                </p>
+                
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Need assistance? 
+                    <a href="#" class="text-primary hover:underline">Contact support</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

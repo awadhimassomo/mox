@@ -48,6 +48,10 @@ class Rider(models.Model):
     created_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
+    # Profile image field
+    profile_image = models.ImageField(upload_to='riders/profile_images/', null=True, blank=True,
+                                     help_text='Profile photo of the rider')
+    
     # Image fields for verification documents
     id_photo = models.ImageField(upload_to='riders/id_photos/', null=True, blank=True, 
                                 help_text='National ID or Voter\'s card')

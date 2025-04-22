@@ -439,12 +439,79 @@ def riders_list(request):
 
 @login_required
 def rider_profile_view(request):
-    """Renders the rider profile page."""
+    """Renders the rider profile page and handles profile updates."""
     if not request.user.is_authenticated:
         return redirect('riders:login')
     try:
         rider = Rider.objects.get(user=request.user)
+        
+        if request.method == 'POST':
+            # Handle profile image upload and other updates
+            if 'profile_image' in request.FILES:
+                rider.profile_image = request.FILES['profile_image']
+            
+            # Update other profile fields
+            if request.POST.get('first_name'):
+                request.user.first_name = request.POST.get('first_name')
+            if request.POST.get('last_name'):
+                request.user.last_name = request.POST.get('last_name')
+            if request.POST.get('phone_number'):
+                rider.phone_number = request.POST.get('phone_number')
+                
+            # Save changes
+            request.user.save()
+            rider.save()
+            messages.success(request, 'Profile updated successfully')
+            return redirect('riders:profile')
+            
         return render(request, 'riders/rider_profile.html', {'rider': rider})
+    except Rider.DoesNotExist:
+        return redirect('riders:login')
+
+
+@login_required
+def change_password(request):
+    """Handles password change for riders"""
+    if not request.user.is_authenticated:
+        return redirect('riders:login')
+    
+    # Initialize context variables
+    password_messages = []
+    
+    try:
+        rider = Rider.objects.get(user=request.user)
+        
+        if request.method == 'POST':
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            # Validate input
+            if not all([current_password, new_password, confirm_password]):
+                password_messages.append({'type': 'error', 'text': 'All password fields are required.'})
+            elif new_password != confirm_password:
+                password_messages.append({'type': 'error', 'text': 'New passwords do not match.'})
+            elif len(new_password) < 8:
+                password_messages.append({'type': 'error', 'text': 'Password must be at least 8 characters long.'})
+            else:
+                # Check if current password is correct
+                user = authenticate(username=request.user.username, password=current_password)
+                if user is None:
+                    password_messages.append({'type': 'error', 'text': 'Current password is incorrect.'})
+                else:
+                    # Change password
+                    user.set_password(new_password)
+                    user.save()
+                    password_messages.append({'type': 'success', 'text': 'Password changed successfully. Please log in again with your new password.'})
+                    # Log the user out so they can log in with new password
+                    logout(request)
+                    return redirect('riders:login')
+        
+        # Render the profile page with password change messages
+        return render(request, 'riders/rider_profile.html', {
+            'rider': rider, 
+            'password_messages': password_messages
+        })
     except Rider.DoesNotExist:
         return redirect('riders:login')
 

@@ -9,9 +9,13 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="text-center">
                     <div class="mb-4">
-                        <svg class="mx-auto h-24 w-24 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                        </svg>
+                        {% if rider.profile_image %}
+                            <img src="{{ rider.profile_image.url }}" alt="Profile" class="mx-auto h-24 w-24 rounded-full object-cover border-2 border-indigo-600">
+                        {% else %}
+                            <svg class="mx-auto h-24 w-24 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                            </svg>
+                        {% endif %}
                     </div>
                     <h4 class="text-xl font-semibold text-gray-900">{{ rider.user.get_full_name }}</h4>
                     <p class="text-gray-500">{{ rider.phone_number }}</p>
@@ -37,7 +41,17 @@
                 <!-- Profile Information -->
                 <div class="p-6">
                     <h5 class="text-lg font-medium text-gray-900 mb-6">Profile Information</h5>
-                    <form id="profile-form" class="space-y-6">
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="mb-4 p-3 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form id="profile-form" method="post" enctype="multipart/form-data" action="{% url 'riders:profile' %}" class="space-y-6">
+                        {% csrf_token %}
                         <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                             <div>
                                 <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
@@ -56,6 +70,21 @@
                             <input type="tel" id="phone_number" name="phone_number" value="{{ rider.phone_number }}" required
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         </div>
+                        
+                        <div>
+                            <label for="profile_image" class="block text-sm font-medium text-gray-700">Profile Image</label>
+                            <div class="mt-1 flex items-center space-x-2">
+                                <label class="block w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Choose Image
+                                    <input type="file" name="profile_image" id="profile_image" accept="image/*" class="hidden">
+                                </label>
+                                <span id="selected-image" class="text-sm text-gray-500">No file selected</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Upload a profile photo to personalize your account</p>
+                        </div>
 
                         <div>
                             <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -68,7 +97,17 @@
                 <!-- Change Password -->
                 <div class="p-6">
                     <h5 class="text-lg font-medium text-gray-900 mb-6">Change Password</h5>
-                    <form id="password-form" class="space-y-6">
+                    
+                    {% if password_messages %}
+                        {% for message in password_messages %}
+                            <div class="mb-4 p-3 {% if message.type == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
+                                {{ message.text }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form id="password-form" method="post" action="{% url 'riders:change_password' %}" class="space-y-6">
+                        {% csrf_token %}
                         <div>
                             <label for="current_password" class="block text-sm font-medium text-gray-700">Current Password</label>
                             <input type="password" id="current_password" name="current_password" required

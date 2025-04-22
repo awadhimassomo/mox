@@ -5,6 +5,20 @@
 {% block header_title %}Discover Businesses{% endblock %}
 
 {% block content %}
+<!-- PWA Installation Banner for Home Page -->
+<div id="homePageInstallBanner" class="mb-4 mx-2 bg-primary text-white rounded-lg shadow-lg" style="display: block;">
+    <div class="p-4 flex justify-between items-center">
+        <div>
+            <strong>Install Mo-Express App</strong>
+            <p class="text-sm mb-0">Get our app for the best experience!</p>
+        </div>
+        <div class="flex space-x-2">
+            <button id="homeInstallBtn" class="bg-white text-primary px-3 py-1 rounded-md text-sm font-medium">Install</button>
+            <button id="closeHomeInstallBanner" class="bg-transparent text-white px-3 py-1 rounded-md text-sm">Later</button>
+        </div>
+    </div>
+</div>
+
 <div class="px-4 py-6">
     <!-- Search Bar -->
     <div class="mb-6">
@@ -96,6 +110,20 @@
 
 {% block extra_js %}
 <script>
+    // Safe element selector helper function
+    function $(selector) {
+        return document.querySelector(selector);
+    }
+
+    // Safe addEventListener helper
+    function addEventListenerSafe(element, event, handler) {
+        if (element) {
+            element.addEventListener(event, handler);
+            return true;
+        }
+        return false;
+    }
+
     // Lazy loading images
     document.addEventListener("DOMContentLoaded", function() {
         var lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
@@ -326,5 +354,184 @@
         
         return businessCard;
     }
+
+    // Home page specific PWA installation banner and handling
+    document.addEventListener("DOMContentLoaded", function() {
+        // Safely get all the DOM elements
+        const homePageInstallBanner = $('#homePageInstallBanner');
+        const staticInstallBanner = $('#staticInstallBanner');
+        const homeInstallBtn = $('#homeInstallBtn');
+        const closeHomeInstallBanner = $('#closeHomeInstallBanner');
+        const closeStaticBanner = $('#closeStaticBanner');
+        const manualInstallBtn = $('#manualInstallBtn');
+        const installInstructionsModal = $('#installInstructionsModal');
+        const closeInstructionsModal = $('#closeInstructionsModal');
+        
+        // Banner management functions
+        function showBanner(banner) {
+            if (banner) banner.style.display = 'block';
+        }
+        
+        function hideBanner(banner) {
+            if (banner) banner.style.display = 'none';
+        }
+        
+        // Check for standalone mode (already installed)
+        const isRunningStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                   window.navigator.standalone || document.referrer.includes('android-app://');
+        
+        // If app is already installed, don't show the banners
+        if (isRunningStandalone) {
+            console.log('App is already installed as PWA');
+            hideBanner(staticInstallBanner);
+            hideBanner(homePageInstallBanner);
+            localStorage.setItem('pwaBannerDismissed', 'true');
+            localStorage.setItem('staticBannerDismissed', 'true');
+            return;
+        }
+        
+        // Check if either banner was previously dismissed and respect that choice
+        const staticBannerDismissed = localStorage.getItem('staticBannerDismissed');
+        const pwaBannerDismissed = localStorage.getItem('pwaBannerDismissed');
+        
+        // Initially handle static banner visibility
+        if (staticBannerDismissed === 'true') {
+            hideBanner(staticInstallBanner);
+        } else {
+            showBanner(staticInstallBanner);
+        }
+        
+        // Handle the manual install button click - show instructions modal
+        addEventListenerSafe(manualInstallBtn, 'click', function(e) {
+            e.preventDefault();
+            if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
+        });
+        
+        // Close the instructions modal
+        addEventListenerSafe(closeInstructionsModal, 'click', function() {
+            if (installInstructionsModal) installInstructionsModal.style.display = 'none';
+        });
+        
+        // Also close modal when clicking outside
+        addEventListenerSafe(installInstructionsModal, 'click', function(e) {
+            if (e.target === installInstructionsModal) {
+                installInstructionsModal.style.display = 'none';
+            }
+        });
+        
+        // Close button for static banner
+        addEventListenerSafe(closeStaticBanner, 'click', function() {
+            hideBanner(staticInstallBanner);
+            localStorage.setItem('staticBannerDismissed', 'true');
+            
+            // Set a timeout to clear the dismissed state after a period
+            localStorage.setItem('staticBannerDismissedTimestamp', Date.now().toString());
+        });
+        
+        // Check if dismissal period has expired
+        const checkDismissalPeriod = () => {
+            const dismissedTime = parseInt(localStorage.getItem('staticBannerDismissedTimestamp') || '0');
+            const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
+            if (dismissedTime > 0 && (Date.now() - dismissedTime) > threeDaysInMs) {
+                localStorage.removeItem('staticBannerDismissed');
+                localStorage.removeItem('staticBannerDismissedTimestamp');
+                
+                // If app is not in standalone mode and not already dismissed, show static banner
+                if (!isRunningStandalone && staticBannerDismissed !== 'true') {
+                    showBanner(staticInstallBanner);
+                }
+            }
+        };
+        
+        // Run the check when page loads
+        checkDismissalPeriod();
+        
+        // Check for beforeinstallprompt event
+        let deferredPrompt = null;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt event detected');
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Hide static banner when we can show the dynamic one
+            hideBanner(staticInstallBanner);
+            
+            // Only show dynamic banner if not previously dismissed
+            if (pwaBannerDismissed !== 'true') {
+                showBanner(homePageInstallBanner);
+            }
+        });
+        
+        // Install button handler for dynamic banner - use the safe event listener
+        addEventListenerSafe(homeInstallBtn, 'click', async () => {
+            if (!deferredPrompt) {
+                console.warn('Install button clicked but no installation prompt available');
+                
+                // Show manual installation instructions instead
+                if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
+                return;
+            }
+            
+            try {
+                // Show the installation prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User installation choice: ${outcome}`);
+                
+                // Clear the saved prompt
+                deferredPrompt = null;
+                
+                // Hide the banner
+                hideBanner(homePageInstallBanner);
+                
+                if (outcome === 'accepted') {
+                    // They installed it, remember this
+                    localStorage.setItem('pwaBannerDismissed', 'true');
+                    hideBanner(staticInstallBanner);
+                }
+            } catch (err) {
+                console.error('Error during installation prompt:', err);
+                
+                // If installation fails, show manual instructions
+                if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
+            }
+        });
+        
+        // Close dynamic banner button - use the safe event listener
+        addEventListenerSafe(closeHomeInstallBanner, 'click', () => {
+            hideBanner(homePageInstallBanner);
+            localStorage.setItem('pwaBannerDismissed', 'true');
+            
+            // Set timestamp for when this was dismissed
+            localStorage.setItem('pwaBannerDismissedTimestamp', Date.now().toString());
+        });
+        
+        // Listen for appinstalled event
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App was installed successfully');
+            // App was installed, hide all banners
+            hideBanner(homePageInstallBanner);
+            hideBanner(staticInstallBanner);
+            localStorage.setItem('pwaBannerDismissed', 'true');
+            localStorage.setItem('staticBannerDismissed', 'true');
+        });
+        
+        // Also listen for display-mode changes (in case user installs manually)
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+            if (evt.matches) {
+                // App was installed, hide all banners
+                hideBanner(homePageInstallBanner);
+                hideBanner(staticInstallBanner);
+                localStorage.setItem('pwaBannerDismissed', 'true');
+                localStorage.setItem('staticBannerDismissed', 'true');
+            }
+        });
+    });
 </script>
 {% endblock %}
