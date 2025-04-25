@@ -45,6 +45,8 @@ class Rider(models.Model):
     penalties = models.IntegerField(default=0, help_text='Number of penalties for missing orders', null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    address = models.TextField(null=True, blank=True, help_text='Human-readable address from reverse geocoding')
+    last_location_update = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     

@@ -4,168 +4,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rider Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #dc2626; /* updated to red */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #b91c1c; /* updated to darker red */
-        }
-        .error-message {
-            color: #f44336;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .register-link {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        .register-link a {
-            color: #dc2626; /* updated to red */
-            text-decoration: none;
-        }
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-        .forgot-password {
-            text-align: right;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .forgot-password a {
-            color: #dc2626;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .forgot-password a:hover {
-            text-decoration: underline;
-        }
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 400px;
-        }
-        .modal-header {
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-        .close {
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
+    <title>Rider Login | Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-{% block content %}
-    <div class="login-container">
-        <h2 style="text-align: center; margin-bottom: 2rem; color: #dc2626;">Rider Login</h2>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" required placeholder="+255xxxxxxxxx">
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden border-2 border-red-600">
+            <div class="p-8">
+                <div class="flex flex-col items-center mb-8">
+                    <!-- Logo with link to homepage -->
+                    <a href="/" class="block">
+                        <img src="{% static 'img/logo.png' %}" alt="Mo-Express Logo" class="h-24 w-auto mb-4">
+                    </a>
+                    <h2 class="text-3xl font-extrabold text-red-600">Rider Login</h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Sign in to your Mo-Express rider account
+                    </p>
+                </div>
+                
+                <!-- Error Messages Section -->
+                <div id="error-message" class="mb-6 p-4 bg-red-100 text-red-700 border-l-4 border-red-500 rounded-md hidden">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="error-text">Error message will appear here</span>
+                    </div>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    {% csrf_token %}
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                            </div>
+                            <div class="absolute inset-y-0 left-10 flex items-center pointer-events-none">
+                                <span class="text-gray-500">+255</span>
+                            </div>
+                            <input type="tel" id="phone" name="phone" 
+                                   class="w-full pl-24 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all duration-200" 
+                                   placeholder="7XXXXXXXX" 
+                                   pattern="[0-9]{9}"
+                                   maxlength="9"
+                                   inputmode="numeric"
+                                   required>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Enter 9 digits after +255 (e.g., 712345678)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <input type="password" id="password" name="password" 
+                                   class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all duration-200" 
+                                   required>
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Remember me & Forgot password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                            <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                        </div>
+                        <div class="text-sm">
+                            <a href="#" id="forgotPasswordLink" class="font-medium text-red-600 hover:text-red-500">Forgot your password?</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 transform hover:scale-105">
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="/riders/register/" class="font-medium text-red-600 hover:text-red-500 transition-colors">
+                            Register now
+                        </a>
+                    </p>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div class="forgot-password">
-                <a href="#" id="forgotPasswordLink">Forgot Password?</a>
-            </div>
-            <button type="submit">Login</button>
-            <div id="error-message" class="error-message"></div>
-        </form>
-        <div class="register-link">
-            Don't have an account? <a href="/riders/register/">Register here</a>
         </div>
     </div>
 
     <!-- Forgot Password Modal -->
-    <div id="forgotPasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Reset Password</h3>
-                <span class="close" id="closeModal">&times;</span>
+    <div id="forgotPasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full mx-4 relative border-2 border-red-600">
+            <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-red-600">Reset Password</h3>
+                <p class="text-sm text-gray-600 mt-2">Enter your phone number to receive a password reset code</p>
             </div>
-            <form id="forgotPasswordForm">
-                <div class="form-group">
-                    <label for="resetPhone">Phone Number</label>
-                    <input type="tel" id="resetPhone" name="resetPhone" required placeholder="+255xxxxxxxxx">
+            
+            <!-- Reset Error Messages Section -->
+            <div id="reset-error-message" class="mb-6 p-4 bg-red-100 text-red-700 border-l-4 border-red-500 rounded-md hidden">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span id="reset-error-text">Error message will appear here</span>
                 </div>
-                <button type="submit">Send OTP</button>
-                <div id="reset-error-message" class="error-message"></div>
+            </div>
+            
+            <form id="forgotPasswordForm" class="space-y-6">
+                <div>
+                    <label for="resetPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </div>
+                        <div class="absolute inset-y-0 left-10 flex items-center pointer-events-none">
+                            <span class="text-gray-500">+255</span>
+                        </div>
+                        <input type="tel" id="resetPhone" name="resetPhone" 
+                               class="w-full pl-24 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all duration-200" 
+                               placeholder="7XXXXXXXX" 
+                               pattern="[0-9]{9}"
+                               maxlength="9"
+                               inputmode="numeric"
+                               required>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Enter 9 digits after +255 (e.g., 712345678)</p>
+                </div>
+                
+                <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 transform hover:scale-105">
+                    Send Reset Code
+                </button>
             </form>
         </div>
     </div>
-    {% endblock %}
+
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.addEventListener('DOMContentLoaded', function() {
+        const phoneInput = document.getElementById('phone');
+        const resetPhoneInput = document.getElementById('resetPhone');
+        const errorMessageDiv = document.getElementById('error-message');
+        const errorMessageText = document.getElementById('error-text');
+        const resetErrorMessageDiv = document.getElementById('reset-error-message');
+        const resetErrorMessageText = document.getElementById('reset-error-text');
+        
+        // Format phone input to ensure only numbers and correct length
+        function setupPhoneInput(input) {
+            input.addEventListener('input', function(e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Limit to exactly 9 digits
+                if (this.value.length > 9) {
+                    this.value = this.value.slice(0, 9);
+                }
+            });
+        }
+        
+        // Setup both phone inputs
+        setupPhoneInput(phoneInput);
+        setupPhoneInput(resetPhoneInput);
+
+        // Add form submit handler to ensure proper formatting
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const phone = document.getElementById('phone').value;
+            // If phone number is not exactly 9 digits, prevent submission
+            if (phoneInput.value.length !== 9) {
+                showError('Please enter exactly 9 digits after +255');
+                phoneInput.focus();
+                return;
+            }
+            
+            // Format with 255 prefix to match database format
+            const formattedPhone = '255' + phoneInput.value;
             const password = document.getElementById('password').value;
             
             fetch('/riders/login/', {
@@ -175,7 +210,7 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    phone_number: phone,
+                    phone_number: formattedPhone,
                     password: password
                 })
             })
@@ -184,16 +219,38 @@
                 if (data.success) {
                     window.location.href = '/riders/dashboard/';
                 } else {
-                    document.getElementById('error-message').textContent = 
-                        data.error || 'Invalid phone number or password';
+                    showError(data.error || 'Invalid phone number or password');
                 }
             })
             .catch(error => {
-                document.getElementById('error-message').textContent = 
-                    'An error occurred. Please try again.';
+                showError('An error occurred. Please try again.');
             });
         });
 
+        // Password toggle functionality
+        const togglePassword = document.querySelector('.toggle-password');
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const input = document.getElementById('password');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                    `;
+                } else {
+                    input.type = 'password';
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    `;
+                }
+            });
+        }
+        
         // Forgot password modal functionality
         const modal = document.getElementById('forgotPasswordModal');
         const forgotPasswordLink = document.getElementById('forgotPasswordLink');
@@ -201,25 +258,33 @@
 
         forgotPasswordLink.addEventListener('click', function(e) {
             e.preventDefault();
-            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
         });
 
         closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
+            modal.classList.add('hidden');
         });
 
         window.addEventListener('click', function(e) {
             if (e.target === modal) {
-                modal.style.display = 'none';
+                modal.classList.add('hidden');
             }
         });
 
         // Forgot password form submission
-        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        forgotPasswordForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const phone = document.getElementById('resetPhone').value;
-            const errorElement = document.getElementById('reset-error-message');
+            // If phone number is not exactly 9 digits, prevent submission
+            if (resetPhoneInput.value.length !== 9) {
+                showResetError('Please enter exactly 9 digits after +255');
+                resetPhoneInput.focus();
+                return;
+            }
+            
+            // Format with 255 prefix to match database format
+            const formattedPhone = '255' + resetPhoneInput.value;
             
             fetch('/riders/forgot-password/', {
                 method: 'POST',
@@ -228,7 +293,7 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    phone_number: phone
+                    phone_number: formattedPhone
                 })
             })
             .then(response => response.json())
@@ -237,11 +302,11 @@
                     // Redirect to OTP verification page for password reset
                     window.location.href = '/riders/reset-password-verify/';
                 } else {
-                    errorElement.textContent = data.error || 'Failed to process request';
+                    showResetError(data.error || 'Failed to process request');
                 }
             })
             .catch(error => {
-                errorElement.textContent = 'An error occurred. Please try again.';
+                showResetError('An error occurred. Please try again.');
             });
         });
 
@@ -260,6 +325,19 @@
             }
             return cookieValue;
         }
+        
+        // Function to show error message
+        function showError(message) {
+            errorMessageText.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+        
+        // Function to show reset error message
+        function showResetError(message) {
+            resetErrorMessageText.textContent = message;
+            resetErrorMessageDiv.classList.remove('hidden');
+        }
+    });
     </script>
 </body>
 </html>

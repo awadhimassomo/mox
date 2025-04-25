@@ -180,7 +180,7 @@
                         <i class='bx bx-grid-alt nav_icon'></i>
                         <span class="nav_name">Dashboard</span>
                     </a>
-                    <a href="{% url 'rider_profile' %}" class="nav_link {% if request.resolver_match.url_name == 'rider_profile' %}active{% endif %}">
+                    <a href="{% url 'riders:profile' %}" class="nav_link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                         <i class='bx bx-user nav_icon'></i>
                         <span class="nav_name">Profile</span>
                     </a>

@@ -32,7 +32,7 @@
                 <div class="hidden md:flex md:space-x-6">
                     <a href="{% url 'riders:dashboard' %}" class="text-sm font-medium text-gray-900 hover:text-gray-700">Dashboard</a>
                     <a href="{% url 'riders:rider_earnings' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Earnings</a>
-                    <a href="{% url 'riders:rider_profile' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Profile</a>
+                    <a href="{% url 'riders:profile' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Profile</a>
                 </div>
     
                 {% if user.is_authenticated %}
@@ -72,7 +72,7 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md">
             <a href="{% url 'riders:dashboard' %}" class="block py-2 px-4 text-sm text-gray-900">Dashboard</a>
             <a href="{% url 'riders:rider_earnings' %}" class="block py-2 px-4 text-sm text-gray-500 hover:text-gray-900">Earnings</a>
-            <a href="{% url 'riders:rider_profile' %}" class="block py-2 px-4 text-sm text-gray-500 hover:text-gray-900">Profile</a>
+            <a href="{% url 'riders:profile' %}" class="block py-2 px-4 text-sm text-gray-500 hover:text-gray-900">Profile</a>
             {% if user.is_authenticated %}
             <a href="{% url 'riders:rider_logout' %}" class="block py-2 px-4 text-sm text-red-600 hover:text-red-800">Logout</a>
             {% endif %}
@@ -169,21 +169,57 @@
 
      
 document.addEventListener("DOMContentLoaded", function () {
+    // Variables to track rider status
+    let isRiderOnline = false;
+    const toggleStatusBtn = document.getElementById("toggleStatusBtn");
+    const toggleStatusBtnMobile = document.getElementById("toggleStatusBtnMobile");
+
     // Check geolocation availability
     if ("geolocation" in navigator) {
+        // Add click event listeners to online/offline buttons
+        toggleStatusBtn.addEventListener("click", toggleRiderStatus);
+        toggleStatusBtnMobile.addEventListener("click", toggleRiderStatus);
+        
+        // Initial status check
         checkLocationStatus();
     } else {
         updateStatusUI(false);
         showNotification("Location services are not available", "error");
     }
 
-    // Function to check and update location status
-    function checkLocationStatus() {
+    // Function to toggle rider status
+    function toggleRiderStatus() {
+        if (isRiderOnline) {
+            // If currently online, go offline
+            isRiderOnline = false;
+            updateStatusUI(false);
+            showNotification("You are now offline", "error");
+            // Send offline status to server
+            sendLocationToServer(null, null, false);
+        } else {
+            // If currently offline, request location and go online
+            requestLocation();
+        }
+    }
+
+    // Function to request location and update status
+    function requestLocation() {
+        showNotification("Fetching your location...", "info");
+        
+        // Clear any existing errors
+        console.log("Requesting location access...");
+        
+        const locationOptions = {
+            enableHighAccuracy: true,
+            timeout: 20000,  // 20 seconds timeout
+            maximumAge: 0    // Always get fresh location
+        };
+        
         navigator.geolocation.getCurrentPosition(
             (position) => {
+                isRiderOnline = true;
                 updateStatusUI(true);
                 const { latitude, longitude } = position.coords;
-                sendLocationToServer(latitude, longitude);
                 
                 // Get address from coordinates using reverse geocoding
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
@@ -191,20 +227,75 @@ document.addEventListener("DOMContentLoaded", function () {
                     .then(data => {
                         const address = data.display_name || 'Unknown location';
                         showNotification(`📍 You are online at: ${address}`, "success");
+                        console.log(`Location detected: ${address}`);
+                        
+                        // Send location to server with address
+                        sendLocationToServer(latitude, longitude, true, address);
                     })
                     .catch(() => {
                         // Fallback to showing coordinates if geocoding fails
                         showNotification(`📍 You are online at: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, "success");
+                        sendLocationToServer(latitude, longitude, true);
                     });
             },
             (error) => {
+                console.error("Geolocation error:", error);
+                isRiderOnline = false;
                 updateStatusUI(false);
+                
                 let errorMessage = "Location access denied. Please enable location services to go online.";
                 if (error.code === error.TIMEOUT) {
                     errorMessage = "Location request timed out. Please try again.";
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = "Unable to determine your location. Check your device settings.";
+                } else if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage = "Location permission denied. Please allow location access in your browser settings.";
                 }
+                
                 showNotification(errorMessage, "error");
-            }
+            },
+            locationOptions
+        );
+    }
+
+    // Function to check and update location status
+    function checkLocationStatus() {
+        const locationOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,  // 10 seconds timeout for initial check
+            maximumAge: 0
+        };
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                isRiderOnline = true;
+                updateStatusUI(true);
+                const { latitude, longitude } = position.coords;
+                
+                // Get address from coordinates for initial check
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const address = data.display_name || 'Unknown location';
+                        console.log(`✅ Initial location check successful: ${address}`);
+                        sendLocationToServer(latitude, longitude, true, address);
+                    })
+                    .catch(() => {
+                        console.log(`✅ Initial location check successful: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+                        sendLocationToServer(latitude, longitude, true);
+                    });
+            },
+            (error) => {
+                console.error("Initial location check failed:", error);
+                isRiderOnline = false;
+                updateStatusUI(false);
+                
+                // Show a helpful message about enabling location
+                if (error.code === error.PERMISSION_DENIED) {
+                    showNotification("Please enable location in your browser settings to go online", "error");
+                }
+            },
+            locationOptions
         );
     }
 
@@ -212,7 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function showNotification(message, type = "success") {
         const notification = document.createElement("div");
         notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
-            type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            type === "success" ? "bg-green-100 text-green-800" : 
+            type === "error" ? "bg-red-100 text-red-800" : 
+            "bg-blue-100 text-blue-800"
         }`;
         notification.innerHTML = message;
         document.body.appendChild(notification);
@@ -268,18 +361,46 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Function to send location to the server
-    function sendLocationToServer(latitude, longitude) {
-        fetch("/riders/update-location/", {
+    function sendLocationToServer(latitude, longitude, is_online, address = null) {
+        // Create the payload with address if available
+        const payload = {
+            latitude: latitude, 
+            longitude: longitude, 
+            is_online: is_online
+        };
+        
+        // Add address to payload if available
+        if (address) {
+            payload.address = address;
+        }
+        
+        // Use the API endpoint instead of the regular endpoint
+        fetch("/riders/api/update-location/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCookie("csrftoken")
             },
-            body: JSON.stringify({ latitude: latitude, longitude: longitude })
+            body: JSON.stringify(payload)
         })
-        .then(response => response.json())
-        .then(data => console.log("✅ Location updated:", data))
-        .catch(error => console.error("❌ Error updating location:", error));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("✅ Location updated:", data);
+            // If location update was successful, ensure rider is shown as online
+            if (is_online) {
+                isRiderOnline = true;
+                updateStatusUI(true);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error updating location:", error);
+            showNotification("Failed to update location on server. Retry going online.", "error");
+        });
     }
 
     // Function to get CSRF token
@@ -288,18 +409,21 @@ document.addEventListener("DOMContentLoaded", function () {
         if (document.cookie) {
             const cookies = document.cookie.split(";");
             cookies.forEach(cookie => {
-                if (cookie.trim().startsWith(name + "=")) {
-                    cookieValue = cookie.split("=")[1];
+                const cookieParts = cookie.trim().split("=");
+                if (cookieParts[0] === name) {
+                    cookieValue = decodeURIComponent(cookieParts[1]);
                 }
             });
         }
         return cookieValue;
     }
 
-    // Auto-update location every 20 minutes
+    // Auto-update location every 5 minutes if rider is online
     setInterval(() => {
-        checkLocationStatus();
-    }, 1200000);
+        if (isRiderOnline) {
+            requestLocation();
+        }
+    }, 300000); // 300000 ms = 5 minutes
 });
 
 

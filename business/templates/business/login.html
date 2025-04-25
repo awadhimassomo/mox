@@ -9,6 +9,12 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <!-- Logo with link to homepage -->
+        <div class="flex justify-center mb-4">
+            <a href="/">
+                <img src="{% static 'img/mo-express-logo.png' %}" alt="Mo-Express Logo" class="h-20 w-auto">
+            </a>
+        </div>
         <h2 class="text-2xl font-bold text-center text-[#FF0000] mb-6">Business Login</h2>
 
         <form class="space-y-6" method="POST" id="loginForm">
@@ -19,10 +25,16 @@
             
             <div>
                 <label class="block text-gray-700 mb-2">Phone Number:</label>
-                <input type="tel" name="phone" id="phone" required
-                    placeholder="Enter your phone number"
-                    title="Enter your phone number"
-                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 pointer-events-none">+255</span>
+                    <input type="tel" name="phone" id="phone" required
+                        placeholder="7XXXXXXXX"
+                        pattern="[0-9]{9}"
+                        maxlength="9"
+                        inputmode="numeric"
+                        class="w-full pl-14 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Enter 9 digits after +255 (e.g., 712345678)</p>
             </div>
 
             <div>
@@ -51,6 +63,18 @@
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('loginForm');
         const locationStatus = document.getElementById('locationStatus');
+        const phoneInput = document.getElementById('phone');
+
+        // Phone number input formatting
+        phoneInput.addEventListener('input', function(e) {
+            // Remove any non-numeric characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Limit to exactly 9 digits
+            if (this.value.length > 9) {
+                this.value = this.value.slice(0, 9);
+            }
+        });
         
         // Function to show notification
         function showNotification(message, type = 'info') {
@@ -121,8 +145,15 @@
                 return;
             }
 
+            // Check phone number length
+            if (phone.length !== 9) {
+                showNotification("Please enter exactly 9 digits after +255", 'error');
+                phoneInput.focus();
+                return;
+            }
+
             const requestData = {
-                phone: phone,
+                phone: '+255' + phone,
                 password: password,
                 latitude: document.getElementById('latitude').value,
                 longitude: document.getElementById('longitude').value

@@ -21,3 +21,6 @@ coverage/
 *.project
 *.sublime-workspace
 *.sublime-project
+db.sqlite3
+/staticfiles/
+/media/

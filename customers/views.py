@@ -12,13 +12,8 @@ from django.conf import settings
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Q, Count, Avg
 from django.utils import timezone
 import json
-import uuid
-import datetime
+import logging
 import math
-import random
-import requests
-
-import string 
 from decimal import Decimal
 from itertools import groupby
 from django.db.models.functions import Abs
@@ -26,7 +21,6 @@ from django.db.models.functions import Abs
 from riders.models import Rider
 from django.db.models import F, ExpressionWrapper, FloatField
 from django.db.models.functions import Abs
-
 
 from business.models import Business, Product, Category, REGION_CHOICES
 from riders.utils import calculate_distance
@@ -36,8 +30,41 @@ from .forms import CustomerProfileForm, DeliveryAddressForm, CustomerSignUpForm
 from operations.models import CustomUser as User
 from riders.models import Rider as RiderProfile
 
-import logging
+# Configure logger
+logger = logging.getLogger(__name__)
 
+# Utility functions for common operations
+
+def get_or_create_customer_profile(request):
+    """
+    Get existing customer profile or create a new one if needed.
+    Returns the CustomerProfile object.
+    """
+    if not hasattr(request.user, 'customer_profile'):
+        # Try to get an existing profile first
+        try:
+            customer = CustomerProfile.objects.get(user=request.user)
+        except CustomerProfile.DoesNotExist:
+            # Create a customer profile for the user only if it doesn't exist
+            customer = CustomerProfile.objects.create(
+                user=request.user,
+                phone_number=f"temp_{request.user.id}"  # Temporary phone number
+            )
+    else:
+        customer = request.user.customer_profile
+    
+    return customer
+
+
+def calculate_cart_totals(cart):
+    """
+    Calculate cart subtotal, count, and other totals.
+    Returns tuple of (subtotal, cart_count)
+    """
+    cart_items = cart.items.all()
+    subtotal = sum(item.product.price * item.quantity for item in cart_items)
+    cart_count = sum(item.quantity for item in cart_items)
+    return subtotal, cart_count
 
 
 def calculate_delivery_fee(business, delivery_address, transport_mode=None):
@@ -68,8 +95,26 @@ def calculate_delivery_fee(business, delivery_address, transport_mode=None):
     return Decimal(fee), distance_km  # Return fee and distance
 
 
+def get_delivery_fee_for_customer(customer, cart, default_fee=Decimal('2000')):
+    """
+    Get appropriate delivery fee for a customer based on their addresses and cart.
+    Returns the calculated delivery fee.
+    """
+    # Initialize with default value
+    delivery_fee = default_fee
+    
+    # If user has a default address and cart has a business, calculate dynamic delivery fee
+    if hasattr(customer, 'default_address') and customer.default_address and cart.business:
+        delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+    # If no default address but user has addresses, use the first one
+    elif DeliveryAddress.objects.filter(customer=customer).exists() and cart.business:
+        default_address = DeliveryAddress.objects.filter(customer=customer).first()
+        delivery_fee, _ = calculate_delivery_fee(cart.business, default_address)
+    
+    return delivery_fee
 
-logger = logging.getLogger(__name__)
+
+# View functions
 
 @login_required
 def select_transport_mode(request):
@@ -121,6 +166,7 @@ def select_transport_mode(request):
         messages.error(request, f'Error selecting transport mode: {str(e)}')
         return redirect('customers:cart')
 
+
 @login_required
 def save_transport_mode(request):
     """Save the selected transport mode and redirect to checkout"""
@@ -145,6 +191,7 @@ def save_transport_mode(request):
     except Exception as e:
         messages.error(request, f'Error saving transport mode: {str(e)}')
         return redirect('customers:select_transport_mode')
+
 
 def calculate_delivery_fee_view(request):
     try:
@@ -171,11 +218,11 @@ def calculate_delivery_fee_view(request):
             return JsonResponse({'success': False, 'error': 'Business information not found'}, status=400)
 
         # Now call your existing calculate_delivery_fee function
-        delivery_fee = calculate_delivery_fee(business, delivery_address)
+        delivery_fee, distance_km = calculate_delivery_fee(business, delivery_address)
         
         logger.info(f"Calculated delivery fee: {delivery_fee} TZS for distance between business ({business.latitude}, {business.longitude}) and address ({delivery_address.latitude}, {delivery_address.longitude})")
 
-        return JsonResponse({'success': True, 'delivery_fee': float(delivery_fee)})
+        return JsonResponse({'success': True, 'delivery_fee': float(delivery_fee), 'distance_km': float(distance_km)})
 
     except Exception as e:
         logger.error(f"Error calculating delivery fee: {str(e)}")
@@ -184,9 +231,59 @@ def calculate_delivery_fee_view(request):
 
 @login_required
 def home(request):
-    businesses = Business.objects.all()
-    featured_businesses = Business.objects.filter(is_featured=True)
+    # Get businesses, excluding those from the user's region if the user has location data
+    businesses_query = Business.objects.filter(is_active=True)
+    
+    # Get featured businesses
+    featured_businesses = Business.objects.filter(is_featured=True, is_active=True)
     categories = Category.objects.all()
+    
+    # Check if user has location data
+    user_region = None
+    if request.user.is_authenticated and hasattr(request.user, 'customer_profile'):
+        customer = request.user.customer_profile
+        if hasattr(customer, 'region') and customer.region:
+            user_region = customer.region
+        elif customer.latitude and customer.longitude:
+            # Define regions with their approximate center coordinates
+            regions = {
+                'dar_es_salaam': {'lat': -6.7924, 'lng': 39.2083},
+                'arusha': {'lat': -3.3869, 'lng': 36.6830},
+                'mwanza': {'lat': -2.5164, 'lng': 32.9175},
+                'dodoma': {'lat': -6.1630, 'lng': 35.7516},
+                'tanga': {'lat': -5.0705, 'lng': 39.1089},
+                'mbeya': {'lat': -8.9000, 'lng': 33.4500},
+                'morogoro': {'lat': -6.8222, 'lng': 37.6616},
+                'zanzibar': {'lat': -6.1659, 'lng': 39.1988},
+            }
+            
+            # Determine user's region based on proximity to region centers
+            min_distance = float('inf')
+            lat = float(customer.latitude)
+            lng = float(customer.longitude)
+            
+            for region_code, coords in regions.items():
+                # Calculate rough distance using Pythagorean distance for quick comparison
+                dist = math.sqrt((lat - coords['lat'])**2 + (lng - coords['lng'])**2)
+                
+                if dist < min_distance:
+                    min_distance = dist
+                    user_region = region_code
+    
+    # Filter businesses for "In Other Regions" section
+    if user_region:
+        # Get businesses from user's region for the "Popular in your region" section
+        businesses_in_region = businesses_query.filter(region=user_region)
+        
+        # Get businesses from other regions for the "In Other Regions" section
+        businesses_other_regions = businesses_query.exclude(region=user_region)
+        
+        # Use businesses from other regions for the "In Other Regions" section
+        businesses = businesses_other_regions
+    else:
+        # No user region detected, show all businesses
+        businesses = businesses_query
+        businesses_in_region = []
     
     # Get cart count if user is authenticated
     cart_count = 0
@@ -202,19 +299,24 @@ def home(request):
                     pass
         except Exception as e:
             # Log the error but continue
-            print(f"Error getting customer profile: {str(e)}")
+            logger.error(f"Error getting customer profile: {str(e)}")
     
     context = {
         'businesses': businesses,
+        'businesses_in_region': businesses_in_region,
         'featured_businesses': featured_businesses,
         'categories': categories,
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'user_region': user_region,
+        'user_region_display': dict(REGION_CHOICES).get(user_region, user_region.title() if user_region else None)
     }
     return render(request, 'customers/home.html', context)
+
 
 def business_list(request):
     businesses = Business.objects.all()
     return render(request, 'customers/business_list.html', {'businesses': businesses})
+
 
 def business_detail(request, business_id):
     business = get_object_or_404(Business, id=business_id)
@@ -250,7 +352,7 @@ def business_detail(request, business_id):
                     cart_count = 0
         except Exception as e:
             # Log the error but continue
-            print(f"Error getting customer profile: {str(e)}")
+            logger.error(f"Error getting customer profile: {str(e)}")
     
     # Check if business has cover_image and banner
     has_cover_image = business.cover_image is not None
@@ -268,35 +370,90 @@ def business_detail(request, business_id):
     
     return render(request, 'customers/business_detail.html', context)
 
+
 def search(request):
-    """Search businesses and products"""
+    """Enhanced search for businesses and products"""
     query = request.GET.get('q', '')
     category_id = request.GET.get('category')
+    sort = request.GET.get('sort', 'relevance')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
     
-    businesses = Business.objects.all()
+    # Start with all active businesses and products
+    businesses = Business.objects.filter(is_active=True)
     products = Product.objects.all()
     
+    # Apply search query if provided
     if query:
         businesses = businesses.filter(
             Q(name__icontains=query) |
-            Q(description__icontains=query)
+            Q(description__icontains=query) |
+            Q(address__icontains=query)
         )
         products = products.filter(
             Q(name__icontains=query) |
-            Q(description__icontains=query)
+            Q(description__icontains=query) |
+            Q(business__name__icontains=query)
         )
     
+    # Apply category filter
     if category_id:
-        category = get_object_or_404(Category, id=category_id)
-        products = products.filter(category=category)
+        try:
+            category = Category.objects.get(id=category_id)
+            # Filter products by category
+            products = products.filter(category=category)
+            
+            # Filter businesses to only show those with products in this category
+            business_ids = products.values_list('business_id', flat=True).distinct()
+            businesses = businesses.filter(id__in=business_ids)
+        except Category.DoesNotExist:
+            pass
+    
+    # Apply price range filters (for products only)
+    if min_price:
+        try:
+            min_price = float(min_price)
+            products = products.filter(price__gte=min_price)
+        except (ValueError, TypeError):
+            pass
+            
+    if max_price:
+        try:
+            max_price = float(max_price)
+            products = products.filter(price__lte=max_price)
+        except (ValueError, TypeError):
+            pass
+    
+    # Apply sorting
+    if sort == 'price_low':
+        products = products.order_by('price')
+    elif sort == 'price_high':
+        products = products.order_by('-price')
+    elif sort == 'name_asc':
+        products = products.order_by('name')
+        businesses = businesses.order_by('name')
+    elif sort == 'name_desc':
+        products = products.order_by('-name')
+        businesses = businesses.order_by('-name')
+    
+    # Get cart count for UI if user is authenticated
+    cart_count = 0
+    if request.user.is_authenticated and hasattr(request.user, 'customer_profile'):
+        try:
+            cart = Cart.objects.get(customer=request.user.customer_profile)
+            cart_count = sum(item.quantity for item in cart.items.all())
+        except Cart.DoesNotExist:
+            pass
     
     context = {
         'query': query,
-        'businesses': businesses[:20],  # Limit results
-        'products': products[:20],
-        'categories': Category.objects.all()
+        'businesses': businesses[:24],  # Limit results
+        'products': products[:24],
+        'categories': Category.objects.all(),
+        'cart_count': cart_count
     }
     return render(request, 'customers/search.html', context)
+
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -344,25 +501,14 @@ def product_detail(request, product_id):
     
     return render(request, 'customers/product_detail.html', context)
 
+
 @login_required
 def add_to_cart(request, product_id):
     try:
         product = get_object_or_404(Product, id=product_id)
         
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
+        # Get customer profile
+        customer = get_or_create_customer_profile(request)
         
         # Get or create cart
         cart, created = Cart.objects.get_or_create(customer=customer)
@@ -411,82 +557,7 @@ def add_to_cart(request, product_id):
         return redirect('customers:cart')
     except Exception as e:
         # Log the error
-        print(f"Error adding to cart: {str(e)}")
-        messages.error(request, f"Error adding to cart: {str(e)}")
-        return redirect('customers:cart')
-
-
-@login_required
-def update_cart_item_ajax(request, item_id):
-    """Handle AJAX requests to update cart item quantity"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-    try:
-        # Get the data from the request
-        data = json.loads(request.body)
-        quantity = int(data.get('quantity', 1))
-        
-        # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            return JsonResponse({
-                'success': False,
-                'error': "You don't have permission to update this item."
-            })
-        
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
-        
-        total = subtotal + delivery_fee
-        
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
-            'cart_count': cart_count
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
-    except Exception as e:
-        # Log the error
-        print(f"Error adding to cart: {str(e)}")
+        logger.error(f"Error adding to cart: {str(e)}")
         
         # Return error response for AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
@@ -499,72 +570,6 @@ def update_cart_item_ajax(request, item_id):
         messages.error(request, f"Error adding to cart: {str(e)}")
         return redirect('customers:business_detail', business_id=product.business.id)
 
-@login_required
-def cart_view(request):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-            
-        cart = Cart.objects.get(customer=customer)
-        cart_items = cart.items.all()
-        
-        # Calculate subtotal
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        
-        # Initialize delivery fee with default value
-        delivery_fee = Decimal('2000')  # Default fee
-        
-        # If user has a default address and cart has a business, calculate dynamic delivery fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
-        # If no default address but user has addresses, use the first one
-        elif DeliveryAddress.objects.filter(customer=customer).exists() and cart.business:
-            default_address = DeliveryAddress.objects.filter(customer=customer).first()
-            delivery_fee, _ = calculate_delivery_fee(cart.business, default_address)
-        
-        # Calculate total
-        total = subtotal + delivery_fee
-        
-        # Update cart count for the navbar
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        context = {
-            'cart': cart,
-            'cart_items': cart_items,
-            'subtotal': subtotal,
-            'delivery_fee': delivery_fee,
-            'total': total,
-            'cart_count': cart_count
-        }
-        
-    except Cart.DoesNotExist:
-        context = {
-            'cart_items': [],
-            'subtotal': 0,
-            'delivery_fee': 0,
-            'total': 0,
-            'cart_count': 0
-        }
-    
-    return render(request, 'customers/cart.html', context)
-
-@login_required
-def update_cart_item(request, item_id):
-    if request.method != 'POST':
-        return redirect('customers:cart')
-
 
 @login_required
 def update_cart_item_ajax(request, item_id):
@@ -578,16 +583,7 @@ def update_cart_item_ajax(request, item_id):
         quantity = int(data.get('quantity', 1))
         
         # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
+        customer = get_or_create_customer_profile(request)
         
         # Get cart item
         cart_item = get_object_or_404(CartItem, id=item_id)
@@ -608,14 +604,10 @@ def update_cart_item_ajax(request, item_id):
         
         # Calculate new cart totals
         cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
+        subtotal, cart_count = calculate_cart_totals(cart)
         
         # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        delivery_fee = get_delivery_fee_for_customer(customer, cart)
         
         total = subtotal + delivery_fee
         
@@ -633,23 +625,15 @@ def update_cart_item_ajax(request, item_id):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
     except Exception as e:
+        logger.error(f"Error updating cart: {str(e)}")
         return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
-    
+
+
+@login_required
+def remove_from_cart(request, item_id):
     try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
+        # Get customer profile
+        customer = get_or_create_customer_profile(request)
         
         # Get cart item
         cart_item = get_object_or_404(CartItem, id=item_id)
@@ -658,228 +642,45 @@ def update_cart_item_ajax(request, item_id):
         if cart_item.cart.customer != customer:
             messages.error(request, "You don't have permission to update this item.")
             return redirect('customers:cart')
-            
-        # Update quantity
-        quantity = int(request.POST.get('quantity', 1))
-        cart_item.quantity = quantity
-        cart_item.save()
         
-        messages.success(request, "Cart updated.")
-        return redirect('customers:cart')
+        # Remove the item
+        cart_item.delete()
         
-    except Exception as e:
-        messages.error(request, f"Error updating cart: {str(e)}")
-        return redirect('customers:cart')
-
-
-@login_required
-def update_cart_item_ajax(request, item_id):
-    """Handle AJAX requests to update cart item quantity"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-    try:
-        # Get the data from the request
-        data = json.loads(request.body)
-        quantity = int(data.get('quantity', 1))
+        # Calculate new cart totals
+        cart = cart_item.cart
+        subtotal, cart_count = calculate_cart_totals(cart)
         
-        # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
+        # Calculate delivery fee
+        delivery_fee = get_delivery_fee_for_customer(customer, cart)
         
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
+        # Calculate total
+        total = subtotal + delivery_fee
         
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
+        # If it's an AJAX request, return JSON response
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
-                'success': False,
-                'error': "You don't have permission to update this item."
+                'success': True,
+                'message': 'Item removed from cart',
+                'subtotal': float(subtotal),
+                'delivery_fee': float(delivery_fee),
+                'total': float(total),
+                'cart_count': cart_count
             })
         
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
-        
-        total = subtotal + delivery_fee
-        
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
-            'cart_count': cart_count
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
-        
-        # Update quantity
-        quantity = int(request.POST.get('quantity', 1))
-        if quantity < 1:
-            quantity = 1
-        
-        cart_item.quantity = quantity
-        cart_item.save()
-        
-        messages.success(request, "Cart updated.")
+        # For regular requests, add a message and redirect
+        messages.success(request, "Item removed from cart.")
         return redirect('customers:cart')
-
-
-@login_required
-def update_cart_item_ajax(request, item_id):
-    """Handle AJAX requests to update cart item quantity"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-    try:
-        # Get the data from the request
-        data = json.loads(request.body)
-        quantity = int(data.get('quantity', 1))
         
-        # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            return JsonResponse({
-                'success': False,
-                'error': "You don't have permission to update this item."
-            })
-        
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
-        
-        total = subtotal + delivery_fee
-        
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
-            'cart_count': cart_count
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
-    
-    except Exception as e:
-        messages.error(request, f"Error updating cart: {str(e)}")
+        logger.error(f"Error removing item from cart: {str(e)}")
+        
+        # For AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': str(e)})
+        
+        # For regular requests
+        messages.error(request, f"Error removing item from cart: {str(e)}")
         return redirect('customers:cart')
-
-
-@login_required
-def remove_from_cart(request, item_id):
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Try to get an existing profile first
-            from customers.models import CustomerProfile
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                # Create a customer profile for the user only if it doesn't exist
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"  # Temporary phone number
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee = calculate_delivery_fee(cart.business, customer.default_address)
-        
-        total = subtotal + delivery_fee
-        
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity),
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
-            'cart_count': cart_count
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
 
 
 def login_view(request):
@@ -891,14 +692,53 @@ def login_view(request):
         phone = request.POST.get('phone')
         password = request.POST.get('password')
         
+        # Add detailed logging of phone number format
+        logger.info(f"Login attempt - Raw phone number: {phone}")
+        
+        # Check phone number format
+        if phone and not phone.startswith('255'):
+            logger.info(f"Adding 255 prefix to phone number: {phone}")
+            # Try to format phone properly
+            if phone.startswith('0'):
+                phone = '255' + phone[1:]
+                logger.info(f"Converted 0xxx format to: {phone}")
+            elif phone.startswith('+255'):
+                phone = phone[1:]  # Remove the + sign
+                logger.info(f"Removed + sign from +255 format: {phone}")
+            else:
+                phone = '255' + phone
+                logger.info(f"Added 255 prefix: {phone}")
+        
+        logger.info(f"Attempting authentication with phone: {phone}")
         user = authenticate(request, username=phone, password=password)
         
         if user is not None:
+            logger.info(f"User authenticated successfully: {user.id}")
             login(request, user)
             next_url = request.GET.get('next', 'customers:home')
             return redirect(next_url)
         else:
-            messages.error(request, 'Invalid phone number or password')
+            logger.error(f"Authentication failed for phone: {phone}")
+            # Try alternate formats as fallback
+            alternate_formats = []
+            if phone.startswith('255'):
+                alternate_formats.append('0' + phone[3:])  # Try with 0 prefix
+                alternate_formats.append('+' + phone)  # Try with + prefix
+            
+            success = False
+            for alt_phone in alternate_formats:
+                logger.info(f"Trying alternate format: {alt_phone}")
+                alt_user = authenticate(request, username=alt_phone, password=password)
+                if alt_user is not None:
+                    logger.info(f"Alternate format authentication successful: {alt_phone}")
+                    login(request, alt_user)
+                    next_url = request.GET.get('next', 'customers:home')
+                    success = True
+                    return redirect(next_url)
+            
+            if not success:
+                logger.error("All authentication attempts failed")
+                messages.error(request, 'Invalid phone number or password')
     
     return render(request, 'customers/login.html')
 
@@ -913,21 +753,35 @@ def register_view(request):
         if form.is_valid():
             # Check if a user with this email already exists
             email = form.cleaned_data.get('email')
-            if User.objects.filter(email=email).exists():
-                # User is already registered
+            phone = form.cleaned_data.get('phone')
+            
+            if User.objects.filter(email=email).exists() and email:
+                # User is already registered with this email
                 messages.info(request, 'An account with this email already exists. Please log in.')
                 return render(request, 'customers/already_registered.html', {
                     'email': email,
                     'login_url': reverse('customers:login')
                 })
+            
+            # Check if a user with this phone number already exists
+            if User.objects.filter(phone=phone).exists():
+                # Phone number is already registered
+                messages.error(request, 'This phone number is already registered. Please use a different number or log in.')
+                return render(request, 'customers/register.html', {'form': form})
                 
             # If no existing user, create new account
-            user = form.save()
-            # Create customer profile
-            CustomerProfile.objects.create(user=user)
-            # Log the user in
-            login(request, user)
-            return redirect('customers:home')
+            try:
+                user = form.save()
+                # Create customer profile
+                CustomerProfile.objects.create(user=user, phone_number=phone)
+                # Log the user in
+                login(request, user)
+                return redirect('customers:home')
+            except Exception as e:
+                # Handle any database integrity errors (like duplicate phone number in profile)
+                logger.error(f"Error creating user account: {str(e)}")
+                messages.error(request, 'This phone number is already registered. Please use a different number or log in.')
+                return render(request, 'customers/register.html', {'form': form})
     else:
         form = CustomerSignUpForm()
     
@@ -1005,6 +859,7 @@ def save_transport_mode(request):
     return redirect('customers:checkout')
 
 
+@login_required
 def checkout(request, business_id=None):
     if not hasattr(request.user, 'customer_profile'):
         messages.error(request, 'Please complete your profile before checkout.')
@@ -1232,6 +1087,7 @@ def manage_addresses(request):
     return render(request, 'customers/manage_addresses.html', context)
 
 
+@login_required
 def featured_business_checkout(request, business_id):
     # Get the business
     business = get_object_or_404(Business, id=business_id)
@@ -1405,6 +1261,7 @@ def add_address_from_coordinates(request):
         })
     
     except Exception as e:
+        logger.error(f"Error creating address from coordinates: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)})
 
 
@@ -1498,17 +1355,17 @@ def nearby_businesses_api(request):
     
     # Sort regional businesses by distance
     regional_businesses = sorted(regional_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
-    
+
     # Sort featured businesses by distance
     featured_businesses = sorted(featured_businesses, key=lambda x: x['distance'] if x['distance'] else float('inf'))
-    
+
     # Limit to nearest 20 businesses and 10 featured businesses
     businesses_data = businesses_data[:20]
     featured_businesses = featured_businesses[:10]
-    
+
     # Get the region display name
     region_display_name = dict(REGION_CHOICES).get(user_region, user_region.title() if user_region else None)
-    
+
     return JsonResponse({
         'all_businesses': businesses_data,
         'regional_businesses': regional_businesses,
@@ -1528,223 +1385,152 @@ def update_cart(request):
         if not item_id:
             messages.error(request, "No item specified.")
             return redirect('customers:cart')
-
-
-@login_required
-def update_cart_item_ajax(request, item_id):
-    """Handle AJAX requests to update cart item quantity"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-    try:
-        # Get the data from the request
-        data = json.loads(request.body)
-        quantity = int(data.get('quantity', 1))
-        
-        # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            return JsonResponse({
-                'success': False,
-                'error': "You don't have permission to update this item."
-            })
-        
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
-        cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
-        
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
-        
-        total = subtotal + delivery_fee
-        
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
-            'cart_count': cart_count
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
         
         try:
-            cart_item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer_profile)
+            # Get customer profile
+            customer = get_or_create_customer_profile(request)
             
-            if quantity > 0:
-                cart_item.quantity = quantity
-                cart_item.save()
-            else:
-                cart_item.delete()
+            # Get cart item
+            cart_item = get_object_or_404(CartItem, id=item_id)
             
-            messages.success(request, "Cart updated successfully.")
+            # Check if item belongs to user's cart
+            if cart_item.cart.customer != customer:
+                messages.error(request, "You don't have permission to update this item.")
+                return redirect('customers:cart')
+                
+            # Update quantity
+            if quantity < 1:
+                quantity = 1
+            
+            cart_item.quantity = quantity
+            cart_item.save()
+            
+            messages.success(request, "Cart updated.")
+            return redirect('customers:cart')
+            
         except Exception as e:
+            logger.error(f"Error updating cart: {str(e)}")
             messages.error(request, f"Error updating cart: {str(e)}")
+            return redirect('customers:cart')
     
     return redirect('customers:cart')
 
 
 @login_required
-def update_cart_item_ajax(request, item_id):
-    """Handle AJAX requests to update cart item quantity"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
+def cart_view(request):
     try:
-        # Get the data from the request
-        data = json.loads(request.body)
-        quantity = int(data.get('quantity', 1))
-        
-        # Ensure customer profile exists
-        if not hasattr(request.user, 'customer_profile'):
-            try:
-                customer = CustomerProfile.objects.get(user=request.user)
-            except CustomerProfile.DoesNotExist:
-                customer = CustomerProfile.objects.create(
-                    user=request.user,
-                    phone_number=f"temp_{request.user.id}"
-                )
-        else:
-            customer = request.user.customer_profile
-        
-        # Get cart item
-        cart_item = get_object_or_404(CartItem, id=item_id)
-        
-        # Check if item belongs to user's cart
-        if cart_item.cart.customer != customer:
-            return JsonResponse({
-                'success': False,
-                'error': "You don't have permission to update this item."
-            })
-        
-        # Update quantity or remove if quantity is 0
-        if quantity > 0:
-            cart_item.quantity = quantity
-            cart_item.save()
-        else:
-            cart_item.delete()
-        
-        # Calculate new cart totals
-        cart = cart_item.cart
+        # Get customer profile
+        customer = get_or_create_customer_profile(request)
+            
+        cart = Cart.objects.get(customer=customer)
         cart_items = cart.items.all()
-        subtotal = sum(item.product.price * item.quantity for item in cart_items)
-        cart_count = sum(item.quantity for item in cart_items)
         
-        # Calculate delivery fee
-        delivery_fee = Decimal('2000')  # Default fee
-        if hasattr(customer, 'default_address') and customer.default_address and cart.business:
-            delivery_fee, _ = calculate_delivery_fee(cart.business, customer.default_address)
+        # Calculate cart totals
+        subtotal, cart_count = calculate_cart_totals(cart)
         
+        # Get delivery fee
+        delivery_fee = get_delivery_fee_for_customer(customer, cart)
+        
+        # Calculate total
         total = subtotal + delivery_fee
         
-        # Return success response with updated data
-        return JsonResponse({
-            'success': True,
-            'message': 'Cart updated successfully',
-            'item_subtotal': float(cart_item.product.price * cart_item.quantity) if quantity > 0 else 0,
-            'subtotal': float(subtotal),
-            'delivery_fee': float(delivery_fee),
-            'total': float(total),
+        context = {
+            'cart': cart,
+            'cart_items': cart_items,
+            'subtotal': subtotal,
+            'delivery_fee': delivery_fee,
+            'total': total,
             'cart_count': cart_count
-        })
+        }
         
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Error updating cart: {str(e)}'})
+    except Cart.DoesNotExist:
+        context = {
+            'cart_items': [],
+            'subtotal': 0,
+            'delivery_fee': 0,
+            'total': 0,
+            'cart_count': 0
+        }
+    
+    return render(request, 'customers/cart.html', context)
 
 
 @login_required
 def profile(request):
     """View to display and update user profile information"""
-    try:
-        # Check if user has a customer profile
-        if not hasattr(request.user, 'customer_profile'):
-            # Create a customer profile for the user if it doesn't exist
-            from customers.models import CustomerProfile
+    if not hasattr(request.user, 'customer_profile'):
+        from customers.models import CustomerProfile
+        try:
+            customer = CustomerProfile.objects.get(user=request.user)
+        except CustomerProfile.DoesNotExist:
             customer = CustomerProfile.objects.create(
                 user=request.user,
-                phone_number=f"temp_{request.user.id}"  # Temporary phone number
+                phone_number=f"temp_{request.user.id}"
             )
-        else:
-            customer = request.user.customer_profile
+    else:
+        customer = request.user.customer_profile
+    
+    if request.method == 'POST':
+        form = CustomerProfileForm(request.POST, request.FILES, instance=customer)
+        if form.is_valid():
+            profile = form.save(commit=False)
             
-        # Initialize form with user data
-        if request.method == 'POST':
-            # Debug print statement to check files in request
-            print(f"FILES in request: {request.FILES}")
-            
-            # Make sure request.FILES is passed to the form
-            form = CustomerProfileForm(request.POST, request.FILES, instance=customer)
-            if form.is_valid():
-                # Debug: Track profile image
-                if 'profile_image' in request.FILES:
-                    print(f"Profile image found: {request.FILES['profile_image']}")
-                
-                # Save the form with the image
-                profile = form.save(commit=False)
-                
-                # Explicitly handle the profile image if it's in the request
-                if 'profile_image' in request.FILES:
-                    profile.profile_image = request.FILES['profile_image']
-                
-                profile.save()
-                messages.success(request, 'Profile updated successfully.')
-                return redirect('customers:profile')
-            else:
-                # Log form errors for debugging
-                print(f"Form errors: {form.errors}")
-                messages.error(request, f"Error updating profile: {form.errors}")
-        else:
-            form = CustomerProfileForm(instance=customer)
-        
-        # Get user orders for profile view
-        orders = Order.objects.filter(customer=customer).order_by('-created_at')[:5]
-        addresses = DeliveryAddress.objects.filter(customer=customer)
-        favorite_businesses = Favorite.objects.filter(customer=customer).select_related('business')
-        
-        context = {
-            'form': form,  # Changed from profile_form to form to match template
-            'customer': customer,
-            'recent_orders': orders,
-            'addresses': addresses,
-            'favorite_businesses': favorite_businesses,
-        }
-        
-        return render(request, 'customers/profile.html', context)
-        
-    except Exception as e:
-        messages.error(request, f'Error loading profile: {str(e)}')
-        return redirect('customers:home')
+            # Explicitly handle the profile image if it's in the request
+            if 'profile_image' in request.FILES:
+                profile.profile_image = request.FILES['profile_image']
 
+            profile.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('customers:profile')
+        else:
+            # Log form errors for debugging
+            logger.error(f"Form errors: {form.errors}")
+            messages.error(request, f"Error updating profile: {form.errors}")
+    else:
+        form = CustomerProfileForm(instance=customer)
+
+    # Get user orders for profile view
+    orders = Order.objects.filter(customer=customer).order_by('-created_at')[:5]
+    addresses = DeliveryAddress.objects.filter(customer=customer)
+    favorite_businesses = Favorite.objects.filter(customer=customer).select_related('business')
+
+    context = {
+        'form': form,
+        'customer': customer,
+        'recent_orders': orders,
+        'addresses': addresses,
+        'favorite_businesses': favorite_businesses
+    }
+    return render(request, 'customers/profile.html', context)
+
+
+@login_required
+def save_user_location(request):
+    """API endpoint to save user's location to their profile"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    try:
+        # Parse JSON data
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if not latitude or not longitude:
+            return JsonResponse({'success': False, 'error': 'Latitude and longitude are required'})
+        
+        # Update user's profile with location
+        customer = get_or_create_customer_profile(request)
+        customer.last_known_latitude = latitude
+        customer.last_known_longitude = longitude
+        customer.location_updated_at = timezone.now()
+        customer.save()
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Location saved successfully'
+        })
+    
+    except Exception as e:
+        logger.error(f"Error saving user location: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})

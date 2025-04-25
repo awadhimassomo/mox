@@ -3,8 +3,8 @@
 {% block title %}Checkout | Mo-Express{% endblock %}
 
 {% block back_button %}
-<a href="{% url 'customers:cart' %}" class="text-gray-600 dark:text-gray-300">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<a href="{% url 'customers:cart' %}" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm text-gray-600 dark:text-gray-300 hover:bg-white/20 transition-all">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
     </svg>
 </a>
@@ -13,189 +13,328 @@
 {% block header_title %}Checkout{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-    <h1 class="text-2xl font-bold mb-8">Checkout</h1>
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+    <div class="mb-6 flex items-center justify-between">
+        <h1 class="text-xl font-bold">Complete Your Order</h1>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+            <span class="inline-block w-2 h-2 bg-primary-500 rounded-full mr-1"></span>
+            Secure Checkout
+        </div>
+    </div>
 
-    <form method="POST" action="{% url 'customers:place_order' %}" id="checkoutForm">
+    <form method="POST" action="{% url 'customers:place_order' %}" id="checkoutForm" class="relative">
         {% csrf_token %}
         
-        <!-- Delivery Address -->
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold mb-4">Delivery Address</h2>
-            {% if delivery_addresses %}
-            <div class="space-y-4">
-                {% for address in delivery_addresses %}
-                <label class="block">
-                    <div class="flex items-start space-x-3 bg-white dark:bg-gray-800 p-4 rounded-lg border {% if address.is_default %}border-primary{% else %}border-gray-200 dark:border-gray-700{% endif %}">
-                        <input type="radio" 
-                               name="delivery_address" 
-                               value="{{ address.id }}"
-                               {% if address.is_default %}checked{% endif %}
-                               class="mt-1 delivery-address-radio">
-                        <div class="flex-1">
-                            <h3 class="font-medium">{{ address.name }}</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ address.street }}, {{ address.area }}, {{ address.city }}
-                            </p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ address.phone }}
-                            </p>
-                            {% if address.is_default %}
-                            <span class="inline-block mt-1 text-xs bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 px-2 py-0.5 rounded">
-                                Default
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </label>
-                {% endfor %}
-                
-                <div class="flex justify-between mt-4">
-                    <a href="{% url 'customers:manage_addresses' %}" 
-                       class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                        Manage Addresses
-                    </a>
-                    <a href="{% url 'customers:add_address' %}?next=checkout" 
-                       class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors">
-                        Add New Address
-                    </a>
-                </div>
+        <!-- Order Progress -->
+        <div class="mb-8 flex items-center justify-between px-8">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold">1</div>
+                <span class="mt-2 text-xs font-medium text-primary-600 dark:text-primary-400">Address</span>
             </div>
-            {% else %}
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-4">
-                <div class="flex items-center justify-center mb-4">
-                    <div class="bg-yellow-100 dark:bg-yellow-800 rounded-full p-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="text-lg font-semibold text-center text-gray-800 dark:text-white mb-2">No Delivery Addresses Found</h3>
-                <p class="text-center text-gray-600 dark:text-gray-300 mb-4">Please add a delivery address to continue with your order.</p>
-                
-                <div class="flex justify-center">
-                    <a href="{% url 'customers:add_address' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        Add New Address
-                    </a>
-                </div>
-                
-                <div class="mt-4 text-center">
-                    <button type="button" id="use-current-location" class="mt-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Use My Current Location
-                    </button>
-                </div>
+            <div class="flex-1 h-1 bg-gray-200 dark:bg-gray-700">
+                <div class="h-full bg-primary-500 w-1/2"></div>
             </div>
-            {% endif %}
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center font-semibold">2</div>
+                <span class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">Payment</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 dark:bg-gray-700"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center font-semibold">3</div>
+                <span class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">Confirm</span>
+            </div>
         </div>
-
-        <!-- Order Summary -->
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
-                <div class="space-y-4">
-                    {% for item in cart.items.all %}
-                    <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center space-x-3">
-                            {% if item.product.image %}
-                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-12 h-12 object-cover rounded">
-                            {% else %}
-                            <div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                <span class="text-gray-500">{{ item.product.name|slice:":1" }}</span>
-                            </div>
-                            {% endif %}
-                            <div>
-                                <h3 class="font-medium">{{ item.product.name }}</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ item.quantity }} x TZS {{ item.product.price|floatformat:0 }}</p>
-                            </div>
-                        </div>
-                        <p class="font-semibold">TZS {{ item.total_price|floatformat:0 }}</p>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <!-- Left Side: Address and Payment -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Delivery Address -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Delivery Address
+                        </h2>
+                        {% if delivery_addresses %}
+                        <a href="{% url 'customers:add_address' %}?next=checkout" 
+                           class="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add New
+                        </a>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                     
-                    <div class="space-y-2 pt-2">
-                        <div class="flex justify-between">
-                            <span id="cart-subtotal" data-subtotal="{{ cart.subtotal|floatformat:0 }}" hidden></span>
-                            <span class="text-gray-600 dark:text-gray-400">SubTotal</span>
-                            <span>TZS {{ cart.subtotal|floatformat:0 }}</span>
+                    {% if delivery_addresses %}
+                    <div class="space-y-3">
+                        {% for address in delivery_addresses %}
+                        <label class="block cursor-pointer">
+                            <div class="flex items-start space-x-3 p-3 rounded-lg border-2 transition-all duration-200 
+                                        {% if address.is_default %}
+                                        border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-700
+                                        {% else %}
+                                        border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-800
+                                        {% endif %}">
+                                <input type="radio" 
+                                       name="delivery_address" 
+                                       value="{{ address.id }}"
+                                       {% if address.is_default %}checked{% endif %}
+                                       class="mt-1 delivery-address-radio">
+                                <div class="flex-1">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <h3 class="font-medium text-gray-900 dark:text-white">{{ address.name }}</h3>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                {{ address.street }}, {{ address.area }}, {{ address.city }}
+                                            </p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                {{ address.phone }}
+                                            </p>
+                                        </div>
+                                        
+                                        {% if address.is_default %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                            Default
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                        
+                        <div class="mt-4 text-right">
+                            <a href="{% url 'customers:manage_addresses' %}" 
+                               class="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                                Manage all addresses
+                            </a>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 dark:text-gray-400">Delivery Fee</span>
-                            <span id="delivery-fee">TZS {{ delivery_fee|floatformat:0 }}</span>
+                    </div>
+                    {% else %}
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="w-16 h-16 bg-yellow-100 dark:bg-yellow-800 rounded-full flex items-center justify-center mb-4 text-yellow-500 dark:text-yellow-400">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">No Delivery Addresses</h3>
+                            <p class="text-center text-gray-600 dark:text-gray-300 mb-5 max-w-sm">
+                                Please add a delivery address to continue with your order.
+                            </p>
+                            
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="{% url 'customers:add_address' %}?next=checkout" 
+                                   class="inline-flex items-center justify-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg shadow-sm transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Add New Address
+                                </a>
+                                
+                                <button type="button" id="use-current-location" class="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    Use Current Location
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex justify-between font-semibold pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <span>Total</span>
-                            <span id="total-amount">TZS {{ total|floatformat:0 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Payment Method -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        Payment Method
+                    </h2>
+                    <div class="space-y-3">
+                        <label class="block cursor-pointer">
+                            <div class="flex items-center space-x-3 p-3 rounded-lg border-2 border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-700">
+                                <input type="radio" name="payment_method" value="cash" checked class="mt-1">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-medium text-gray-900 dark:text-white">Cash on Delivery</h3>
+                                        <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        Pay with cash when your order is delivered
+                                    </p>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Coming soon payment methods with better styling -->
+                        <div class="relative">
+                            <div class="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-[1px] flex items-center justify-center rounded-lg z-10">
+                                <span class="bg-primary-500 text-white text-xs px-2 py-1 rounded">Coming Soon</span>
+                            </div>
+                            <label class="block cursor-not-allowed">
+                                <div class="flex items-center space-x-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                                    <input type="radio" name="payment_method" value="mpesa" disabled class="mt-1">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="font-medium text-gray-900 dark:text-white">M-Pesa</h3>
+                                            <svg class="w-7 h-7 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            Pay using your M-Pesa mobile money
+                                        </p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute inset-0 bg-white/60 dark:bg-gray-800/60 backdrop-blur-[1px] flex items-center justify-center rounded-lg z-10">
+                                <span class="bg-primary-500 text-white text-xs px-2 py-1 rounded">Coming Soon</span>
+                            </div>
+                            <label class="block cursor-not-allowed">
+                                <div class="flex items-center space-x-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                                    <input type="radio" name="payment_method" value="card" disabled class="mt-1">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="font-medium text-gray-900 dark:text-white">Card Payment</h3>
+                                            <div class="flex space-x-1">
+                                                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#1434CB">
+                                                    <path d="M22.072 7.97H1.928c-.53 0-.961.427-.961.954v9.154c0 .526.431.953.961.953h20.144c.53 0 .961-.427.961-.953V8.924c0-.527-.431-.954-.961-.954z"/>
+                                                    <path fill="#FFFFFF" d="M6.914 14.487l.84-1.955.84 1.955H6.914zm9.059-1.247c-.239-.12-.61-.25-1.078-.25-.59 0-1.008.295-1.008.714 0 .399.36.61.647.74.298.134.397.22.397.34 0 .185-.237.27-.458.27-.309 0-.597-.058-.917-.2l-.129-.068-.139.839c.23.096.658.18 1.099.186.637 0 1.168-.292 1.168-.745 0-.245-.148-.439-.595-.595-.25-.1-.4-.17-.4-.275 0-.091.107-.192.34-.192.193-.5.338.01.438.055l.1.055.157-.744zm1.313 1.247h.808l.498-3.203h-.775l-.53 3.203zm3.258-3.203l-.772 1.99-.82-1.756-.13-.234h-1.199l1.657 3.203h.97l1.037-3.203h-.892z"/>
+                                                    <path fill="#FFFFFF" d="M10.99 12.304L10.334 15h-.933l.648-2.688a5.355 5.355 0 00-.69-.008c-.3 0-.578.58-.711.15l-.01.058h1.281c.06 0 .11.036.127.086l.23.097-.078.309z"/>
+                                                </svg>
+                                                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="#FF5F00">
+                                                    <path d="M9.5 5.847v12.306h5v-12.306z"/>
+                                                    <path d="M9.944 12a7.805 7.805 0 013.001-6.153 7.825 7.825 0 100 12.306A7.805 7.805 0 019.944 12z" fill="#EB001B"/>
+                                                    <path d="M24 12a7.825 7.825 0 01-11.055 6.153 7.829 7.829 0 000-12.306A7.825 7.825 0 0124 12z" fill="#F79E1B"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            Pay with credit or debit card
+                                        </p>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>
+
+                <!-- Order Notes -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Order Notes (Optional)
+                    </h2>
+                    <textarea name="notes" 
+                              placeholder="Special instructions for delivery driver (e.g., 'Call when outside', 'Leave at door', etc.)" 
+                              rows="3"
+                              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"></textarea>
+                </div>
             </div>
-        </div>
-
-        <!-- Payment Method -->
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold mb-4">Payment Method</h2>
-            <div class="space-y-4">
-                <label class="block">
-                    <div class="flex items-center space-x-3 bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-primary">
-                        <input type="radio" name="payment_method" value="cash" checked class="mt-1">
-                        <div class="flex-1">
-                            <h3 class="font-medium">Cash on Delivery</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Pay when you receive your order</p>
+            
+            <!-- Right Side: Order Summary -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 lg:sticky lg:top-24">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        Order Summary
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="max-h-64 overflow-y-auto pr-2 -mr-2">
+                            {% for item in cart.items.all %}
+                            <div class="flex items-start space-x-3 py-3 {% if not forloop.last %}border-b border-gray-200 dark:border-gray-700{% endif %}">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-14 h-14 object-cover rounded-lg flex-shrink-0">
+                                {% else %}
+                                <div class="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span class="text-gray-500 dark:text-gray-400 font-medium">{{ item.product.name|slice:":1"|upper }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between">
+                                        <h3 class="font-medium text-gray-900 dark:text-white truncate">{{ item.product.name }}</h3>
+                                        <span class="font-semibold text-gray-900 dark:text-white ml-2">TZS {{ item.total_price|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-1">
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                            {{ item.quantity }} × TZS {{ item.product.price|floatformat:0 }}
+                                        </p>
+                                        {% if item.product.weight %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300">
+                                            {{ item.product.weight }} kg
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                    </div>
-                </label>
-                <!-- Other payment methods are disabled for now -->
-                <label class="block opacity-50">
-                    <div class="flex items-center space-x-3 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <input type="radio" name="payment_method" value="mpesa" disabled class="mt-1">
-                        <div class="flex-1">
-                            <h3 class="font-medium">M-Pesa</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Pay using M-Pesa (Coming soon)</p>
+                        
+                        <div class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span id="cart-subtotal" data-subtotal="{{ cart.subtotal|floatformat:0 }}" hidden></span>
+                                    <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+                                    <span class="text-gray-900 dark:text-white">TZS {{ cart.subtotal|floatformat:0 }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                                    <span id="delivery-fee" class="text-gray-900 dark:text-white">TZS {{ delivery_fee|floatformat:0 }}</span>
+                                </div>
+                                {% if cart.items.count > 0 %}
+                                <div class="flex justify-between pt-3 border-t border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
+                                    <span>Total</span>
+                                    <span id="total-amount" class="text-lg">TZS {{ total|floatformat:0 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-                </label>
-                <label class="block opacity-50">
-                    <div class="flex items-center space-x-3 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <input type="radio" name="payment_method" value="tigopesa" disabled class="mt-1">
-                        <div class="flex-1">
-                            <h3 class="font-medium">Tigo Pesa</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Pay using Tigo Pesa (Coming soon)</p>
+                        
+                        <!-- Delivery estimate -->
+                        <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800/50 rounded-lg p-3 mt-4">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-primary-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-primary-700 dark:text-primary-300">Estimated Delivery Time</p>
+                                    <p class="text-sm text-primary-600/70 dark:text-primary-400/70 mt-1">
+                                        Your order will arrive in approximately 30-45 minutes after confirmation
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Place Order Button -->
+                        <button type="submit" 
+                                id="submitButton"
+                                class="w-full py-4 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors flex items-center justify-center space-x-2 mt-4">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Confirm Order</span>
+                        </button>
                     </div>
-                </label>
-                <label class="block opacity-50">
-                    <div class="flex items-center space-x-3 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <input type="radio" name="payment_method" value="airtelmoney" disabled class="mt-1">
-                        <div class="flex-1">
-                            <h3 class="font-medium">Airtel Money</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Pay using Airtel Money (Coming soon)</p>
-                        </div>
-                    </div>
-                </label>
+                </div>
             </div>
-        </div>
-
-        <!-- Order Notes -->
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold mb-4">Order Notes</h2>
-            <textarea name="notes" 
-                      placeholder="Any special instructions for delivery?" 
-                      rows="3"
-                      class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
-        </div>
-
-        <!-- Place Order Button -->
-        <div class="mt-8">
-            <button type="submit" 
-                    id="submitButton"
-                    class="w-full py-4 bg-primary text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
-                Confirm Order
-            </button>
         </div>
     </form>
 </div>
@@ -203,155 +342,72 @@
 
 {% block extra_js %}
 <script>
- 
-    
-   // Function to fetch delivery fee from backend
-// Function to fetch delivery fee from the backend
-function updateDeliveryFee() {
-    const selectedAddress = document.querySelector('input[name="delivery_address"]:checked');
-
-    if (selectedAddress) {
-        const addressId = selectedAddress.value;
-        console.log("Selected Address ID:", addressId);
-
-        // Show loading animation while calculating
-        document.getElementById('delivery-fee').innerHTML = '<span class="animate-pulse">Calculating...</span>';
-        document.getElementById('total-amount').innerHTML = '<span class="animate-pulse">Calculating...</span>';
-
-        // Call the Django API to get the delivery fee
-        fetch(`/customers/calculate-delivery-fee/?address_id=${addressId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('delivery-fee').textContent = `TZS ${data.delivery_fee.toLocaleString()}`;
-                    
-                    // Get cart subtotal (if it's inside a hidden field)
-                    let cartSubtotal = parseFloat(document.getElementById("cart-subtotal").dataset.subtotal);
-
-                    const total = cartSubtotal + data.delivery_fee;
-                    document.getElementById('total-amount').textContent = `TZS ${total.toLocaleString()}`;
-                } else {
-                    alert("Error: " + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching delivery fee:', error);
-                alert("Failed to calculate delivery fee.");
-            });
-    } else {
-        console.warn("No address selected. Cannot calculate delivery fee.");
-    }
-}
-
-// Attach event listener to address selection
-document.querySelectorAll('input[name="delivery_address"]').forEach(radio => {
-    radio.addEventListener('change', updateDeliveryFee);
-});
-
-// Initial update on page load
-document.addEventListener('DOMContentLoaded', updateDeliveryFee);
-
-
-// Attach event listener to address selection
-document.querySelectorAll('input[name="delivery_address"]').forEach(radio => {
-    radio.addEventListener('change', updateDeliveryFee);
-});
-
-// Initial update on page load
-document.addEventListener('DOMContentLoaded', updateDeliveryFee);
-    
-    // Add event listeners to address radio buttons
-    document.querySelectorAll('.delivery-address-radio').forEach(radio => {
-        radio.addEventListener('change', updateTotals);
-    });
-    
-    // Initialize totals on page load
-    document.addEventListener('DOMContentLoaded', updateTotals);
-    
-    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-        const addressId = document.querySelector('input[name="delivery_address"]:checked');
-        if (!addressId) {
-            e.preventDefault();
-            showToast('Please select a delivery address');
-            return;
-        }
-
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-        if (!paymentMethod) {
-            e.preventDefault();
-            showToast('Please select a payment method');
-            return;
-        }
-    });
-
-    function updateTotals() {
-    console.log("Updating totals...");
-    
-    // Get selected address
-    const selectedAddress = document.querySelector('input[name="delivery_address"]:checked');
-
-    if (!selectedAddress) {
-        console.warn("No address selected. Cannot update totals.");
-        return;
-    }
-
-    // Fetch new delivery fee
-    fetch(`/customers/calculate-delivery-fee/?address_id=${selectedAddress.value}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('delivery-fee').textContent = `TZS ${data.delivery_fee.toLocaleString()}`;
-                const total = parseFloat("{{ cart.subtotal|floatformat:0 }}") + data.delivery_fee;
-                document.getElementById('total-amount').textContent = `TZS ${total.toLocaleString()}`;
-            } else {
-                console.error("Error updating totals:", data.error);
-            }
-        })
-        .catch(error => console.error('Error fetching totals:', error));
-}
-
-    
     document.addEventListener('DOMContentLoaded', function() {
         // Delivery address change
         const deliveryAddressRadios = document.querySelectorAll('.delivery-address-radio');
         deliveryAddressRadios.forEach(radio => {
-            radio.addEventListener('change', updateDeliveryFee);
+            radio.addEventListener('change', function() {
+                // Highlight selected address card
+                document.querySelectorAll('[name="delivery_address"]').forEach(r => {
+                    const card = r.closest('div');
+                    if (r.checked) {
+                        card.classList.add('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20', 'dark:border-primary-700');
+                        card.classList.remove('border-gray-200', 'dark:border-gray-700');
+                    } else {
+                        card.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20', 'dark:border-primary-700');
+                        card.classList.add('border-gray-200', 'dark:border-gray-700');
+                    }
+                });
+                
+                updateDeliveryFee();
+            });
         });
         
-        function updateDeliveryFee() {
-            const selectedAddressId = document.querySelector('input[name="delivery_address"]:checked')?.value;
-            if (selectedAddressId) {
-                // Show loading spinner
-                document.getElementById('delivery-fee').innerHTML = '<span class="inline-block animate-pulse">Calculating...</span>';
-                document.getElementById('total-amount').innerHTML = '<span class="inline-block animate-pulse">Calculating...</span>';
-                
-                // Make AJAX call to get updated delivery fee
-                fetch(`/customers/calculate-delivery-fee/?address_id=${selectedAddressId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            document.getElementById('delivery-fee').textContent = `TZS ${data.delivery_fee.toLocaleString()}`;
-                            document.getElementById('total-amount').textContent = `TZS ${data.total.toLocaleString()}`;
-                        } else {
-                            console.error('Error:', data.error);
-                            document.getElementById('delivery-fee').textContent = `TZS {{ delivery_fee|floatformat:0 }}`;
-                            document.getElementById('total-amount').textContent = `TZS {{ total|floatformat:0 }}`;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        document.getElementById('delivery-fee').textContent = `TZS {{ delivery_fee|floatformat:0 }}`;
-                        document.getElementById('total-amount').textContent = `TZS {{ total|floatformat:0 }}`;
-                    });
+        // Initial call to update delivery fee
+        updateDeliveryFee();
+        
+        // Form validation
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            const addressId = document.querySelector('input[name="delivery_address"]:checked');
+            if (!addressId) {
+                e.preventDefault();
+                showToast('Please select a delivery address');
+                return;
             }
-        }
+
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (!paymentMethod) {
+                e.preventDefault();
+                showToast('Please select a payment method');
+                return;
+            }
+            
+            // Show loading state on button
+            const submitBtn = document.getElementById('submitButton');
+            submitBtn.innerHTML = `
+                <svg class="animate-spin w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing Order...
+            `;
+            submitBtn.disabled = true;
+        });
         
         // Use current location functionality
         const useCurrentLocationBtn = document.getElementById('use-current-location');
         if (useCurrentLocationBtn) {
             useCurrentLocationBtn.addEventListener('click', function() {
                 if (navigator.geolocation) {
-                    useCurrentLocationBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Getting your location...';
+                    // Show loading state
+                    useCurrentLocationBtn.innerHTML = `
+                        <svg class="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Getting location...
+                    `;
+                    useCurrentLocationBtn.disabled = true;
                     
                     navigator.geolocation.getCurrentPosition(
                         function(position) {
@@ -373,46 +429,104 @@ document.addEventListener('DOMContentLoaded', updateDeliveryFee);
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
+                                    showToast('Location set successfully');
                                     // Reload the page to show the new address
                                     window.location.reload();
                                 } else {
-                                    alert('Error: ' + data.error);
-                                    useCurrentLocationBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Use My Current Location';
+                                    showToast('Error: ' + data.error);
+                                    useCurrentLocationBtn.innerHTML = `
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        Use Current Location
+                                    `;
+                                    useCurrentLocationBtn.disabled = false;
                                 }
                             })
                             .catch(error => {
                                 console.error('Error:', error);
-                                alert('An error occurred while processing your location.');
-                                useCurrentLocationBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Use My Current Location';
+                                showToast('Failed to set your location');
+                                useCurrentLocationBtn.innerHTML = `
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    Use Current Location
+                                `;
+                                useCurrentLocationBtn.disabled = false;
                             });
                         },
                         function(error) {
-                            console.error('Error getting location:', error);
-                            let errorMessage = 'Unable to get your location.';
+                            console.error('Geolocation error:', error);
+                            let errorMessage = 'Unable to access your location';
                             
                             switch(error.code) {
                                 case error.PERMISSION_DENIED:
-                                    errorMessage = 'Please allow location access to use this feature.';
+                                    errorMessage = 'Please allow location access in your browser settings';
                                     break;
                                 case error.POSITION_UNAVAILABLE:
-                                    errorMessage = 'Location information is unavailable.';
+                                    errorMessage = 'Location information is unavailable';
                                     break;
                                 case error.TIMEOUT:
-                                    errorMessage = 'The request to get your location timed out.';
+                                    errorMessage = 'Location request timed out';
                                     break;
                             }
                             
-                            alert(errorMessage);
-                            useCurrentLocationBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Use My Current Location';
+                            showToast(errorMessage);
+                            useCurrentLocationBtn.innerHTML = `
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Use Current Location
+                            `;
+                            useCurrentLocationBtn.disabled = false;
                         }
                     );
                 } else {
-                    alert('Geolocation is not supported by your browser.');
+                    showToast('Geolocation is not supported by your browser');
                 }
             });
         }
-
- 
     });
+    
+    // Function to calculate and update the delivery fee
+    function updateDeliveryFee() {
+        const selectedAddress = document.querySelector('input[name="delivery_address"]:checked');
+
+        if (selectedAddress) {
+            const addressId = selectedAddress.value;
+            
+            // Show loading animation
+            document.getElementById('delivery-fee').innerHTML = '<span class="inline-block animate-pulse">Calculating...</span>';
+            document.getElementById('total-amount').innerHTML = '<span class="inline-block animate-pulse">Calculating...</span>';
+
+            // Call the Django API to get the delivery fee
+            fetch(`/customers/calculate-delivery-fee/?address_id=${addressId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('delivery-fee').textContent = `TZS ${data.delivery_fee.toLocaleString()}`;
+                        
+                        // Get cart subtotal
+                        let cartSubtotal = parseFloat(document.getElementById("cart-subtotal").dataset.subtotal || "{{ cart.subtotal|floatformat:0 }}");
+
+                        const total = cartSubtotal + data.delivery_fee;
+                        document.getElementById('total-amount').textContent = `TZS ${total.toLocaleString()}`;
+                    } else {
+                        showToast("Error calculating delivery fee: " + data.error);
+                        document.getElementById('delivery-fee').textContent = `TZS {{ delivery_fee|floatformat:0 }}`;
+                        document.getElementById('total-amount').textContent = `TZS {{ total|floatformat:0 }}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching delivery fee:', error);
+                    showToast("Failed to calculate delivery fee");
+                    document.getElementById('delivery-fee').textContent = `TZS {{ delivery_fee|floatformat:0 }}`;
+                    document.getElementById('total-amount').textContent = `TZS {{ total|floatformat:0 }}`;
+                });
+        }
+    }
 </script>
 {% endblock %}

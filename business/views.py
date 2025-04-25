@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from orders.models import Order
 from user_verification.utils import create_otp_for_user, send_otp_via_sms
 from .models import Business, BusinessProfile, Product, Category
@@ -18,6 +18,11 @@ from .forms import ProductForm
 from .utils import check_low_stock
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse, reverse_lazy
+from io import BytesIO
+import pandas as pd
+from django.http import HttpResponse
+from datetime import datetime
+from django.core.paginator import Paginator
 
 # Create your views here.
 
@@ -442,9 +447,16 @@ def verify_otp(request, user_id):
             submitted_otp = f"{otp1}{otp2}{otp3}{otp4}{otp5}{otp6}"
             
             # Check if OTP is valid
-            from user_verification.models import OTP
+            from user_verification.models import OTPVerification
             try:
-                otp_obj = OTP.objects.get(user=user, is_used=False)
+                # Get the most recent non-used OTP for this user
+                otp_obj = OTPVerification.objects.filter(user=user, is_used=False).order_by('-otp_timestamp').first()
+                
+                if not otp_obj:
+                    return render(request, "business/otp_verification.html", {
+                        "user_id": user_id,
+                        "error": "OTP expired or not found. Please request a new one."
+                    })
                 
                 # Verify OTP
                 if otp_obj.otp == submitted_otp and not otp_obj.is_expired():
@@ -488,12 +500,13 @@ def verify_otp(request, user_id):
                     # Invalid OTP
                     return render(request, "business/otp_verification.html", {
                         "user_id": user_id,
-                        "error": "Invalid OTP. Please try again."
+                        "error": "Invalid OTP or OTP expired. Please try again or request a new one."
                     })
-            except OTP.DoesNotExist:
+            except Exception as e:
+                print(f"Error verifying OTP: {str(e)}")
                 return render(request, "business/otp_verification.html", {
                     "user_id": user_id,
-                    "error": "OTP expired or not found. Please request a new one."
+                    "error": f"Error verifying OTP. Please try again or request a new one. ({str(e)})"
                 })
         except CustomUser.DoesNotExist:
             return render(request, "business/otp_verification.html", {
@@ -546,177 +559,68 @@ def resend_otp(request):
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
-@csrf_exempt
-def verify_otp(request, user_id):
-    """Handle OTP verification for business registration"""
-    # For GET requests, show the OTP verification page
-    if request.method == "GET":
-        return render(request, "business/otp_verification.html", {"user_id": user_id})
-    
-    # For POST requests, verify the OTP
-    if request.method == "POST":
-        try:
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Get the OTP from form
-            otp1 = request.POST.get('otp1', '')
-            otp2 = request.POST.get('otp2', '')
-            otp3 = request.POST.get('otp3', '')
-            otp4 = request.POST.get('otp4', '')
-            otp5 = request.POST.get('otp5', '')
-            otp6 = request.POST.get('otp6', '')
-            
-            # Combine OTP digits
-            submitted_otp = f"{otp1}{otp2}{otp3}{otp4}{otp5}{otp6}"
-            
-            # Check if OTP is valid
-            from user_verification.models import OTP
-            try:
-                otp_obj = OTP.objects.get(user=user, is_used=False)
-                
-                # Verify OTP
-                if otp_obj.otp == submitted_otp and not otp_obj.is_expired():
-                    # Mark OTP as used
-                    otp_obj.is_used = True
-                    otp_obj.save()
-                    
-                    # Activate user
-                    user.is_active = True
-                    user.save()
-                    
-                    # Create business with saved data
-                    try:
-                        # Extract form data from registration
-                        business_name = user.first_name.split()[0] + "'s Business" # Default business name
-                        phone = user.phone
-                        owner_name = user.first_name
-                        region = user.region
-                        
-                        # Create business
-                        business = Business.objects.create(
-                            user=user,
-                            name=business_name,
-                            owner_name=owner_name,
-                            phone=phone,
-                            region=region
-                        )
-                        
-                        # Log in the user
-                        login(request, user)
-                        
-                        # Redirect to dashboard
-                        return redirect('business:business_dashboard')
-                    except Exception as e:
-                        print(f"Error creating business: {str(e)}")
-                        return render(request, "business/otp_verification.html", {
-                            "user_id": user_id,
-                            "error": "Error creating business. Please contact support."
-                        })
-                else:
-                    # Invalid OTP
-                    return render(request, "business/otp_verification.html", {
-                        "user_id": user_id,
-                        "error": "Invalid OTP. Please try again."
-                    })
-            except OTP.DoesNotExist:
-                return render(request, "business/otp_verification.html", {
-                    "user_id": user_id,
-                    "error": "OTP expired or not found. Please request a new one."
-                })
-        except CustomUser.DoesNotExist:
-            return render(request, "business/otp_verification.html", {
-                "error": "User not found. Please register again."
-            })
-    
-    return render(request, "business/otp_verification.html", {"user_id": user_id})
-
-
-@csrf_exempt
-def resend_otp(request):
-    """Resend OTP for business registration"""
-    if request.method == "POST":
-        try:
-            if request.content_type and 'application/json' in request.content_type:
-                # Handle JSON data
-                try:
-                    data = json.loads(request.body)
-                    user_id = data.get('user_id')
-                except json.JSONDecodeError:
-                    return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-            else:
-                # Handle form data
-                user_id = request.POST.get('user_id')
-            
-            if not user_id:
-                return JsonResponse({'error': 'User ID is required'}, status=400)
-            
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Generate new OTP
-            otp = random.randint(100000, 999999)
-            
-            # Save new OTP to user's data
-            create_otp_for_user(user=user, otp=otp)
-            
-            # Send OTP via SMS
-            try:
-                send_otp_via_sms(user.phone, otp)
-                return JsonResponse({'success': True, 'message': 'OTP sent successfully'})
-            except Exception as e:
-                return JsonResponse({'error': f'Failed to send OTP: {str(e)}'}, status=500)
-        
-        except CustomUser.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
-    
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-
-# View to add a new product
 @login_required
-def add_product(request):
-    """View to add a new product"""
+def mark_order_ready(request):
+    """View to mark an order as ready for pickup"""
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
+        order_id = request.POST.get('order_id')
+        try:
+            # Try to get business directly by user first
+            business = None
             try:
-                # Create product with business association
-                product = form.save(commit=False)
-                product.business = Business.objects.get(user=request.user)
-                product.save()
-                messages.success(request, "Product added successfully!")
-                return redirect('business:business_dashboard')
-            except Exception as e:
-                print(f"Error in add_product: {str(e)}")
-                messages.error(request, f"Error saving product: {str(e)}")
-        else:
-            print(f"Form errors: {form.errors}")
-            messages.error(request, "There was an error with your submission. Please check the form.")
-    else:
-        form = ProductForm()
+                # First try to get business from business profile if it exists
+                business_profile = BusinessProfile.objects.get(user=request.user)
+                business = business_profile.business
+            except BusinessProfile.DoesNotExist:
+                # If no profile exists, try to get business directly
+                business = Business.objects.get(user=request.user)
+            
+            print(f"Found business: {business.name} (ID: {business.id}) for user {request.user.phone}")
+            
+            # Get the order and verify it belongs to this business
+            order = Order.objects.get(id=order_id, business=business)
+            
+            # Update the order status to ready_for_pickup
+            current_status = order.status
+            print(f"DEBUG: Order #{order.id} current status: {current_status}")
+            
+            # Accept both uppercase and lowercase status values
+            if current_status.lower() in ['processing', 'pending', 'confirmed', 'assigned']:
+                order.status = 'ready_for_pickup'
+                order.save()
+                messages.success(request, f"Order #{order.id} marked as ready for pickup.")
+                print(f"DEBUG: Order status updated to: {order.status}")
+            else:
+                messages.error(request, f"Cannot mark order #{order.id} as ready. Current status: {current_status}")
+                print(f"DEBUG: Invalid status transition from {current_status} to ready_for_pickup")
+                
+        except Business.DoesNotExist:
+            messages.error(request, "Business not found for this user.")
+            print(f"DEBUG: Business not found for user {request.user.id}")
+        except Order.DoesNotExist:
+            messages.error(request, f"Order #{order_id} not found or doesn't belong to your business.")
+            print(f"DEBUG: Order {order_id} not found or doesn't belong to business")
+        except Exception as e:
+            messages.error(request, f"Error updating order: {str(e)}")
+            print(f"DEBUG: Exception in mark_order_ready: {str(e)}")
     
-    # Get all categories for the dropdown
-    categories = Category.objects.all().order_by('name')
-    
-    return render(request, 'business/add_product.html', {
-        'form': form,
-        'categories': categories
-    })
+    return redirect('business:business_dashboard')
 
-
-@login_required
-def sales_history(request):
-    """View for displaying sales history"""
-    orders = Order.objects.filter(business=request.user.businesses.first()).order_by('-created_at')
-    return render(request, 'business/sales_history.html', {'orders': orders})
 
 @login_required
 def earnings(request):
     """View for displaying earnings"""
-    total_earnings = Order.objects.filter(business=request.user.businesses.first(), status='completed').aggregate(total=models.Sum('total_price'))['total'] or 0
+    from django.db.models import Sum
+    business = request.user.businesses.first()
+    total_earnings = 0
+    
+    if business:
+        # Use 'total' field instead of 'total_price' since that's what's available in the Order model
+        total_earnings = Order.objects.filter(
+            business=business, 
+            status='completed'
+        ).aggregate(total=Sum('total'))['total'] or 0
+    
     return render(request, 'business/earnings.html', {'total_earnings': total_earnings})
 
 @login_required
@@ -793,306 +697,121 @@ def create_business(request):
     })
 
 
-@csrf_exempt
-def verify_otp(request, user_id):
-    """Handle OTP verification for business registration"""
-    # For GET requests, show the OTP verification page
-    if request.method == "GET":
-        return render(request, "business/otp_verification.html", {"user_id": user_id})
+@login_required
+def sales_history(request):
+    """View for displaying sales history"""
+    business = request.user.businesses.first()
+    orders = []
     
-    # For POST requests, verify the OTP
-    if request.method == "POST":
-        try:
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Get the OTP from form
-            otp1 = request.POST.get('otp1', '')
-            otp2 = request.POST.get('otp2', '')
-            otp3 = request.POST.get('otp3', '')
-            otp4 = request.POST.get('otp4', '')
-            otp5 = request.POST.get('otp5', '')
-            otp6 = request.POST.get('otp6', '')
-            
-            # Combine OTP digits
-            submitted_otp = f"{otp1}{otp2}{otp3}{otp4}{otp5}{otp6}"
-            
-            # Check if OTP is valid
-            from user_verification.models import OTP
-            try:
-                otp_obj = OTP.objects.get(user=user, is_used=False)
-                
-                # Verify OTP
-                if otp_obj.otp == submitted_otp and not otp_obj.is_expired():
-                    # Mark OTP as used
-                    otp_obj.is_used = True
-                    otp_obj.save()
-                    
-                    # Activate user
-                    user.is_active = True
-                    user.save()
-                    
-                    # Create business with saved data
-                    try:
-                        # Extract form data from registration
-                        business_name = user.first_name.split()[0] + "'s Business" # Default business name
-                        phone = user.phone
-                        owner_name = user.first_name
-                        region = user.region
-                        
-                        # Create business
-                        business = Business.objects.create(
-                            user=user,
-                            name=business_name,
-                            owner_name=owner_name,
-                            phone=phone,
-                            region=region
-                        )
-                        
-                        # Log in the user
-                        login(request, user)
-                        
-                        # Redirect to dashboard
-                        return redirect('business:business_dashboard')
-                    except Exception as e:
-                        print(f"Error creating business: {str(e)}")
-                        return render(request, "business/otp_verification.html", {
-                            "user_id": user_id,
-                            "error": "Error creating business. Please contact support."
-                        })
-                else:
-                    # Invalid OTP
-                    return render(request, "business/otp_verification.html", {
-                        "user_id": user_id,
-                        "error": "Invalid OTP. Please try again."
-                    })
-            except OTP.DoesNotExist:
-                return render(request, "business/otp_verification.html", {
-                    "user_id": user_id,
-                    "error": "OTP expired or not found. Please request a new one."
-                })
-        except CustomUser.DoesNotExist:
-            return render(request, "business/otp_verification.html", {
-                "error": "User not found. Please register again."
-            })
+    if business:
+        orders = Order.objects.filter(business=business).order_by('-created_at')
     
-    return render(request, "business/otp_verification.html", {"user_id": user_id})
-
-
-@csrf_exempt
-def resend_otp(request):
-    """Resend OTP for business registration"""
-    if request.method == "POST":
-        try:
-            if request.content_type and 'application/json' in request.content_type:
-                # Handle JSON data
-                try:
-                    data = json.loads(request.body)
-                    user_id = data.get('user_id')
-                except json.JSONDecodeError:
-                    return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-            else:
-                # Handle form data
-                user_id = request.POST.get('user_id')
-            
-            if not user_id:
-                return JsonResponse({'error': 'User ID is required'}, status=400)
-            
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Generate new OTP
-            otp = random.randint(100000, 999999)
-            
-            # Save new OTP to user's data
-            create_otp_for_user(user=user, otp=otp)
-            
-            # Send OTP via SMS
-            try:
-                send_otp_via_sms(user.phone, otp)
-                return JsonResponse({'success': True, 'message': 'OTP sent successfully'})
-            except Exception as e:
-                return JsonResponse({'error': f'Failed to send OTP: {str(e)}'}, status=500)
-        
-        except CustomUser.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
-    
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    return render(request, 'business/sales_history.html', {
+        'orders': orders,
+        'business': business
+    })
 
 @login_required
-def mark_order_ready(request):
-    """View to mark an order as ready for pickup"""
-    if request.method == 'POST':
-        order_id = request.POST.get('order_id')
-        try:
-            # Try to get business directly by user first
-            business = None
-            try:
-                # First try to get business from business profile if it exists
-                business_profile = BusinessProfile.objects.get(user=request.user)
-                business = business_profile.business
-            except BusinessProfile.DoesNotExist:
-                # If no profile exists, try to get business directly
-                business = Business.objects.get(user=request.user)
-            
-            print(f"Found business: {business.name} (ID: {business.id}) for user {request.user.phone}")
-            
-            # Get the order and verify it belongs to this business
-            order = Order.objects.get(id=order_id, business=business)
-            
-            # Update the order status to ready_for_pickup
-            current_status = order.status
-            print(f"DEBUG: Order #{order.id} current status: {current_status}")
-            
-            # Accept both uppercase and lowercase status values
-            if current_status.lower() in ['processing', 'pending', 'confirmed', 'assigned']:
-                order.status = 'ready_for_pickup'
-                order.save()
-                messages.success(request, f"Order #{order.id} marked as ready for pickup.")
-                print(f"DEBUG: Order status updated to: {order.status}")
-            else:
-                messages.error(request, f"Cannot mark order #{order.id} as ready. Current status: {current_status}")
-                print(f"DEBUG: Invalid status transition from {current_status} to ready_for_pickup")
-                
-        except Business.DoesNotExist:
-            messages.error(request, "Business not found for this user.")
-            print(f"DEBUG: Business not found for user {request.user.id}")
-        except Order.DoesNotExist:
-            messages.error(request, f"Order #{order_id} not found or doesn't belong to your business.")
-            print(f"DEBUG: Order {order_id} not found or doesn't belong to business")
-        except Exception as e:
-            messages.error(request, f"Error updating order: {str(e)}")
-            print(f"DEBUG: Exception in mark_order_ready: {str(e)}")
+def export_sales_history_excel(request):
+    """Export sales history to Excel"""
+    business = request.user.businesses.first()
+    if not business:
+        messages.error(request, "No business found for your account.")
+        return redirect('business:business_dashboard')
     
-    return redirect('business:business_dashboard')
-
-
-@csrf_exempt
-def verify_otp(request, user_id):
-    """Handle OTP verification for business registration"""
-    # For GET requests, show the OTP verification page
-    if request.method == "GET":
-        return render(request, "business/otp_verification.html", {"user_id": user_id})
+    # Get all orders for this business
+    orders = Order.objects.filter(business=business).order_by('-created_at')
     
-    # For POST requests, verify the OTP
-    if request.method == "POST":
-        try:
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Get the OTP from form
-            otp1 = request.POST.get('otp1', '')
-            otp2 = request.POST.get('otp2', '')
-            otp3 = request.POST.get('otp3', '')
-            otp4 = request.POST.get('otp4', '')
-            otp5 = request.POST.get('otp5', '')
-            otp6 = request.POST.get('otp6', '')
-            
-            # Combine OTP digits
-            submitted_otp = f"{otp1}{otp2}{otp3}{otp4}{otp5}{otp6}"
-            
-            # Check if OTP is valid
-            from user_verification.models import OTP
-            try:
-                otp_obj = OTP.objects.get(user=user, is_used=False)
-                
-                # Verify OTP
-                if otp_obj.otp == submitted_otp and not otp_obj.is_expired():
-                    # Mark OTP as used
-                    otp_obj.is_used = True
-                    otp_obj.save()
-                    
-                    # Activate user
-                    user.is_active = True
-                    user.save()
-                    
-                    # Create business with saved data
-                    try:
-                        # Extract form data from registration
-                        business_name = user.first_name.split()[0] + "'s Business" # Default business name
-                        phone = user.phone
-                        owner_name = user.first_name
-                        region = user.region
-                        
-                        # Create business
-                        business = Business.objects.create(
-                            user=user,
-                            name=business_name,
-                            owner_name=owner_name,
-                            phone=phone,
-                            region=region
-                        )
-                        
-                        # Log in the user
-                        login(request, user)
-                        
-                        # Redirect to dashboard
-                        return redirect('business:business_dashboard')
-                    except Exception as e:
-                        print(f"Error creating business: {str(e)}")
-                        return render(request, "business/otp_verification.html", {
-                            "user_id": user_id,
-                            "error": "Error creating business. Please contact support."
-                        })
-                else:
-                    # Invalid OTP
-                    return render(request, "business/otp_verification.html", {
-                        "user_id": user_id,
-                        "error": "Invalid OTP. Please try again."
-                    })
-            except OTP.DoesNotExist:
-                return render(request, "business/otp_verification.html", {
-                    "user_id": user_id,
-                    "error": "OTP expired or not found. Please request a new one."
-                })
-        except CustomUser.DoesNotExist:
-            return render(request, "business/otp_verification.html", {
-                "error": "User not found. Please register again."
-            })
+    # Apply filters if provided
+    date_filter = request.GET.get('date_filter')
+    status_filter = request.GET.get('status_filter')
+    search_query = request.GET.get('search')
     
-    return render(request, "business/otp_verification.html", {"user_id": user_id})
-
-
-@csrf_exempt
-def resend_otp(request):
-    """Resend OTP for business registration"""
-    if request.method == "POST":
-        try:
-            if request.content_type and 'application/json' in request.content_type:
-                # Handle JSON data
-                try:
-                    data = json.loads(request.body)
-                    user_id = data.get('user_id')
-                except json.JSONDecodeError:
-                    return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-            else:
-                # Handle form data
-                user_id = request.POST.get('user_id')
-            
-            if not user_id:
-                return JsonResponse({'error': 'User ID is required'}, status=400)
-            
-            # Get the user
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Generate new OTP
-            otp = random.randint(100000, 999999)
-            
-            # Save new OTP to user's data
-            create_otp_for_user(user=user, otp=otp)
-            
-            # Send OTP via SMS
-            try:
-                send_otp_via_sms(user.phone, otp)
-                return JsonResponse({'success': True, 'message': 'OTP sent successfully'})
-            except Exception as e:
-                return JsonResponse({'error': f'Failed to send OTP: {str(e)}'}, status=500)
+    if date_filter:
+        today = timezone.now().date()
+        if date_filter == 'today':
+            orders = orders.filter(created_at__date=today)
+        elif date_filter == 'week':
+            start_of_week = today - timezone.timedelta(days=today.weekday())
+            orders = orders.filter(created_at__date__gte=start_of_week)
+        elif date_filter == 'month':
+            orders = orders.filter(created_at__month=today.month, created_at__year=today.year)
+    
+    if status_filter and status_filter != 'all':
+        orders = orders.filter(status__iexact=status_filter)
+    
+    if search_query:
+        orders = orders.filter(
+            Q(order_number__icontains=search_query) |
+            Q(customer_name__icontains=search_query)
+        )
+    
+    # Create DataFrame from orders
+    data = []
+    for order in orders:
+        data.append({
+            'Order Number': order.order_number,
+            'Customer': order.customer_name if hasattr(order, 'customer_name') else (order.customer.name if order.customer else 'N/A'),
+            'Date': order.created_at.strftime('%Y-%m-%d %H:%M'),
+            'Status': order.status,
+            'Total Amount': order.total,
+            'Delivery Address': order.delivery_address.address if hasattr(order, 'delivery_address') and order.delivery_address else 'N/A',
+        })
+    
+    df = pd.DataFrame(data)
+    
+    # Create Excel file
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Sales History', index=False)
         
-        except CustomUser.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+        # Auto-adjust columns width
+        worksheet = writer.sheets['Sales History']
+        for idx, col in enumerate(df.columns):
+            max_len = max(df[col].astype(str).map(len).max(), len(col)) + 2
+            worksheet.column_dimensions[chr(65 + idx)].width = max_len
     
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    # Create HTTP response with Excel file
+    output.seek(0)
+    filename = f"sales_history_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
+
+@login_required
+def import_sales_history_excel(request):
+    """Import sales data from Excel"""
+    if request.method != 'POST' or 'excel_file' not in request.FILES:
+        messages.error(request, "No file uploaded")
+        return redirect('business:sales_history')
+    
+    excel_file = request.FILES['excel_file']
+    
+    # Check file extension
+    if not excel_file.name.endswith(('.xlsx', '.xls')):
+        messages.error(request, "Unsupported file format. Please upload an Excel file (.xlsx, .xls)")
+        return redirect('business:sales_history')
+    
+    try:
+        # Read Excel file
+        df = pd.read_excel(excel_file)
+        
+        # Process the data (this is just a demonstration, you may want to customize this)
+        # For safety, we're just displaying what was imported, not actually creating orders
+        
+        row_count = len(df)
+        messages.success(request, f"Successfully processed {row_count} records from Excel file. View console for details.")
+        
+        # You could process the data here to create or update orders
+        # But for now we'll just pass this as information
+        print(f"Imported {row_count} records from Excel")
+        print(df.head())
+        
+    except Exception as e:
+        messages.error(request, f"Error processing Excel file: {str(e)}")
+    
+    return redirect('business:sales_history')

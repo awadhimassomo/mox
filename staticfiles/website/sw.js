@@ -1,21 +1,36 @@
 // Service Worker for Mo-Express PWA
 
-const CACHE_NAME = 'mo-express-cache-v1';
+const CACHE_NAME = 'mo-express-cache-v3';
 const urlsToCache = [
   '/',
-  '/static/website/manifest.json',
+  '/static/website/manifest.webmanifest',
   '/static/website/images/favicon.ico',
-  '/static/website/images/bg.jpg'
-  // Add other assets to cache as needed
+  '/static/website/images/bg.jpg',
+  '/static/website/images/icons/icon-192x192.png',
+  '/static/website/images/icons/icon-512x512.png',
+  '/riders/static/img/logo.png'
 ];
 
 // Install service worker and cache resources
 self.addEventListener('install', event => {
+  // Force the waiting service worker to become active
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        
+        // Use Promise.allSettled with individual promises that can fail independently
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            fetch(url, { mode: 'no-cors' })
+              .then(response => cache.put(url, response))
+              .catch(error => {
+                console.warn(`Failed to cache ${url}: ${error.message}`);
+              })
+          )
+        );
       })
   );
 });

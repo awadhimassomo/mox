@@ -1,0 +1,380 @@
+{% extends 'business/base.html' %}
+{% load static %}
+
+{% block title %}Sales History | Mo-Express{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-lg p-4 md:p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Sales History</h2>
+            <div class="text-sm text-gray-500">Last updated: {% now "F j, Y H:i" %}</div>
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">Filter Orders</h3>
+            <div class="flex flex-wrap gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <label for="date-filter" class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                    <select id="date-filter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                
+                <div class="flex-1 min-w-[200px]">
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status-filter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div class="flex-1 min-w-[200px]">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input type="text" id="search" placeholder="Order #, Customer name..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div class="flex items-end">
+                    <button id="apply-filters" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Orders Table -->
+        <div class="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in orders %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{{ order.order_number }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ order.customer_name|default:"N/A" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ order.created_at|date:"F j, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            TZS {{ order.total|floatformat:0 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if order.status == 'pending' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                            {% elif order.status == 'processing' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Processing
+                                </span>
+                            {% elif order.status == 'ready_for_pickup' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                    Ready for Pickup
+                                </span>
+                            {% elif order.status == 'in_transit' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    In Transit
+                                </span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Delivered
+                                </span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Cancelled
+                                </span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ order.status|title }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-900" onclick="viewOrderDetails('{{ order.id }}')">View Details</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No orders found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+            <div class="flex flex-1 justify-between sm:hidden">
+                {% if orders.has_previous %}
+                <a href="?page={{ orders.previous_page_number }}" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+                {% else %}
+                <span class="relative inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">Previous</span>
+                {% endif %}
+                
+                {% if orders.has_next %}
+                <a href="?page={{ orders.next_page_number }}" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+                {% else %}
+                <span class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">Next</span>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">{{ orders.start_index }}</span> to <span class="font-medium">{{ orders.end_index }}</span> of <span class="font-medium">{{ orders.paginator.count }}</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                        {% if orders.has_previous %}
+                        <a href="?page={{ orders.previous_page_number }}" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Previous</span>
+                            <!-- Heroicon name: mini/chevron-left -->
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                        
+                        {% for i in orders.paginator.page_range %}
+                            {% if orders.number == i %}
+                            <span class="relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">{{ i }}</span>
+                            {% else %}
+                            <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ i }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if orders.has_next %}
+                        <a href="?page={{ orders.next_page_number }}" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Next</span>
+                            <!-- Heroicon name: mini/chevron-right -->
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Export Options -->
+        <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{% url 'business:export_sales_history' %}{% if request.GET.date_filter or request.GET.status_filter or request.GET.search %}?{% if request.GET.date_filter %}date_filter={{ request.GET.date_filter }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% endif %}" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export to Excel
+            </a>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center" onclick="document.getElementById('importModal').classList.remove('hidden')">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Import from Excel
+            </button>
+            <a href="#" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center" onclick="exportToPDF()">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Export to PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal (Hidden by default) -->
+<div id="orderDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Order Details</h3>
+                <button onclick="closeOrderModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="orderDetails" class="space-y-4">
+                <!-- Order details will be loaded here -->
+                <div class="text-center py-8">
+                    <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="mt-2 text-gray-600">Loading order details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div id="importModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-900">Import Sales Data</h3>
+            <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form action="{% url 'business:import_sales_history' %}" method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            
+            <div>
+                <label for="excel_file" class="block text-sm font-medium text-gray-700 mb-1">Upload Excel File</label>
+                <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" required 
+                       class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="mt-1 text-sm text-gray-500">Accepted formats: .xlsx, .xls</p>
+            </div>
+            
+            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <p class="text-sm text-yellow-800">
+                    <strong>Note:</strong> Please ensure your Excel file has the following columns: Order Number, Customer, Date, Status, Total Amount.
+                </p>
+            </div>
+            
+            <div class="pt-4 flex justify-end space-x-3">
+                <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded transition-colors"
+                        onclick="document.getElementById('importModal').classList.add('hidden')">
+                    Cancel
+                </button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors">
+                    Import Data
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Export to PDF functionality (uses browser print for simplicity)
+    function exportToPDF() {
+        window.print();
+    }
+    
+    // Toggle order details modal
+    function viewOrderDetails(orderId) {
+        // Here you would fetch the order details from the server
+        // For now, just show the modal with a placeholder
+        const modal = document.getElementById('orderDetailsModal');
+        const detailsContainer = document.getElementById('orderDetails');
+        
+        // Show the modal
+        modal.classList.remove('hidden');
+        
+        // Simulate loading data (in a real app, you'd fetch this from an API)
+        setTimeout(() => {
+            detailsContainer.innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 class="font-semibold text-blue-800">Order #12345</h4>
+                    <p class="text-sm text-blue-600">Placed on April 24, 2025</p>
+                </div>
+                
+                <div class="border-b pb-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Customer Information</h5>
+                    <p class="text-sm text-gray-600">Name: John Doe</p>
+                    <p class="text-sm text-gray-600">Phone: +255 712 345 678</p>
+                    <p class="text-sm text-gray-600">Delivery Address: 123 Main St, Dar es Salaam</p>
+                </div>
+                
+                <div class="border-b py-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Order Items</h5>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-sm">2 × Product A</span>
+                            <span class="text-sm font-medium">TZS 60,000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm">1 × Product B</span>
+                            <span class="text-sm font-medium">TZS 5,000</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-b py-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Order Summary</h5>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-sm">Subtotal:</span>
+                            <span class="text-sm">TZS 65,000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm">Delivery Fee:</span>
+                            <span class="text-sm">TZS 5,000</span>
+                        </div>
+                        <div class="flex justify-between font-medium">
+                            <span>Total:</span>
+                            <span>TZS 70,000</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Order Status</h5>
+                    <div class="flex items-center">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Delivered
+                        </span>
+                        <span class="ml-2 text-sm text-gray-600">April 24, 2025 at 2:30 PM</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded transition-colors">
+                        Print Receipt
+                    </button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors">
+                        Contact Customer
+                    </button>
+                </div>
+            `;
+        }, 1000);
+    }
+    
+    function closeOrderModal() {
+        const modal = document.getElementById('orderDetailsModal');
+        modal.classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('orderDetailsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeOrderModal();
+        }
+    });
+    
+    // Filter functionality
+    document.getElementById('apply-filters').addEventListener('click', function() {
+        // In a real app, this would filter the data or redirect with query parameters
+        // For now, just show a message
+        alert('Filters would be applied here');
+    });
+</script>
+{% endblock %}

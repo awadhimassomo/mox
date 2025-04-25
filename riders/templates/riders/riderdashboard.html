@@ -3,10 +3,29 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold mb-6 text-gray-800">Rider Dashboard</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Rider Dashboard</h1>
+        
+        <!-- Online/Offline Toggle Button -->
+        <div class="flex items-center">
+            <span id="statusText" class="mr-2 text-gray-600">Loading...</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="onlineToggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            </label>
+        </div>
+    </div>
 
     <!-- Hidden CSRF token field -->
     {% csrf_token %}
+    
+    <!-- Location status indicator -->
+    <div id="locationStatus" class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200 hidden">
+        <div class="flex items-center">
+            <span id="locationIcon" class="mr-2">📍</span>
+            <span id="locationMessage">Updating your location...</span>
+        </div>
+    </div>
 
     <div class="grid grid-cols-1 gap-4">
         <!-- Incoming Orders (Auto-refresh & Accept Timer) -->
@@ -278,5 +297,226 @@
 
     // Initial load
     fetchIncomingOrders();
+    
+    // Location tracking functionality
+    let locationUpdateInterval;
+    const locationStatus = document.getElementById('locationStatus');
+    const locationMessage = document.getElementById('locationMessage');
+    const locationIcon = document.getElementById('locationIcon');
+    
+    // Function to update rider's location
+    function updateRiderLocation() {
+        // Show location status
+        locationStatus.classList.remove('hidden');
+        locationIcon.textContent = '🔄';
+        locationMessage.textContent = 'Updating your location...';
+        
+        // Get the online status from the toggle
+        const isOnline = document.getElementById('onlineToggle').checked;
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                
+                // Send location to server
+                fetch('/riders/update-location/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude,
+                        is_online: isOnline
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Location updated:', data);
+                    const timestamp = new Date().toLocaleTimeString();
+                    locationIcon.textContent = '✅';
+                    locationMessage.textContent = `Location updated at ${timestamp}`;
+                    
+                    // Check if the server's status matches our toggle
+                    if (data.is_online !== undefined) {
+                        const onlineToggle = document.getElementById('onlineToggle');
+                        const statusText = document.getElementById('statusText');
+                        
+                        // Update toggle to match server status if different
+                        if (onlineToggle.checked !== data.is_online) {
+                            onlineToggle.checked = data.is_online;
+                            statusText.textContent = data.is_online ? 'Online' : 'Offline';
+                            statusText.className = data.is_online ? 'mr-2 text-green-600 font-medium' : 'mr-2 text-red-600 font-medium';
+                        }
+                    }
+                    
+                    // Always refresh rider status to ensure consistency
+                    checkRiderStatus();
+                    
+                    // Hide the status after a few seconds
+                    setTimeout(() => {
+                        locationStatus.classList.add('hidden');
+                    }, 5000);
+                })
+                .catch(error => {
+                    console.error('Error updating location:', error);
+                    locationIcon.textContent = '❌';
+                    locationMessage.textContent = 'Failed to update location. Will try again.';
+                });
+            }, error => {
+                console.error('Geolocation error:', error);
+                locationIcon.textContent = '⚠️';
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        locationMessage.textContent = 'Location access denied. Please enable location permissions.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        locationMessage.textContent = 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        locationMessage.textContent = 'Location request timed out.';
+                        break;
+                    default:
+                        locationMessage.textContent = 'Unknown error getting location.';
+                }
+            }, {
+                enableHighAccuracy: true,
+                timeout: 15000, // 15 seconds
+                maximumAge: 0 // Don't use cached position
+            });
+        } else {
+            locationIcon.textContent = '❌';
+            locationMessage.textContent = 'Geolocation is not supported by this browser.';
+        }
+    }
+    
+    // Function to check current rider status
+    function checkRiderStatus() {
+        fetch('/riders/api/dashboard-data/', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update toggle based on current status
+            const onlineToggle = document.getElementById('onlineToggle');
+            const statusText = document.getElementById('statusText');
+            
+            if (data.is_available !== undefined) {
+                onlineToggle.checked = data.is_available;
+                statusText.textContent = data.is_available ? 'Online' : 'Offline';
+                statusText.className = data.is_available ? 'mr-2 text-green-600 font-medium' : 'mr-2 text-red-600 font-medium';
+                
+                // Also update the navbar status
+                updateNavbarStatus(data.is_available);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching rider status:', error);
+        });
+    }
+    
+    // Function to toggle rider availability status
+    function toggleAvailability() {
+        const isOnline = document.getElementById('onlineToggle').checked;
+        const statusText = document.getElementById('statusText');
+        
+        console.log('Toggling availability to:', isOnline ? 'ONLINE' : 'OFFLINE');
+        
+        // Update UI immediately for better responsiveness
+        statusText.textContent = isOnline ? 'Online' : 'Offline';
+        statusText.className = isOnline ? 'mr-2 text-green-600 font-medium' : 'mr-2 text-red-600 font-medium';
+        
+        // Also update the navbar status
+        updateNavbarStatus(isOnline);
+        
+        // Send update to server with current location
+        updateRiderLocation();
+        
+        // Set a small timeout and verify status was updated correctly
+        setTimeout(() => {
+            checkRiderStatus();
+        }, 2000);
+    }
+    
+    // Function to update the status in the base template navbar
+    function updateNavbarStatus(isOnline) {
+        // Find the status elements in the navigation bar (from base.html)
+        const navbarStatus = document.getElementById('riderStatus');
+        const navbarStatusMobile = document.getElementById('riderStatusMobile');
+        const navbarToggleBtn = document.getElementById('toggleStatusBtn');
+        const navbarToggleBtnMobile = document.getElementById('toggleStatusBtnMobile');
+        
+        if (navbarStatus && navbarToggleBtn) {
+            // Update desktop navbar status
+            navbarStatus.textContent = isOnline ? 'Online' : 'Offline';
+            navbarStatus.className = isOnline ? 'text-green-600' : 'text-gray-500';
+            navbarToggleBtn.textContent = isOnline ? 'Go Offline' : 'Go Online';
+            navbarToggleBtn.className = isOnline ? 
+                'px-4 py-2 rounded-lg text-white font-semibold bg-green-500' : 
+                'px-4 py-2 rounded-lg text-white font-semibold bg-gray-400';
+        }
+        
+        if (navbarStatusMobile && navbarToggleBtnMobile) {
+            // Update mobile navbar status
+            navbarStatusMobile.textContent = isOnline ? 'Online' : 'Offline';
+            navbarStatusMobile.className = isOnline ? 'text-green-600' : 'text-gray-500';
+            navbarToggleBtnMobile.textContent = isOnline ? 'Go Offline' : 'Go Online';
+            navbarToggleBtnMobile.className = isOnline ? 
+                'px-4 py-2 rounded-lg text-white font-semibold bg-green-500' : 
+                'px-4 py-2 rounded-lg text-white font-semibold bg-gray-400';
+        }
+    }
+    
+    // Start location updates when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get initial rider status
+        checkRiderStatus();
+        
+        // Add event listener to toggle
+        document.getElementById('onlineToggle').addEventListener('change', toggleAvailability);
+        
+        // Connect the navbar toggle buttons to our toggle if they exist
+        const navbarToggleBtn = document.getElementById('toggleStatusBtn');
+        const navbarToggleBtnMobile = document.getElementById('toggleStatusBtnMobile');
+        
+        if (navbarToggleBtn) {
+            navbarToggleBtn.addEventListener('click', function() {
+                // Toggle our dashboard switch
+                const onlineToggle = document.getElementById('onlineToggle');
+                onlineToggle.checked = !onlineToggle.checked;
+                toggleAvailability();
+            });
+        }
+        
+        if (navbarToggleBtnMobile) {
+            navbarToggleBtnMobile.addEventListener('click', function() {
+                // Toggle our dashboard switch
+                const onlineToggle = document.getElementById('onlineToggle');
+                onlineToggle.checked = !onlineToggle.checked;
+                toggleAvailability();
+            });
+        }
+        
+        // Update location immediately on page load
+        updateRiderLocation();
+        
+        // Then update every 5 minutes (300,000 ms)
+        locationUpdateInterval = setInterval(updateRiderLocation, 300000);
+        
+        // Also update when the page becomes visible again (tab switching)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateRiderLocation();
+                checkRiderStatus(); // Also refresh status
+            }
+        });
+    });
 </script>
 {% endblock %}

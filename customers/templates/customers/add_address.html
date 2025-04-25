@@ -1,0 +1,885 @@
+{% extends 'customers/base.html' %}
+{% load static %}
+
+{% block title %}Add New Address | Mo-Express{% endblock %}
+
+{% block extra_head %}
+<!-- Google Maps API Styles -->
+<style>
+    /* Ensure the map container has explicit width and height */
+    #map {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+</style>
+<style>
+    /* Custom animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animated-card {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    /* Custom map styles - FIXED HEIGHT */
+    #map-container {
+        height: 400px !important;
+        width: 100% !important;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative; /* Ensures proper containing context */
+    }
+    
+    #map {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important; 
+        height: 100% !important;
+        z-index: 10;
+    }
+    
+    #map-container:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Custom form element styles */
+    .form-floating > input,
+    .form-floating > textarea {
+        height: 58px;
+        padding-top: 28px;
+        padding-bottom: 12px;
+    }
+    
+    .form-floating > label {
+        padding: 16px 12px 0 12px;
+        opacity: 0.65;
+    }
+    
+    /* Shadow and glow effects */
+    .focus-ring {
+        box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.1);
+    }
+    
+    .glow-on-hover:focus {
+        box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+    }
+
+    /* Badge styles */
+    .location-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 1rem;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2d3748;
+    }
+    
+    .location-badge.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    /* Pulsating dot */
+    .pulse {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #FF5722;
+        cursor: pointer;
+        box-shadow: 0 0 0 rgba(255, 87, 34, 0.4);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+        }
+    }
+    
+    /* Loading overlay */
+    .map-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 500;
+        border-radius: 12px;
+    }
+    
+    /* Google Maps controls fix */
+    .gm-style .gm-style-iw-c {
+        z-index: 900 !important;
+    }
+    .gm-control-active {
+        z-index: 900 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header with animated gradient -->
+        <div class="bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl shadow-lg mb-8 overflow-hidden relative">
+            <div class="absolute inset-0 bg-pattern opacity-10"></div>
+            <div class="relative z-10 px-6 py-12 text-center">
+                <h1 class="text-3xl font-bold text-white mb-4">Add New Delivery Address</h1>
+                <p class="text-white/80 max-w-2xl mx-auto">Add your delivery location so we can bring your orders right to your doorstep. We'll auto-detect your location for faster setup.</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <!-- Left Column - Form -->
+            <div class="lg:col-span-3 animated-card" style="animation-delay: 0.1s">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Address Details
+                        </h2>
+                    </div>
+                    
+                    <form method="post" id="address-form" class="p-6">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                        <div class="mb-6 animated-card" style="animation-delay: 0.2s">
+                            {% for message in messages %}
+                            <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        {% if message.tags == 'success' %}
+                                        <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {% elif message.tags == 'error' %}
+                                        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {% else %}
+                                        <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm">{{ message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Address Name Field with icon -->
+                        <div class="mb-5 animated-card" style="animation-delay: 0.3s">
+                            <div class="form-floating">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="name" name="name" value="My Location" required placeholder="Home, Office, etc.">
+                                    <label for="name" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                        Address Name
+                                    </label>
+                                </div>
+                                <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">What would you like to call this address? E.g., Home, Office, etc.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Street Field -->
+                        <div class="mb-5 animated-card" style="animation-delay: 0.4s">
+                            <div class="form-floating">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="street" name="street" required placeholder="Street name or building name">
+                                    <label for="street" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                        Street/Building
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Area Field -->
+                        <div class="mb-5 animated-card" style="animation-delay: 0.5s">
+                            <div class="form-floating">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="area" name="area" required placeholder="Your neighborhood or area">
+                                    <label for="area" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                        Area/Neighborhood
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Two Column Layout for City and Landmark -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                            <!-- City Field -->
+                            <div class="animated-card" style="animation-delay: 0.6s">
+                                <div class="form-floating">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <input type="text" class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="city" name="city" required placeholder="City">
+                                        <label for="city" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                            City
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Landmark Field -->
+                            <div class="animated-card" style="animation-delay: 0.7s">
+                                <div class="form-floating">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <input type="text" class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="landmark" name="landmark" placeholder="Nearby landmark (optional)">
+                                        <label for="landmark" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                            Landmark (Optional)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes Field -->
+                        <div class="mb-5 animated-card" style="animation-delay: 0.8s">
+                            <div class="form-floating">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </div>
+                                    <textarea class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-600 rounded-lg glow-on-hover focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" id="notes" name="notes" rows="3" placeholder="Special delivery instructions..."></textarea>
+                                    <label for="notes" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-700 px-2 peer-focus:px-2 peer-focus:text-orange-600 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-9">
+                                        Delivery Notes (Optional)
+                                    </label>
+                                </div>
+                                <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add any special instructions for delivery to this location</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Set as Default toggle with improved styling -->
+                        <div class="flex items-center mb-5 animated-card" style="animation-delay: 0.9s">
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="is_default" name="is_default" value="true" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Set as default address</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden coordinates fields -->
+                        <input type="hidden" id="latitude" name="latitude" value="">
+                        <input type="hidden" id="longitude" name="longitude" value="">
+                        
+                        <!-- Action Buttons with improved styling -->
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 animated-card" style="animation-delay: 1s">
+                            <a href="{% url 'customers:manage_addresses' %}" class="py-3 px-5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Cancel
+                            </a>
+                            <button type="submit" class="py-3 px-5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Save Address
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Right Column - Map and Location Controls -->
+            <div class="lg:col-span-2 animated-card" style="animation-delay: 0.2s">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                            Location
+                        </h2>
+                    </div>
+                    
+                    <div class="p-6">
+                        <!-- Current Location Box -->
+                        <div class="mb-6 animated-card" style="animation-delay: 0.3s">
+                            <div class="form-check flex items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-750">
+                                <input class="form-check-input w-5 h-5 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500" type="checkbox" id="use-current-location" checked>
+                                <label class="form-check-label ml-3 text-gray-700 dark:text-gray-300 font-medium" for="use-current-location">
+                                    Use my current location
+                                </label>
+                                <div class="ml-auto flex items-center">
+                                    <div id="location-indicator" class="pulse"></div>
+                                </div>
+                            </div>
+                            <div id="location-status" class="mt-2"></div>
+                        </div>
+                        
+                        <!-- Map Display -->
+                        <div class="relative mb-6 animated-card" style="animation-delay: 0.4s">
+                            <div id="map-container" class="relative">
+                                <div id="map-loading" class="map-loading">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="animate-spin h-10 w-10 text-orange-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span class="text-gray-600">Loading map...</span>
+                                    </div>
+                                </div>
+                                <div id="map"></div>
+                                <div id="location-badge" class="location-badge">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span id="location-accuracy">Waiting for location...</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                You can drag the marker to adjust your exact location
+                            </div>
+                        </div>
+                        
+                        <!-- Manual Coordinates (for advanced users) -->
+                        <div class="animated-card" style="animation-delay: 0.5s">
+                            <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-750">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Coordinates (Advanced)</h3>
+                                    <button type="button" id="toggle-coordinates" class="text-xs text-orange-600 hover:text-orange-500">
+                                        Show
+                                    </button>
+                                </div>
+                                <div id="coordinates-fields" class="hidden grid grid-cols-2 gap-3">
+                                    <div class="relative">
+                                        <label for="manual-lat" class="text-xs text-gray-500 dark:text-gray-400">Latitude</label>
+                                        <input type="text" id="manual-lat" class="w-full mt-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg" placeholder="e.g. -6.8123">
+                                    </div>
+                                    <div class="relative">
+                                        <label for="manual-lng" class="text-xs text-gray-500 dark:text-gray-400">Longitude</label>
+                                        <input type="text" id="manual-lng" class="w-full mt-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg" placeholder="e.g. 39.2456">
+                                    </div>
+                                    <div class="col-span-2 mt-2">
+                                        <button type="button" id="apply-coordinates" class="w-full py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 text-xs font-medium rounded-lg">
+                                            Apply Coordinates
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Tips Card -->
+                <div class="mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg overflow-hidden animated-card" style="animation-delay: 0.6s">
+                    <div class="p-6 text-white">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Tips for Better Deliveries
+                        </h3>
+                        <ul class="space-y-2 text-sm text-white/90">
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Add detailed landmarks to help delivery personnel find your location
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Include specific directions in the notes (e.g., "blue gate on the left")
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Make sure your map marker is positioned at your exact location
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Google Maps JavaScript API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_x2KWBg1z6NR7C-V4LVQh-hkA9kCzF40&libraries=places"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const useCurrentLocationCheckbox = document.getElementById('use-current-location');
+        const locationStatusDiv = document.getElementById('location-status');
+        const locationIndicator = document.getElementById('location-indicator');
+        const locationBadge = document.getElementById('location-badge');
+        const locationAccuracy = document.getElementById('location-accuracy');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const toggleCoordinatesBtn = document.getElementById('toggle-coordinates');
+        const coordinatesFields = document.getElementById('coordinates-fields');
+        const manualLatInput = document.getElementById('manual-lat');
+        const manualLngInput = document.getElementById('manual-lng');
+        const applyCoordinatesBtn = document.getElementById('apply-coordinates');
+        const mapLoading = document.getElementById('map-loading');
+        
+        // Map variables
+        let map;
+        let marker;
+        let userLocationFound = false;
+        let geocoder;
+        
+        // Initialize map with a slight delay to ensure container is properly sized
+        setTimeout(initMap, 500);
+        
+        // Initialize map
+        function initMap() {
+            console.log('Initializing map...');
+            try {
+                // Default coordinates for Tanzania
+                const defaultLat = -6.8236;
+                const defaultLng = 39.2695;
+                const defaultLocation = { lat: defaultLat, lng: defaultLng };
+                console.log('Setting default location:', defaultLocation);
+                
+                // Create map with default view
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 13,
+                    center: defaultLocation,
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true,
+                    zoomControl: true
+                });
+                
+                // Initialize geocoder
+                geocoder = new google.maps.Geocoder();
+                
+                // Add a draggable marker
+                marker = new google.maps.Marker({
+                    position: defaultLocation,
+                    map: map,
+                    draggable: true,
+                    animation: google.maps.Animation.DROP
+                });
+                
+                // Update coordinates when marker is dragged
+                google.maps.event.addListener(marker, 'dragend', function() {
+                    const position = marker.getPosition();
+                    updateCoordinates(position.lat(), position.lng());
+                    
+                    // Reverse geocode the new position
+                    fetchAddressFromCoordinates(position.lat(), position.lng());
+                    
+                    // Update badge
+                    locationBadge.classList.remove('active');
+                    locationAccuracy.textContent = 'Custom location';
+                });
+                
+                // Force map to recalculate its size
+                setTimeout(function() {
+                    google.maps.event.trigger(map, 'resize');
+                    
+                    // Hide loading overlay
+                    if (mapLoading) {
+                        mapLoading.style.display = 'none';
+                    }
+                    
+                    // If checkbox is checked, get current location
+                    if (useCurrentLocationCheckbox.checked) {
+                        getCurrentLocation();
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error("Error initializing map:", error);
+                // Show error in map container
+                if (mapLoading) {
+                    mapLoading.innerHTML = `
+                        <div class="p-4 bg-red-50 rounded-lg">
+                            <p class="text-red-600 font-medium">Map failed to load</p>
+                            <p class="text-red-500 text-sm mt-1">Please refresh the page and try again</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Function to get and display current location
+        function getCurrentLocation() {
+            console.log('Getting current location...');
+            locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-blue-50 text-blue-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>Getting your location...</div>';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    // Success callback
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        // Update fields and map
+                        updateCoordinates(latitude, longitude);
+                        updateMapMarker(latitude, longitude);
+                        
+                        // Update UI to show success
+                        userLocationFound = true;
+                        locationIndicator.classList.remove('pulse');
+                        locationIndicator.style.backgroundColor = '#4CAF50';
+                        locationBadge.classList.add('active');
+                        
+                        // Show accuracy information
+                        const accuracy = Math.round(position.coords.accuracy);
+                        locationAccuracy.textContent = `Accurate to ${accuracy} meters`;
+                        
+                        // Update status message
+                        locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-green-50 text-green-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Location detected successfully!</div>';
+                        
+                        // Fetch address details from coordinates
+                        fetchAddressFromCoordinates(latitude, longitude);
+                        
+                        // Update manual coordinates fields
+                        manualLatInput.value = latitude.toFixed(6);
+                        manualLngInput.value = longitude.toFixed(6);
+                    },
+                    // Error callback
+                    function(error) {
+                        let errorMessage = 'Error getting your location: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Location permission denied. Please enable location access in your browser settings.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Location request timed out.';
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMessage += 'An unknown error occurred.';
+                                break;
+                        }
+                        locationStatusDiv.innerHTML = `<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>${errorMessage}</div>`;
+                        useCurrentLocationCheckbox.checked = false;
+                        locationBadge.classList.remove('active');
+                        locationAccuracy.textContent = 'Location not available';
+                    },
+                    // Options
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Geolocation is not supported by your browser.</div>';
+                useCurrentLocationCheckbox.checked = false;
+                locationBadge.classList.remove('active');
+                locationAccuracy.textContent = 'Location not available';
+            }
+        }
+        
+        // Function to update coordinates in the form
+        function updateCoordinates(lat, lng) {
+            latitudeInput.value = lat;
+            longitudeInput.value = lng;
+        }
+        
+        // Function to update map marker
+        function updateMapMarker(lat, lng) {
+            if (map && marker) {
+                // Update marker position
+                const newPosition = new google.maps.LatLng(lat, lng);
+                marker.setPosition(newPosition);
+                
+                // Center map on marker
+                map.setCenter(newPosition);
+                map.setZoom(16);
+            }
+        }
+        
+        // Function to fetch address details from coordinates using reverse geocoding
+        function fetchAddressFromCoordinates(lat, lng) {
+            if (!geocoder) {
+                console.error('Geocoder not initialized');
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Map service not initialized. Please refresh the page.</div>';
+                return;
+            }
+            
+            try {
+                // Show loading state
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-blue-50 text-blue-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>Fetching address details...</div>';
+                
+                const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
+                
+                geocoder.geocode({ 'location': latlng }, function(results, status) {
+                    console.log('Geocoder status:', status);
+                    console.log('Geocoder results:', results);
+                    
+                    if (status === 'OK' && results && results.length > 0) {
+                        // Process the data
+                        const addressComponents = results[0].address_components || [];
+                        let streetNumber = '';
+                        let route = '';
+                        let neighborhood = '';
+                        let sublocality = '';
+                        let locality = '';
+                        let district = '';
+                        let city = '';
+                        let formattedAddress = results[0].formatted_address || '';
+                        
+                        console.log('Found address components:', addressComponents);
+                        
+                        // Extract the parts we need
+                        for (const component of addressComponents) {
+                            const types = component.types;
+                            
+                            if (types.includes('street_number')) {
+                                streetNumber = component.long_name;
+                                console.log('Found street number:', streetNumber);
+                            } else if (types.includes('route')) {
+                                route = component.long_name;
+                                console.log('Found route:', route);
+                            } else if (types.includes('neighborhood')) {
+                                neighborhood = component.long_name;
+                                console.log('Found neighborhood:', neighborhood);
+                            } else if (types.includes('sublocality') || types.includes('sublocality_level_1')) {
+                                sublocality = component.long_name;
+                                console.log('Found sublocality:', sublocality);
+                            } else if (types.includes('locality')) {
+                                locality = component.long_name;
+                                console.log('Found locality:', locality);
+                            } else if (types.includes('administrative_area_level_2')) {
+                                district = component.long_name;
+                                console.log('Found district:', district);
+                            } else if (types.includes('administrative_area_level_1')) {
+                                if (!city) {
+                                    city = component.long_name;
+                                    console.log('Found city (admin area):', city);
+                                }
+                            }
+                        }
+                        
+                        try {
+                            // Set a meaningful address name
+                            const nameInput = document.getElementById('name');
+                            console.log('Current name value:', nameInput.value);
+                            // Only set the name if it's still the default value
+                            if (nameInput && nameInput.value === 'My Location') {
+                                // Use the most specific name available
+                                if (neighborhood) {
+                                    nameInput.value = neighborhood;
+                                } else if (sublocality) {
+                                    nameInput.value = sublocality;
+                                } else if (locality) {
+                                    nameInput.value = locality;
+                                } else {
+                                    // Keep the default 'My Location'
+                                }
+                                console.log('Updated name to:', nameInput.value);
+                            }
+                            
+                            // Set the street address
+                            const streetInput = document.getElementById('street');
+                            let streetAddress = route;
+                            if (streetNumber) {
+                                streetAddress = streetNumber + ' ' + route;
+                            }
+                            if (streetAddress && streetInput) {
+                                streetInput.value = streetAddress;
+                                console.log('Set street to:', streetAddress);
+                            } else {
+                                console.log('Could not set street. Value:', streetAddress, 'Element exists:', !!streetInput);
+                            }
+                            
+                            // Set the area/neighborhood
+                            const areaInput = document.getElementById('area');
+                            if (areaInput) {
+                                if (neighborhood) {
+                                    areaInput.value = neighborhood;
+                                } else if (sublocality) {
+                                    areaInput.value = sublocality;
+                                } else if (district) {
+                                    areaInput.value = district;
+                                }
+                                console.log('Set area to:', areaInput.value);
+                            } else {
+                                console.log('Area input element not found');
+                            }
+                            
+                            // Set the city
+                            const cityInput = document.getElementById('city');
+                            if (cityInput) {
+                                if (locality) {
+                                    cityInput.value = locality;
+                                } else if (city) {
+                                    cityInput.value = city;
+                                }
+                                console.log('Set city to:', cityInput.value);
+                            } else {
+                                console.log('City input element not found');
+                            }
+                            
+                            // Set optional landmark field if we have nearby POIs
+                            const landmarkInput = document.getElementById('landmark');
+                            if (landmarkInput && results.length > 1) {
+                                // Check if any nearby result is a point of interest
+                                for (let i = 1; i < Math.min(results.length, 3); i++) {
+                                    const result = results[i];
+                                    if (result.types && result.types.some(type => [
+                                        'point_of_interest', 'establishment', 'store', 'school',
+                                        'hospital', 'shopping_mall', 'bank', 'restaurant'
+                                    ].includes(type))) {
+                                        landmarkInput.value = result.name || '';
+                                        console.log('Set landmark to:', result.name);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                console.log('Landmark input element not found or no nearby POIs');
+                            }
+                            
+                            // Display success message with address details
+                            locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-green-50 text-green-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>Address found: ' + formattedAddress + '</div>';
+                        } catch (err) {
+                            console.error('Error updating form fields:', err);
+                            locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Error updating form fields: ' + err.message + '</div>';
+                        }
+                    } else {
+                        console.error('Geocoder failed due to:', status);
+                        locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Could not find address details for this location.</div>';
+                    }
+                });
+            } catch (err) {
+                console.error('Error in fetchAddressFromCoordinates:', err);
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Error processing location: ' + err.message + '</div>';
+            }
+        }
+        
+        // Event listener for checkbox changes
+        useCurrentLocationCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                getCurrentLocation();
+            } else {
+                locationStatusDiv.innerHTML = '';
+                locationBadge.classList.remove('active');
+                locationAccuracy.textContent = 'Manual location';
+            }
+        });
+        
+        // Toggle coordinates fields
+        toggleCoordinatesBtn.addEventListener('click', function() {
+            if (coordinatesFields.classList.contains('hidden')) {
+                coordinatesFields.classList.remove('hidden');
+                toggleCoordinatesBtn.textContent = 'Hide';
+            } else {
+                coordinatesFields.classList.add('hidden');
+                toggleCoordinatesBtn.textContent = 'Show';
+            }
+        });
+        
+        // Apply manual coordinates
+        applyCoordinatesBtn.addEventListener('click', function() {
+            const lat = parseFloat(manualLatInput.value);
+            const lng = parseFloat(manualLngInput.value);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                updateCoordinates(lat, lng);
+                updateMapMarker(lat, lng);
+                
+                // Update UI
+                locationBadge.classList.remove('active');
+                locationAccuracy.textContent = 'Manual coordinates';
+                
+                // Fetch address for the new coordinates
+                fetchAddressFromCoordinates(lat, lng);
+            } else {
+                // Show error for invalid coordinates
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Invalid coordinates. Please enter valid latitude and longitude values.</div>';
+            }
+        });
+        
+        // Form submission validation
+        document.getElementById('address-form').addEventListener('submit', function(e) {
+            // Check if coordinates are set
+            if (!latitudeInput.value || !longitudeInput.value) {
+                e.preventDefault();
+                locationStatusDiv.innerHTML = '<div class="mt-2 p-2.5 rounded bg-red-50 text-red-700 text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Please enable location or set coordinates manually.</div>';
+                
+                // Scroll to the error message
+                locationStatusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        
+        // Make sure map adjusts when window is resized
+        window.addEventListener('resize', function() {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+    });
+</script>
+{% endblock %}

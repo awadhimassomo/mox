@@ -1,5 +1,3 @@
-
-
 from . import views
 from django.urls import path
 
@@ -51,6 +49,7 @@ urlpatterns = [
     path('addresses/delete/<int:address_id>/', views.delete_address, name='delete_address'),
     path('addresses/add-from-coordinates/', views.add_address_from_coordinates, name='add_address_from_coordinates'),
     path('addresses/set-default/', views.set_default_address, name='set_default_address'),
+    path('save-location/', views.save_user_location, name='save_user_location'),
     
     # Favorites
     path('business/toggle-favorite/', views.toggle_favorite_business, name='toggle_favorite_business'),

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mo-Express{% endblock %}</title>
     <meta name="description" content="Mo-Express - Your trusted delivery partner in Tanzania">
-    <meta name="theme-color" content="#8A2BE2">
+    <meta name="theme-color" content="#FF0000">
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -16,24 +16,84 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Mo-Express">
     
-    <!-- Use Tailwind CSS from CDN with properly configured CORS - no inline config -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Use Tailwind CSS from CDN - Updated to v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fff5f5',
+                            100: '#ffe3e3',
+                            200: '#ffcccc',
+                            300: '#ffa3a3',
+                            400: '#ff6b6b',
+                            500: '#FF0000', /* Main red primary color */
+                            600: '#e60000',
+                            700: '#cc0000',
+                            800: '#990000',
+                            900: '#7a0000',
+                            950: '#450000',
+                        },
+                        accent: '#ff4500' /* Orange-red accent color for contrast */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
     <style>
+        /* Apply smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
         /* Custom scrollbar for WebKit browsers */
         ::-webkit-scrollbar {
-            width: 5px;
+            width: 6px;
         }
         ::-webkit-scrollbar-track {
             background: #f1f1f1;
         }
         ::-webkit-scrollbar-thumb {
-            background: #8A2BE2;
-            border-radius: 5px;
+            background: #FF0000;
+            border-radius: 8px;
         }
         .dark ::-webkit-scrollbar-track {
-            background: #374151;
+            background: #1f2937;
+        }
+        
+        /* Better transitions */
+        a, button, .transition-all {
+            transition: all 0.2s ease-in-out;
         }
         
         /* Toast styling */
@@ -42,14 +102,16 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(15, 23, 42, 0.9);
             color: white;
-            padding: 12px 24px;
-            border-radius: 4px;
+            padding: 14px 28px;
+            border-radius: 8px;
             z-index: 9999;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .toast.show {
@@ -63,17 +125,21 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #8A2BE2;
+            background: linear-gradient(to right, #FF0000, #cc0000);
             color: white;
             padding: 12px;
             display: none;
             z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
         }
         #installBanner .banner-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         #installBanner .text {
             flex: 1;
@@ -81,133 +147,202 @@
         }
         #installBanner button {
             white-space: nowrap;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 18px;
+            border-radius: 8px;
             background: white;
-            color: #8A2BE2;
+            color: #FF0000;
             font-weight: bold;
             border: none;
+            transform: translateY(0);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #installBanner button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        #closeInstallBanner {
+            background: transparent !important;
+            box-shadow: none !important;
+            color: white !important;
+        }
+        
+        /* Skeleton loading animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #262626 25%, #303030 50%, #262626 75%);
+            background-size: 1000px 100%;
+        }
+        
+        /* Bottom navigation glow effect */
+        .nav-active {
+            position: relative;
+            color: #FF0000;
+        }
+        .nav-active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #FF0000;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
     <!-- PWA Install Banner -->
     <div id="installBanner">
         <div class="banner-content">
             <div class="text">
-                <strong>Install Mo-Express App</strong>
-                <p>Install this app on your home screen for quick and easy access.</p>
+                <strong class="text-lg font-medium">Install Mo-Express App</strong>
+                <p class="text-sm opacity-90">Install this app for quick and easy access anytime.</p>
             </div>
-            <div class="actions">
-                <button id="installBtn">Install</button>
-                <button id="closeInstallBanner" class="ml-2 bg-transparent text-white">Later</button>
+            <div class="actions flex">
+                <button id="installBtn" class="shadow-md">Install</button>
+                <button id="closeInstallBanner" class="ml-2">Later</button>
             </div>
         </div>
     </div>
 
     <!-- Top Navigation -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md">
-        <nav class="px-4 py-3">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md backdrop-blur bg-opacity-90 dark:bg-opacity-90">
+        <nav class="px-4 py-4 max-w-6xl mx-auto">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     {% block back_button %}{% endblock %}
-                    <h1 class="text-lg font-semibold">{% block header_title %}Mo-Express{% endblock %}</h1>
+                    <a href="{% url 'website:home' %}" class="text-lg font-semibold hover:text-primary-500 transition-colors flex items-center">
+                        <img src="{% static 'img/logo.png' %}" alt="Mo-Express" class="h-10 w-auto mr-2">
+                        {% block header_title %}Mo-Express{% endblock %}
+                    </a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="darkModeToggle" class="p-2">
-                        <svg class="w-6 h-6 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all" title="Toggle dark mode">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                         </svg>
-                        <svg class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
                         </svg>
                     </button>
                     <!-- Connection status indicator -->
                     <div class="hidden md:block">
-                        <span class="badge rounded-pill connection-status bg-success text-white text-xs px-2 py-1 rounded-full">Online</span>
+                        <span class="connection-status text-xs px-2 py-1 rounded-full bg-green-500 text-white flex items-center">
+                            <span class="h-2 w-2 rounded-full bg-white mr-1 flex-shrink-0"></span>
+                            <span>Online</span>
+                        </span>
                     </div>
-                    <a href="{% url 'customers:cart' %}" class="relative p-2" title="View Shopping Cart" aria-label="View Shopping Cart">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0"/>
+                    
+                    <!-- Notifications bell - Only visible when logged in -->
+                    {% if user.is_authenticated %}
+                    <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <span id="cartCount" class="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold rounded-full w-5 h-5 cart-count" style="display: none;">0</span>
-                    </a>
+                        <!-- Notification badge - Only show if there are notifications -->
+                        <span class="absolute top-0 right-0 bg-accent w-2 h-2 rounded-full"></span>
+                    </button>
+                    {% endif %}
                 </div>
             </div>
         </nav>
     </header>
 
     <!-- Main Content -->
-    <main class="pt-16 pb-20">
+    <main class="pt-20 pb-20 px-4 max-w-6xl mx-auto animate-fade-in">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
-        <div class="flex justify-around">
-            <a href="{% url 'customers:home' %}" class="flex flex-col items-center p-2 flex-1">
+    <!-- Bottom Navigation - Hide on auth pages -->
+    {% if not request.resolver_match.url_name in 'login,register' %}
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-soft">
+        <div class="flex justify-around max-w-6xl mx-auto">
+            <a href="{% url 'customers:home' %}" class="flex flex-col items-center py-3 px-2 flex-1 {% if request.resolver_match.url_name == 'home' %}nav-active{% endif %}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
-                <span class="text-xs">Home</span>
+                <span class="text-xs mt-1 font-medium">Home</span>
             </a>
-            <a href="{% url 'customers:search' %}" class="flex flex-col items-center p-2 flex-1">
+            <a href="{% url 'customers:search' %}" class="flex flex-col items-center py-3 px-2 flex-1 {% if request.resolver_match.url_name == 'search' %}nav-active{% endif %}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <span class="text-xs">Search</span>
+                <span class="text-xs mt-1 font-medium">Search</span>
             </a>
-            <a href="{% url 'orders:order_list' %}" class="flex flex-col items-center p-2 flex-1">
+            <a href="{% url 'orders:order_list' %}" class="flex flex-col items-center py-3 px-2 flex-1 {% if 'order' in request.resolver_match.url_name %}nav-active{% endif %}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
-                <span class="text-xs">Orders</span>
+                <span class="text-xs mt-1 font-medium">Orders</span>
             </a>
-            <a href="{% url 'customers:profile' %}" class="flex flex-col items-center p-2 flex-1">
+            <a href="{% url 'customers:profile' %}" class="flex flex-col items-center py-3 px-2 flex-1 {% if request.resolver_match.url_name == 'profile' %}nav-active{% endif %}">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="text-xs">Profile</span>
+                <span class="text-xs mt-1 font-medium">Profile</span>
             </a>
         </div>
     </nav>
+    {% endif %}
 
-    <!-- Cart Button -->
-    <div id="cartButton" class="fixed bottom-20 right-4 z-40 {% if hide_cart_button %}hidden{% endif %}">
-        <button id="cartBtnMain" 
-                class="bg-primary text-white rounded-full p-4 shadow-lg hover:bg-purple-700 transition-colors">
+    <!-- Cart Button - Hide on auth pages -->
+    {% if not request.resolver_match.url_name in 'login,register' %}
+    <div id="cartButton" class="fixed bottom-20 right-6 z-40 {% if hide_cart_button %}hidden{% endif %}">
+        <a href="{% url 'customers:cart' %}" id="cartBtnMain" 
+                class="flex items-center justify-center bg-primary-500 text-white rounded-full w-14 h-14 shadow-lg hover:bg-primary-600 transform hover:scale-105 transition-all">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0"/>
             </svg>
-        </button>
+            <!-- Cart item count badge -->
+            <span id="cartCount" class="absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center {% if not cart_count or cart_count == 0 %}hidden{% endif %}">
+                {{ cart_count }}
+            </span>
+        </a>
     </div>
+    {% endif %}
 
     <!-- Toast Messages -->
-    <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 hidden">
-        <div class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg">
+    <div id="toast" class="toast">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
             <span id="toastMessage"></span>
         </div>
     </div>
 
     <!-- Scripts -->
     <script>
+        // Set dark mode based on user preference or system preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
         // Dark mode toggle
         document.getElementById('darkModeToggle').addEventListener('click', function() {
             document.documentElement.classList.toggle('dark');
             localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         });
 
-        // Cart button click handler
+        // Set up profile icon click handler - ensure it always works
         document.addEventListener('DOMContentLoaded', function() {
-            // Set up cart button click handler
-            const cartBtn = document.getElementById('cartBtnMain');
-            if (cartBtn) {
-                cartBtn.addEventListener('click', function() {
-                    window.location.href = "{% url 'customers:cart' %}";
-                });
-            }
-            
             // Initialize cart count
             var initialCartCount = 0;
             {% if cart_count %}
@@ -215,6 +350,15 @@
             {% endif %}
             
             updateCartCount(initialCartCount);
+            
+            // Add smooth animations to page elements
+            const animateItems = document.querySelectorAll('.animate-on-load');
+            animateItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('animate-slide-up');
+                    item.style.opacity = '1';
+                }, 100 * index);
+            });
         });
 
         // Function to update cart count in the UI
@@ -226,9 +370,9 @@
                 
                 // Show/hide based on count
                 if (count > 0) {
-                    cartCountElement.style.display = 'flex';
+                    cartCountElement.classList.remove('hidden');
                 } else {
-                    cartCountElement.style.display = 'none';
+                    cartCountElement.classList.add('hidden');
                 }
             }
             
@@ -240,9 +384,9 @@
                     
                     // Show/hide based on count
                     if (count > 0) {
-                        element.style.display = 'flex';
+                        element.classList.remove('hidden');
                     } else {
-                        element.style.display = 'none';
+                        element.classList.add('hidden');
                     }
                 });
             }
@@ -251,21 +395,14 @@
         // Function to show toast messages
         function showToast(message) {
             const toast = document.getElementById('toast');
-            if (toast) {
-                toast.textContent = message;
+            const toastMessage = document.getElementById('toastMessage');
+            
+            if (toast && toastMessage) {
+                toastMessage.textContent = message;
                 toast.classList.add('show');
+                
                 setTimeout(() => {
                     toast.classList.remove('show');
-                }, 3000);
-            } else {
-                // Create toast if it doesn't exist
-                const newToast = document.createElement('div');
-                newToast.id = 'toast';
-                newToast.textContent = message;
-                newToast.classList.add('toast', 'show');
-                document.body.appendChild(newToast);
-                setTimeout(() => {
-                    newToast.classList.remove('show');
                 }, 3000);
             }
         }
@@ -285,41 +422,6 @@
                 navigator.serviceWorker.register("{% static 'sw.js' %}")
                     .then(reg => console.log('Service Worker registered successfully:', reg))
                     .catch(err => console.log('Service Worker registration failed:', err));
-                
-                // Add dynamic PWA installation banner as an alternative
-                const dynamicInstallBanner = document.createElement('div');
-                dynamicInstallBanner.style.display = 'none';
-                dynamicInstallBanner.className = 'pwa-install-banner';
-                dynamicInstallBanner.innerHTML = `
-                    <div class="container py-2 px-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Install Mo-Express App</strong>
-                            <p class="mb-0 small">Get our app for the best experience!</p>
-                        </div>
-                        <div>
-                            <button id="installPwaDynamic" class="btn btn-sm btn-secondary">Install</button>
-                            <button id="closePwaBannerDynamic" class="btn btn-sm btn-link text-light">Later</button>
-                        </div>
-                    </div>
-                `;
-                dynamicInstallBanner.style.cssText = 'position: fixed; bottom: 0; left: 0; right: 0; background-color: #8A2BE2; color: white; z-index: 1000; display: none;';
-                
-                document.body.appendChild(dynamicInstallBanner);
-                
-                // Setup dynamic banner button handlers
-                document.getElementById('installPwaDynamic')?.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        const { outcome } = await deferredPrompt.userChoice;
-                        deferredPrompt = null;
-                        dynamicInstallBanner.style.display = 'none';
-                    }
-                });
-                
-                document.getElementById('closePwaBannerDynamic')?.addEventListener('click', () => {
-                    dynamicInstallBanner.style.display = 'none';
-                    localStorage.setItem('pwaBannerDismissed', 'true');
-                });
             });
         }
         
@@ -329,12 +431,12 @@
             statusElements.forEach(status => {
                 if (navigator.onLine) {
                     status.textContent = 'Online';
-                    status.classList.remove('bg-danger');
-                    status.classList.add('bg-success');
+                    status.classList.remove('bg-red-500');
+                    status.classList.add('bg-green-500');
                 } else {
                     status.textContent = 'Offline';
-                    status.classList.remove('bg-success');
-                    status.classList.add('bg-danger');
+                    status.classList.remove('bg-green-500');
+                    status.classList.add('bg-red-500');
                 }
             });
         };
@@ -371,9 +473,6 @@
                 // Hide the banner
                 installBanner.style.display = 'none';
                 
-                // Log the outcome
-                console.log(`User ${outcome} the A2HS prompt`);
-                
                 if (outcome === 'accepted') {
                     showToast('Thank you for installing our app!');
                 }
@@ -392,8 +491,6 @@
         
         // Listen for app installed event
         window.addEventListener('appinstalled', (evt) => {
-            // Log install to analytics
-            console.log('INSTALL: Success');
             // Hide the banner after successful installation
             installBanner.style.display = 'none';
         });

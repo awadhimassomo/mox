@@ -9,8 +9,14 @@ User = get_user_model()
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
     phone_number = models.CharField(max_length=15, unique=True)
+    profile_image = models.ImageField(upload_to='customers/profile_images/', null=True, blank=True)
     default_address = models.ForeignKey('DeliveryAddress', on_delete=models.SET_NULL, null=True, blank=True, related_name='default_for')
     favorite_businesses = models.ManyToManyField(Business, blank=True, related_name='favorited_by')
+    # Location fields
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    region = models.CharField(max_length=50, blank=True, null=True)
+    last_location_update = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

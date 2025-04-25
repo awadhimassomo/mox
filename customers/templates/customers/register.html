@@ -1,70 +1,258 @@
 {% extends 'customers/base.html' %}
+{% load static %}
 
 {% block title %}Register | Mo-Express{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-        <div class="p-6">
-            <div class="flex justify-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create Account</h2>
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-2 border-red-600">
+        <div class="p-8">
+            <div class="flex flex-col items-center mb-8">
+                <!-- Mo-Express Logo -->
+                <img src="{% static 'img/logo.png' %}" alt="Mo-Express Logo" class="h-24 w-auto mb-4">
+                <h2 class="text-3xl font-extrabold text-red-600 dark:text-red-500">Join Mo-Express</h2>
+                <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    Create your account to get started
+                </p>
             </div>
             
             {% if messages %}
                 {% for message in messages %}
-                    <div class="mb-4 p-3 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
-                        {{ message }}
+                    <div class="mb-6 p-4 {% if message.tags == 'error' %}bg-red-100 text-red-700 border-l-4 border-red-500{% else %}bg-green-100 text-green-700 border-l-4 border-green-500{% endif %} rounded-md">
+                        <div class="flex items-center">
+                            {% if message.tags == 'error' %}
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% else %}
+                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            {% endif %}
+                            {{ message }}
+                        </div>
                     </div>
                 {% endfor %}
             {% endif %}
             
-            <form method="post" class="space-y-4">
+            <form method="post" class="space-y-6">
                 {% csrf_token %}
                 
-                {% for field in form %}
+                <!-- Name Fields in Two Columns -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            First Name *
+                        </label>
+                        <input type="text" name="{{ form.first_name.name }}" id="{{ form.first_name.id_for_label }}" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %}
+                               required>
+                        {% if form.first_name.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.first_name.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Last Name *
+                        </label>
+                        <input type="text" name="{{ form.last_name.name }}" id="{{ form.last_name.id_for_label }}" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %}
+                               required>
+                        {% if form.last_name.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.last_name.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Phone Number with Icon -->
                 <div>
-                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        {{ field.label }}{% if field.field.required %} *{% endif %}
+                    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number *
                     </label>
-                    {% if field.field.widget.input_type == 'password' %}
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" 
-                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:border-gray-600"
-                               {% if field.field.required %}required{% endif %}>
-                    {% elif field.field.widget.input_type == 'text' or field.field.widget.input_type == 'email' %}
-                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" 
-                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:border-gray-600"
-                               {% if field.value %}value="{{ field.value }}"{% endif %}
-                               {% if field.field.required %}required{% endif %}>
-                    {% else %}
-                        {{ field }}
-                    {% endif %}
-                    {% if field.help_text %}
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ field.help_text }}</p>
-                    {% endif %}
-                    {% if field.errors %}
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </div>
+                        <input type="text" name="{{ form.phone.name }}" id="{{ form.phone.id_for_label }}" 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               placeholder="e.g., 0712345678"
+                               {% if form.phone.value %}value="{{ form.phone.value }}"{% endif %}
+                               required>
+                    </div>
+                    {% if form.phone.errors %}
                     <div class="text-red-500 text-sm mt-1">
-                        {% for error in field.errors %}
+                        {% for error in form.phone.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">We'll send a verification code to this number</p>
+                </div>
+                
+                <!-- Email with Icon -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Email Address
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               placeholder="Optional"
+                               {% if form.email.value %}value="{{ form.email.value }}"{% endif %}>
+                    </div>
+                    {% if form.email.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.email.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">For order notifications and receipts</p>
+                </div>
+                
+                <!-- Password with Toggle -->
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Password *
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <input type="password" name="{{ form.password1.name }}" id="{{ form.password1.id_for_label }}" 
+                               class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </div>
+                    </div>
+                    {% if form.password1.help_text %}
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-1">
+                        {% if form.password1.help_text %}
+                            <p>{{ form.password1.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if form.password1.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.password1.errors %}
                         <p>{{ error }}</p>
                         {% endfor %}
                     </div>
                     {% endif %}
                 </div>
-                {% endfor %}
+                
+                <!-- Confirm Password with Toggle -->
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Confirm Password *
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <input type="password" name="{{ form.password2.name }}" id="{{ form.password2.id_for_label }}" 
+                               class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                               required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer toggle-password">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </div>
+                    </div>
+                    {% if form.password2.help_text %}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ form.password2.help_text }}</p>
+                    {% endif %}
+                    {% if form.password2.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.password2.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Terms and Conditions Checkbox -->
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="terms" name="terms" type="checkbox" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded" required>
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="terms" class="font-medium text-gray-700 dark:text-gray-300">
+                            I agree to the <a href="#" class="text-red-600 hover:underline">Terms and Conditions</a> and <a href="#" class="text-red-600 hover:underline">Privacy Policy</a>
+                        </label>
+                    </div>
+                </div>
                 
                 <div>
-                    <button type="submit" class="w-full bg-primary text-black font-semibold py-2 px-4 rounded-lg hover:bg-yellow-400 transition-colors">
-                        Register
+                    <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 transform hover:scale-105">
+                        Create Account
                     </button>
                 </div>
             </form>
             
-            <div class="mt-6 text-center">
+            <div class="mt-8 text-center">
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                     Already have an account? 
-                    <a href="{% url 'customers:login' %}" class="text-primary hover:underline">Login here</a>
+                    <a href="{% url 'customers:login' %}" class="font-medium text-red-600 hover:text-red-500 transition-colors">
+                        Sign in instead
+                    </a>
                 </p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- JavaScript for password toggle -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('input');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                    `;
+                } else {
+                    input.type = 'password';
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    `;
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

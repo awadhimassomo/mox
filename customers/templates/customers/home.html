@@ -1,89 +1,255 @@
 {% extends 'customers/base.html' %}
+{% load static %}
 
 {% block title %}Mo-Express - Home{% endblock %}
 
-{% block header_title %}Discover Businesses{% endblock %}
-
 {% block content %}
 <!-- PWA Installation Banner for Home Page -->
-<div id="homePageInstallBanner" class="mb-4 mx-2 bg-primary text-white rounded-lg shadow-lg" style="display: block;">
+<div id="homePageInstallBanner" class="mb-6 mx-auto max-w-5xl bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl shadow-lg hidden">
     <div class="p-4 flex justify-between items-center">
-        <div>
-            <strong>Install Mo-Express App</strong>
-            <p class="text-sm mb-0">Get our app for the best experience!</p>
+        <div class="flex items-center">
+            <img src="{% static 'icons/icon-72x72.png' %}" alt="Mo-Express" class="w-10 h-10 mr-3 rounded-lg">
+            <div>
+                <strong class="block text-lg font-medium">Install Mo-Express App</strong>
+                <p class="text-sm text-white/90">Add to your home screen for a better experience</p>
+            </div>
         </div>
         <div class="flex space-x-2">
-            <button id="homeInstallBtn" class="bg-white text-primary px-3 py-1 rounded-md text-sm font-medium">Install</button>
-            <button id="closeHomeInstallBanner" class="bg-transparent text-white px-3 py-1 rounded-md text-sm">Later</button>
+            <button id="homeInstallBtn" class="bg-white text-primary-600 px-4 py-2 rounded-lg text-sm font-medium hover:shadow-md transition-all transform hover:-translate-y-0.5">Install</button>
+            <button id="closeHomeInstallBanner" class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm hover:bg-white/30 transition-all">Later</button>
         </div>
     </div>
 </div>
 
-<div class="px-4 py-6">
-    <!-- Search Bar -->
-    <div class="mb-6">
-        <form action="{% url 'customers:search' %}" method="GET" class="relative">
-            <input type="text" 
-                   name="q" 
-                   placeholder="Search businesses or products..." 
-                   class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent">
-            <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </button>
-        </form>
+<div class="animate-fade-in">
+    <!-- Hero Section -->
+    <div class="mb-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl text-white p-6 shadow-lg">
+        <div class="max-w-md mx-auto text-center">
+            <h1 class="text-2xl font-bold mb-3">Order <span id="rotating-product">Gas</span> Anytime, Anywhere</h1>
+            <p class="text-white/90 mb-6">Fast delivery from trusted vendors across Tanzania</p>
+            
+            <!-- Search Bar -->
+            <form action="{% url 'customers:search' %}" method="GET" class="relative w-full max-w-md mx-auto">
+                <input type="text" 
+                       name="q" 
+                       placeholder="Search businesses or products..." 
+                       class="w-full px-5 py-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 focus:ring-2 focus:ring-white focus:border-transparent text-white placeholder-white/75 pr-12">
+                <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 text-primary-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Categories -->
-    <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Categories</h2>
-        <div class="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+    <div class="mb-8 px-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Categories</h2>
+            <a href="{% url 'customers:search' %}" class="text-sm text-primary-500 font-medium flex items-center">
+                View all
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        <div class="flex overflow-x-auto space-x-5 pb-5 scrollbar-hide">
             {% for category in categories %}
             <a href="{% url 'customers:search' %}?category={{ category.id }}" 
-               class="flex-shrink-0 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div class="w-16 h-16 flex items-center justify-center mb-2">
+               class="flex-shrink-0 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all group">
+                <div class="w-20 h-20 flex items-center justify-center mb-3 bg-primary-50 dark:bg-gray-700 rounded-lg mx-auto group-hover:bg-primary-100 transition-colors">
                     {% if category.icon %}
                     <img src="{{ category.icon.url }}" alt="{{ category.name }}" class="w-12 h-12 object-contain">
                     {% else %}
-                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span class="text-gray-500">{{ category.name|slice:":1" }}</span>
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-gray-600 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-lg">
+                        {{ category.name|slice:"0:1"|upper }}
                     </div>
                     {% endif %}
                 </div>
-                <p class="text-sm text-center">{{ category.name }}</p>
+                <p class="text-sm text-center font-medium">{{ category.name }}</p>
             </a>
             {% endfor %}
         </div>
     </div>
 
     <!-- Featured Businesses -->
-    <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Featured Businesses</h2>
-        <div class="grid grid-cols-1 gap-4">
+    <div class="mb-8 px-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                Featured Businesses
+            </h2>
+            <a href="{% url 'customers:search' %}?featured=true" class="text-sm text-primary-500 font-medium flex items-center hover:text-primary-700 transition-colors">
+                View all
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        
+        {% if featured_businesses %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {% for business in featured_businesses %}
                 {% if business.id %}
                 <a href="{% url 'customers:business_detail' business.id %}" 
-                   class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                   class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all relative group border border-gray-100 hover:border-primary-200">
+                    <div class="absolute top-3 left-3 z-10">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-500 text-white shadow-sm">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"></path>
+                            </svg>
+                            Featured
+                        </span>
+                    </div>
+                    
                     <div class="relative h-48">
                         {% if business.cover_image %}
                         <img src="{{ business.cover_image.url }}" 
                              alt="{{ business.name }}" 
-                             class="w-full h-full object-cover">
+                             class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center\'><span class=\'text-primary-500 text-2xl font-bold\'>{{ business.name|slice:":1"|upper }}</span></div>'">
                         {% else %}
-                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <span class="text-gray-500 text-xl">{{ business.name }}</span>
+                        <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+                            <span class="text-primary-500 text-2xl font-bold">{{ business.name|slice:":1"|upper }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1 group-hover:text-primary-500 transition-colors">{{ business.name }}</h3>
+                        <p class="text-gray-600 text-sm mb-2 line-clamp-1">{{ business.address }}</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex">
+                                    {% for i in "12345" %}
+                                    <svg class="w-4 h-4 {% if forloop.counter <= 4 %}text-yellow-400{% else %}text-gray-300{% endif %}" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    {% endfor %}
+                                </div>
+                                <span class="text-sm ml-1 text-gray-600">(120+)</span>
+                            </div>
+                            <span class="bg-primary-50 text-primary-600 text-xs py-1 px-2 rounded-full">
+                                Gas Vendor
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl p-6 text-center shadow-sm">
+            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            <p class="text-gray-600">No featured businesses available at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Popular Near You -->
+    <div class="mb-8 px-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </h2>
+            <button class="refresh-location text-sm text-primary-500 font-medium flex items-center hover:text-primary-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Refresh location
+            </button>
+        </div>
+        
+        <div id="nearby-businesses-container" class="animate-pulse">
+            <div class="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
+                <div class="skeleton w-12 h-12 rounded-full mx-auto mb-4"></div>
+                <div class="skeleton h-4 w-48 mx-auto rounded-full mb-2"></div>
+                <div class="skeleton h-3 w-36 mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="skeleton h-40 w-full"></div>
+                    <div class="p-4">
+                        <div class="skeleton h-5 w-3/4 rounded mb-2"></div>
+                        <div class="skeleton h-4 w-1/2 rounded mb-2"></div>
+                        <div class="flex justify-between mt-3">
+                            <div class="skeleton h-4 w-20 rounded"></div>
+                            <div class="skeleton h-4 w-16 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="skeleton h-40 w-full"></div>
+                    <div class="p-4">
+                        <div class="skeleton h-5 w-1/2 rounded mb-2"></div>
+                        <div class="skeleton h-4 w-3/4 rounded mb-2"></div>
+                        <div class="flex justify-between mt-3">
+                            <div class="skeleton h-4 w-20 rounded"></div>
+                            <div class="skeleton h-4 w-16 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popular in Your Region (if user has a detected region) -->
+    {% if businesses_in_region %}
+    <div class="mb-8 px-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Popular in {{ user_region_display|default:"Your Region" }}
+            </h2>
+            <a href="{% url 'customers:search' %}{% if user_region %}?region={{ user_region }}{% endif %}" class="text-sm text-primary-500 font-medium flex items-center hover:text-primary-700 transition-colors">
+                View all
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {% for business in businesses_in_region|slice:":6" %}
+                {% if business.id %}
+                <a href="{% url 'customers:business_detail' business.id %}" 
+                   class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group border border-gray-100 hover:border-primary-200">
+                    <div class="relative h-32">
+                        {% if business.cover_image %}
+                        <img src="{{ business.cover_image.url }}" 
+                             alt="{{ business.name }}" 
+                             class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center\'><span class=\'text-primary-500 text-xl font-bold\'>{{ business.name|slice:":1"|upper }}</span></div>'">
+                        {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+                            <span class="text-primary-500 text-xl font-bold">{{ business.name|slice:":1"|upper }}</span>
                         </div>
                         {% endif %}
                     </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-1">{{ business.name }}</h3>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-2">{{ business.address }}</p>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                            <span class="text-sm text-gray-600 dark:text-gray-400">4.5 (120 reviews)</span>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm mb-1 truncate group-hover:text-primary-500 transition-colors">{{ business.name }}</h3>
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center">
+                                <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="ml-1 text-gray-600">4.8</span>
+                            </div>
+                            <span class="bg-green-50 text-green-600 px-1.5 py-0.5 rounded text-xs">Available</span>
                         </div>
                     </div>
                 </a>
@@ -91,18 +257,71 @@
             {% endfor %}
         </div>
     </div>
-
-    <!-- Popular Near You -->
-    <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Gas Businesses Near You</h2>
-        <div id="nearby-businesses-container" class="grid grid-cols-1 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-8 text-center">
-                <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+    {% endif %}
+    
+    <!-- In Other Regions -->
+    <div class="px-4 mb-20">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-gray-600 dark:text-gray-400">Loading nearby businesses...</p>
-            </div>
+                {% if user_region_display %}
+                    Explore Outside {{ user_region_display }}
+                {% else %}
+                    Explore All Regions
+                {% endif %}
+            </h2>
+            <a href="{% url 'customers:search' %}" class="text-sm text-primary-500 font-medium flex items-center hover:text-primary-700 transition-colors">
+                View all
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {% for business in businesses|slice:":6" %}
+                {% if business.id %}
+                <a href="{% url 'customers:business_detail' business.id %}" 
+                   class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group border border-gray-100 hover:border-primary-200">
+                    <div class="relative h-32">
+                        {% if business.cover_image %}
+                        <img src="{{ business.cover_image.url }}" 
+                             alt="{{ business.name }}" 
+                             class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center\'><span class=\'text-primary-500 text-xl font-bold\'>{{ business.name|slice:":1"|upper }}</span></div>'">
+                        {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+                            <span class="text-primary-500 text-xl font-bold">{{ business.name|slice:":1"|upper }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-sm mb-1 truncate group-hover:text-primary-500 transition-colors">{{ business.name }}</h3>
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center">
+                                <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="ml-1 text-gray-600">4.8</span>
+                            </div>
+                            <span class="bg-green-50 text-green-600 px-1.5 py-0.5 rounded text-xs">Available</span>
+                        </div>
+                    </div>
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- View all button -->
+        <div class="text-center mt-8">
+            <a href="{% url 'customers:search' %}" class="inline-flex items-center justify-center px-6 py-3 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-all transform hover:scale-105 shadow-md">
+                <span>Explore All Businesses</span>
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                </svg>
+            </a>
         </div>
     </div>
 </div>
@@ -147,225 +366,493 @@
     });
 
     // Geolocation for nearby businesses
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            fetch(`/customers/api/nearby-businesses/?lat=${position.coords.latitude}&lng=${position.coords.longitude}`)
-                .then(response => response.json())
-                .then(data => {
-                    const nearbyContainer = document.querySelector('#nearby-businesses-container');
-                    if (nearbyContainer) {
-                        // Clear loading state or placeholder
-                        nearbyContainer.innerHTML = '';
+    function loadNearbyBusinesses(forceRefresh = false) {
+        const nearbyContainer = document.querySelector('#nearby-businesses-container');
+        
+        if ("geolocation" in navigator) {
+            // Show loading state when refreshing location
+            if (forceRefresh && nearbyContainer) {
+                nearbyContainer.innerHTML = `
+                    <div class="bg-white rounded-xl p-8 text-center shadow-sm animate-pulse">
+                        <svg class="w-12 h-12 mx-auto text-primary-500 mb-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold mb-2">Getting your current location...</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Please wait while we find businesses near you</p>
+                    </div>
+                `;
+            }
+            
+            // First check if the user is authenticated and we already have their location
+            // stored in their profile
+            let skipGeolocation = false;
+            
+            // Skip cached location if we're forcing a refresh
+            if (!forceRefresh) {
+                // Only for authenticated users
+                if ({{ request.user.is_authenticated|yesno:"true,false" }}) {
+                    // Check if user has location data in profile (server-side rendered variables)
+                    const userLatitude = {{ request.user.customer_profile.latitude|default_if_none:"null" }};
+                    const userLongitude = {{ request.user.customer_profile.longitude|default_if_none:"null" }};
+                    const userRegion = "{{ request.user.customer_profile.region|default:'' }}";
+                    const lastLocationUpdate = "{{ request.user.customer_profile.last_location_update|default:'' }}";
+                    
+                    // If we have location data and it's recent (less than 24 hours old), use it
+                    if (userLatitude && userLongitude) {
+                        const now = new Date();
+                        const lastUpdate = lastLocationUpdate ? new Date(lastLocationUpdate) : null;
+                        const isRecent = lastUpdate && ((now - lastUpdate) < (24 * 60 * 60 * 1000)); // 24 hours in ms
                         
-                        // Check if we have businesses to display (either regional or all)
-                        const hasRegionalBusinesses = data.regional_businesses && data.regional_businesses.length > 0;
-                        const hasAllBusinesses = data.all_businesses && data.all_businesses.length > 0;
-                        
-                        if (hasRegionalBusinesses || hasAllBusinesses) {
-                            // Add region heading if available
-                            if (data.user_region) {
-                                const regionName = data.region_name || {
-                                    'dar_es_salaam': 'Dar es Salaam',
-                                    'arusha': 'Arusha',
-                                    'mwanza': 'Mwanza',
-                                    'dodoma': 'Dodoma',
-                                    'tanga': 'Tanga',
-                                    'mbeya': 'Mbeya',
-                                    'morogoro': 'Morogoro',
-                                    'zanzibar': 'Zanzibar'
-                                }[data.user_region] || data.user_region;
-                                
-                                const regionHeading = document.createElement('div');
-                                regionHeading.className = 'mb-4 bg-primary bg-opacity-20 p-3 rounded-lg';
-                                regionHeading.innerHTML = `
-                                    <div class="flex items-center">
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        </svg>
-                                        <span>Showing businesses ${hasRegionalBusinesses ? 'in' : 'near'} <strong>${regionName}</strong></span>
-                                    </div>
-                                `;
-                                nearbyContainer.appendChild(regionHeading);
-                            }
-                            
-                            // Display distance information header
-                            const distanceHeader = document.createElement('div');
-                            distanceHeader.className = 'mb-4 text-sm text-gray-500';
-                            distanceHeader.innerHTML = `
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                    </svg>
-                                    <span>Businesses are sorted by distance from your location</span>
-                                </div>
-                            `;
-                            nearbyContainer.appendChild(distanceHeader);
-                            
-                            // First show regional businesses if available
-                            if (hasRegionalBusinesses) {
-                                // Add region section title
-                                const regionSection = document.createElement('h3');
-                                regionSection.className = 'font-semibold mb-3 mt-4';
-                                regionSection.textContent = `Businesses in ${data.region_name}`;
-                                nearbyContainer.appendChild(regionSection);
-                                
-                                // Add all businesses in the same region
-                                data.regional_businesses.forEach(business => {
-                                    const businessCard = createBusinessCard(business);
-                                    nearbyContainer.appendChild(businessCard);
-                                });
-                            }
-                            
-                            // Show businesses from other regions
-                            if (hasAllBusinesses) {
-                                const otherBusinesses = data.all_businesses.filter(business => !business.same_region);
-                                
-                                if (otherBusinesses.length > 0) {
-                                    // Add other regions section title
-                                    const otherRegionsSection = document.createElement('h3');
-                                    otherRegionsSection.className = 'font-semibold mb-3 mt-6';
-                                    otherRegionsSection.textContent = 'Businesses in Other Regions';
-                                    nearbyContainer.appendChild(otherRegionsSection);
-                                    
-                                    // Add businesses from other regions
-                                    otherBusinesses.slice(0, 5).forEach(business => {
-                                        const businessCard = createBusinessCard(business);
-                                        nearbyContainer.appendChild(businessCard);
-                                    });
-                                }
-                            }
-                            
-                            // Show featured businesses if available
-                            if (data.featured_businesses && data.featured_businesses.length > 0) {
-                                // Add featured section title
-                                const featuredSection = document.createElement('h3');
-                                featuredSection.className = 'font-semibold mb-3 mt-6';
-                                featuredSection.textContent = 'Featured Businesses';
-                                nearbyContainer.appendChild(featuredSection);
-                                
-                                // Add featured businesses
-                                data.featured_businesses.forEach(business => {
-                                    const businessCard = createBusinessCard(business, true);
-                                    nearbyContainer.appendChild(businessCard);
-                                });
-                            }
-                        } else {
-                            // No businesses found
-                            nearbyContainer.innerHTML = `
-                                <div class="bg-white dark:bg-gray-800 rounded-lg p-8 text-center">
-                                    <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                    </svg>
-                                    <h3 class="text-lg font-semibold mb-2">No businesses found</h3>
-                                    <p class="text-gray-500">Try another location or check back later</p>
-                                </div>
-                            `;
+                        if (isRecent) {
+                            skipGeolocation = true;
+                            fetchNearbyBusinesses(userLatitude, userLongitude, userRegion);
                         }
                     }
-                })
-                .catch(error => {
-                    console.error('Error fetching nearby businesses:', error);
-                });
+                }
+            }
+            
+            // If we don't have recent location data, request it from the browser
+            if (!skipGeolocation) {
+                // Request with high accuracy, timeout of 10 seconds, and cache timeout of 5 minutes
+                const geolocationOptions = {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes cache
+                };
+                
+                navigator.geolocation.getCurrentPosition(
+                    // Success handler
+                    function(position) {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        // Save location to user profile if authenticated
+                        if ({{ request.user.is_authenticated|yesno:"true,false" }}) {
+                            saveUserLocation(latitude, longitude);
+                        }
+                        
+                        fetchNearbyBusinesses(latitude, longitude);
+                    }, 
+                    // Error handler with retry option for permission issues
+                    function(error) {
+                        console.error('Geolocation error:', error);
+                        
+                        // Special handling for permission denied errors
+                        if (error.code === 1) {
+                            // Create a more helpful error message with instructions to enable location
+                            const permissionContent = `
+                                <div class="bg-white rounded-xl p-8 text-center shadow-sm">
+                                    <svg class="w-12 h-12 mx-auto text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <h3 class="text-lg font-semibold mb-2">Location access denied</h3>
+                                    <p class="text-gray-500 dark:text-gray-400 mb-4">Please enable location access in your browser settings to see nearby businesses.</p>
+                                    <div class="space-y-3">
+                                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg text-left text-sm">
+                                            <p class="font-medium mb-1">How to enable location:</p>
+                                            <ul class="list-disc pl-5 text-gray-600 dark:text-gray-300 space-y-1">
+                                                <li>Click the lock/info icon in your browser's address bar</li>
+                                                <li>Find "Location" or "Site settings" and allow access</li>
+                                                <li>Refresh this page after changing permissions</li>
+                                            </ul>
+                                        </div>
+                                        <button onclick="window.location.reload()" class="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors w-full">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Refresh after enabling location
+                                        </button>
+                                        <a href="{% url 'customers:search' %}" class="inline-block text-center w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                            Browse all businesses instead
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            if (nearbyContainer) {
+                                nearbyContainer.classList.remove('animate-pulse');
+                                nearbyContainer.innerHTML = permissionContent;
+                            }
+                        } else {
+                            // For other errors, use standard error handling
+                            handleGeolocationError(nearbyContainer, error);
+                        }
+                    },
+                    geolocationOptions
+                );
+            }
+        } else {
+            // Geolocation not supported
+            if (nearbyContainer) {
+                // Remove animation
+                nearbyContainer.classList.remove('animate-pulse');
+                
+                nearbyContainer.innerHTML = `
+                    <div class="bg-white rounded-xl p-8 text-center shadow-sm">
+                        <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold mb-2">Location not supported</h3>
+                        <p class="text-gray-500 dark:text-gray-400 mb-4">Your browser doesn't support location services</p>
+                        <a href="{% url 'customers:search' %}" class="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                            Browse all businesses
+                        </a>
+                    </div>
+                `;
+            }
+        }
+    }
+    
+    // Function to save user location to profile
+    function saveUserLocation(latitude, longitude, region = null) {
+        fetch("{% url 'customers:save_user_location' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude,
+                region: region
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Location saved to profile');
+            } else {
+                console.error('Failed to save location:', data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error saving location:', err);
         });
     }
     
-    // Helper function to create a business card
-    function createBusinessCard(business, isFeatured = false) {
-        const businessCard = document.createElement('div');
-        businessCard.className = `bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow ${isFeatured ? 'border-2 border-red-600' : ''}`;
-        
-        // Determine proximity status
-        let proximityBadge = '';
-        if (business.distance !== null) {
-            if (business.distance < 0.5) {
-                // Very close - within 500 meters
-                proximityBadge = `
-                    <div class="absolute top-2 left-2 bg-green-500 text-white font-semibold text-xs py-1 px-2 rounded-full flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Your Location
-                    </div>`;
-            } else if (business.distance < 2) {
-                // Close - within 2km
-                proximityBadge = `
-                    <div class="absolute top-2 left-2 bg-blue-500 text-white font-semibold text-xs py-1 px-2 rounded-full">
-                        Very Close
-                    </div>`;
-            }
+    // Function to safely create a business card with error handling
+    function createBusinessCard(business) {
+        // Defensive coding - validate business object
+        if (!business || typeof business !== 'object') {
+            console.error('Invalid business data:', business);
+            return document.createElement('div'); // Return empty div to prevent errors
         }
         
-        // Format distance display
-        let distanceDisplay = '';
-        if (business.distance !== null) {
-            if (business.distance < 0.1) {
-                distanceDisplay = `<span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs font-semibold">
-                    At your location
-                </span>`;
-            } else if (business.distance < 1) {
-                // Less than 1km - show in meters
-                const meters = Math.round(business.distance * 1000);
-                distanceDisplay = `<span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-1 rounded text-xs">
-                    ${meters}m away
-                </span>`;
-            } else {
-                // More than 1km - show in km with 1 decimal
-                distanceDisplay = `<span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 px-2 py-1 rounded text-xs">
-                    ${business.distance.toFixed(1)} km
-                </span>`;
-            }
-        }
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md border border-gray-100 hover:border-primary-200';
         
-        businessCard.innerHTML = `
-            <a href="/customers/business/${business.id}/">
-                <div class="h-32 bg-gray-200 dark:bg-gray-700 relative">
-                    ${business.image ? 
-                        `<img src="${business.image}" alt="${business.name}" class="w-full h-full object-cover">` : 
-                        `<div class="w-full h-full flex items-center justify-center">
-                            <span class="text-gray-500">No Image</span>
-                        </div>`
-                    }
-                    ${isFeatured ? 
-                        `<div class="absolute top-2 right-2 bg-red-600 text-white font-semibold text-xs py-1 px-2 rounded">
-                            Featured
-                        </div>` : ''
-                    }
-                    ${proximityBadge}
-                </div>
-                <div class="p-4">
-                    <h3 class="font-semibold">${business.name}</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">${business.description || ''}</p>
-                    <div class="flex items-center mt-2 justify-between">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                            <span class="ml-1 text-sm">${business.rating || '0.0'}</span>
+        try {
+            // Extract business info with fallbacks
+            const businessName = (business.name || 'Unnamed Business').trim();
+            const businessId = business.id || '';
+            const businessDescription = (business.description || 'No description available').trim();
+            const businessLocation = (business.address || business.location || 'Location not specified').trim();
+            const businessRegion = business.region || '';
+            const isVerified = !!business.is_verified;
+            const businessFirstLetter = businessName.charAt(0).toUpperCase();
+            
+            // Get business image URL
+            const imageUrl = business.image_url || business.logo || business.cover_image || '';
+            
+            // Create the HTML for the card
+            card.innerHTML = `
+                <a href="/customers/business/${businessId}/" class="block">
+                    <div class="relative h-48">
+                        ${imageUrl ? 
+                            `<img src="${imageUrl}" 
+                                 alt="${businessName}" 
+                                 class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center\\'><span class=\\'text-primary-500 text-2xl font-bold\\'>${businessFirstLetter}</span></div>';">` 
+                            : 
+                            `<div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+                                <span class="text-primary-500 text-2xl font-bold">${businessFirstLetter}</span>
+                             </div>`
+                        }
+                        
+                        ${businessRegion ? 
+                            `<div class="absolute top-2 right-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/90 backdrop-blur-sm text-gray-700 shadow-sm">
+                                    ${businessRegion}
+                                </span>
+                            </div>` : ''
+                        }
+                    </div>
+                    <div class="p-4">
+                        <div class="flex items-center mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900 flex-1 truncate">${businessName}</h3>
+                            ${isVerified ? 
+                                `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center ml-2">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Verified
+                                </span>` : ''
+                            }
                         </div>
-                        <div class="flex items-center text-sm">
-                            ${business.region ? `<span class="mr-2">${business.region}</span>` : ''}
-                            ${distanceDisplay}
+                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">${businessDescription}</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span class="truncate">${businessLocation}</span>
+                            </div>
+                            <span class="bg-green-50 text-green-600 px-1.5 py-0.5 rounded text-xs">Available</span>
                         </div>
                     </div>
+                </a>
+            `;
+        } catch (err) {
+            console.error('Error creating business card:', err, business);
+            
+            // Fallback simple card with minimal info and first letter display
+            const businessName = business?.name || 'Unnamed Business';
+            const businessFirstLetter = businessName.charAt(0).toUpperCase();
+            
+            card.innerHTML = `
+                <div class="p-4">
+                    <div class="w-full h-32 mb-4 bg-gradient-to-br from-primary-100 to-primary-50 flex items-center justify-center">
+                        <span class="text-primary-500 text-3xl font-bold">${businessFirstLetter}</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">${businessName}</h3>
+                    <p class="text-sm text-gray-600">Business information unavailable</p>
                 </div>
-            </a>
-        `;
+            `;
+        }
         
-        return businessCard;
+        return card;
+    }
+    
+    // Function to fetch nearby businesses
+    function fetchNearbyBusinesses(latitude, longitude, userRegion = null) {
+        const nearbyContainer = document.querySelector('#nearby-businesses-container');
+        
+        fetch(`/customers/api/nearby-businesses/?lat=${latitude}&lng=${longitude}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (nearbyContainer) {
+                    // Remove animation
+                    nearbyContainer.classList.remove('animate-pulse');
+                    
+                    // Clear loading state
+                    nearbyContainer.innerHTML = '';
+                    
+                    // If we got a region from the API and we didn't have one before,
+                    // save it to the user profile
+                    if (data.user_region && !userRegion && {{ request.user.is_authenticated|yesno:"true,false" }}) {
+                        saveUserLocation(latitude, longitude, data.user_region);
+                    }
+                    
+                    // Check if we have businesses to display
+                    const hasRegionalBusinesses = data.regional_businesses && data.regional_businesses.length > 0;
+                    
+                    if (hasRegionalBusinesses) {
+                        // Add location indicator
+                        if (data.user_region) {
+                            const regionName = data.region_name || {
+                                'dar_es_salaam': 'Dar es Salaam',
+                                'arusha': 'Arusha',
+                                'mwanza': 'Mwanza',
+                                'dodoma': 'Dodoma',
+                                'tanga': 'Tanga',
+                                'mbeya': 'Mbeya',
+                                'morogoro': 'Morogoro',
+                                'zanzibar': 'Zanzibar'
+                            }[data.user_region] || data.user_region;
+                            
+                            const locationInfo = document.createElement('div');
+                            locationInfo.className = 'mb-5 bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800/50 rounded-xl p-4 flex items-start';
+                            locationInfo.innerHTML = `
+                                <svg class="w-5 h-5 mr-3 text-primary-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-primary-700 dark:text-primary-300 font-medium">Your location: <span class="font-semibold">${regionName}</span></p>
+                                    <p class="text-sm text-primary-600/70 dark:text-primary-400/70 mt-1">Showing businesses near you based on your current location</p>
+                                </div>
+                            `;
+                            nearbyContainer.appendChild(locationInfo);
+                        }
+                        
+                        // Create grid for businesses
+                        const businessesGrid = document.createElement('div');
+                        businessesGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4';
+                        
+                        // First show regional businesses with a header if available
+                        if (hasRegionalBusinesses) {
+                            const regionalHeader = document.createElement('div');
+                            regionalHeader.className = 'mb-4 mt-3';
+                            regionalHeader.innerHTML = `
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Businesses Near You</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Services available in your region</p>
+                            `;
+                            nearbyContainer.appendChild(regionalHeader);
+                            
+                            data.regional_businesses.slice(0, 4).forEach(business => {
+                                const businessCard = createBusinessCard(business);
+                                businessesGrid.appendChild(businessCard);
+                            });
+                        }
+                        
+                        // Only append businessesGrid if we have businesses to show
+                        nearbyContainer.appendChild(businessesGrid);
+                        
+                        // Add "View More" button if there are more businesses
+                        if (data.regional_businesses.length > 4) {
+                            const viewMoreBtn = document.createElement('div');
+                            viewMoreBtn.className = 'text-center mt-6';
+                            viewMoreBtn.innerHTML = `
+                                <a href="{% url 'customers:search' %}?nearby=true" class="inline-flex items-center justify-center px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800/40 transition-colors">
+                                    <span>View more nearby businesses</span>
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </a>
+                            `;
+                            nearbyContainer.appendChild(viewMoreBtn);
+                        }
+                    } else {
+                        // No businesses found
+                        const noBusinesses = document.createElement('div');
+                        noBusinesses.className = 'bg-white dark:bg-gray-800 rounded-xl p-8 text-center shadow-sm';
+                        noBusinesses.innerHTML = `
+                            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold mb-2">No businesses found</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mb-4">We couldn't find any businesses currently available</p>
+                            <a href="{% url 'customers:search' %}" class="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                                Browse all businesses
+                            </a>
+                        `;
+                        nearbyContainer.appendChild(noBusinesses);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching nearby businesses:', error);
+                if (nearbyContainer) {
+                    // Remove animation
+                    nearbyContainer.classList.remove('animate-pulse');
+                    
+                    // Show error message
+                    nearbyContainer.innerHTML = `
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 text-center shadow-sm">
+                            <svg class="w-12 h-12 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="text-lg font-semibold mb-2">Unable to load businesses</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mb-4">There was a problem finding businesses near you</p>
+                            <button class="refresh-location inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Try again
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add event listener to the new button
+                    document.querySelectorAll('.refresh-location').forEach(btn => {
+                        btn.addEventListener('click', loadNearbyBusinesses);
+                    });
+                }
+            });
+    }
+    
+    // Helper function to handle geolocation errors
+    function handleGeolocationError(container, error) {
+        if (container) {
+            // Remove animation
+            container.classList.remove('animate-pulse');
+            
+            // Show error message based on the specific error
+            let errorMessage = 'We couldn\'t access your location';
+            let errorDetail = 'Please allow location access to see nearby businesses';
+            
+            if (error.code === 1) {
+                // Permission denied
+                errorMessage = 'Location access denied';
+                errorDetail = 'Please enable location services in your browser settings';
+            } else if (error.code === 2) {
+                // Position unavailable
+                errorMessage = 'Location unavailable';
+                errorDetail = 'Your current position is unavailable. Please try again later';
+            } else if (error.code === 3) {
+                // Timeout
+                errorMessage = 'Location request timed out';
+                errorDetail = 'It took too long to determine your location. Please try again';
+            }
+            
+            container.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 text-center shadow-sm">
+                    <svg class="w-12 h-12 mx-auto text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold mb-2">${errorMessage}</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">${errorDetail}</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3">
+                        <button class="refresh-location inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Try again
+                        </button>
+                        <a href="{% url 'customers:search' %}" class="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            Browse all businesses
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listener to the new button
+            document.querySelectorAll('.refresh-location').forEach(btn => {
+                btn.addEventListener('click', loadNearbyBusinesses);
+            });
+        }
+    }
+    
+    // Helper function to get CSRF token for POST requests
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
-    // Home page specific PWA installation banner and handling
+    // Initialize geolocation on page load
     document.addEventListener("DOMContentLoaded", function() {
-        // Safely get all the DOM elements
+        // Load nearby businesses
+        loadNearbyBusinesses();
+        
+        // Add click handler for refresh location buttons
+        document.querySelectorAll('.refresh-location').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Pass true to force a refresh of the location
+                loadNearbyBusinesses(true);
+            });
+        });
+        
+        // Home page specific PWA installation banner and handling
         const homePageInstallBanner = $('#homePageInstallBanner');
-        const staticInstallBanner = $('#staticInstallBanner');
         const homeInstallBtn = $('#homeInstallBtn');
         const closeHomeInstallBanner = $('#closeHomeInstallBanner');
-        const closeStaticBanner = $('#closeStaticBanner');
-        const manualInstallBtn = $('#manualInstallBtn');
-        const installInstructionsModal = $('#installInstructionsModal');
-        const closeInstructionsModal = $('#closeInstructionsModal');
         
         // Banner management functions
         function showBanner(banner) {
@@ -382,83 +869,23 @@
         
         // If app is already installed, don't show the banners
         if (isRunningStandalone) {
-            console.log('App is already installed as PWA');
-            hideBanner(staticInstallBanner);
             hideBanner(homePageInstallBanner);
             localStorage.setItem('pwaBannerDismissed', 'true');
-            localStorage.setItem('staticBannerDismissed', 'true');
             return;
         }
         
-        // Check if either banner was previously dismissed and respect that choice
-        const staticBannerDismissed = localStorage.getItem('staticBannerDismissed');
+        // Check if banner was previously dismissed
         const pwaBannerDismissed = localStorage.getItem('pwaBannerDismissed');
-        
-        // Initially handle static banner visibility
-        if (staticBannerDismissed === 'true') {
-            hideBanner(staticInstallBanner);
-        } else {
-            showBanner(staticInstallBanner);
-        }
-        
-        // Handle the manual install button click - show instructions modal
-        addEventListenerSafe(manualInstallBtn, 'click', function(e) {
-            e.preventDefault();
-            if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
-        });
-        
-        // Close the instructions modal
-        addEventListenerSafe(closeInstructionsModal, 'click', function() {
-            if (installInstructionsModal) installInstructionsModal.style.display = 'none';
-        });
-        
-        // Also close modal when clicking outside
-        addEventListenerSafe(installInstructionsModal, 'click', function(e) {
-            if (e.target === installInstructionsModal) {
-                installInstructionsModal.style.display = 'none';
-            }
-        });
-        
-        // Close button for static banner
-        addEventListenerSafe(closeStaticBanner, 'click', function() {
-            hideBanner(staticInstallBanner);
-            localStorage.setItem('staticBannerDismissed', 'true');
-            
-            // Set a timeout to clear the dismissed state after a period
-            localStorage.setItem('staticBannerDismissedTimestamp', Date.now().toString());
-        });
-        
-        // Check if dismissal period has expired
-        const checkDismissalPeriod = () => {
-            const dismissedTime = parseInt(localStorage.getItem('staticBannerDismissedTimestamp') || '0');
-            const threeDaysInMs = 3 * 24 * 60 * 60 * 1000;
-            if (dismissedTime > 0 && (Date.now() - dismissedTime) > threeDaysInMs) {
-                localStorage.removeItem('staticBannerDismissed');
-                localStorage.removeItem('staticBannerDismissedTimestamp');
-                
-                // If app is not in standalone mode and not already dismissed, show static banner
-                if (!isRunningStandalone && staticBannerDismissed !== 'true') {
-                    showBanner(staticInstallBanner);
-                }
-            }
-        };
-        
-        // Run the check when page loads
-        checkDismissalPeriod();
         
         // Check for beforeinstallprompt event
         let deferredPrompt = null;
         
         window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('beforeinstallprompt event detected');
             // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
             
             // Stash the event so it can be triggered later
             deferredPrompt = e;
-            
-            // Hide static banner when we can show the dynamic one
-            hideBanner(staticInstallBanner);
             
             // Only show dynamic banner if not previously dismissed
             if (pwaBannerDismissed !== 'true') {
@@ -466,13 +893,10 @@
             }
         });
         
-        // Install button handler for dynamic banner - use the safe event listener
+        // Install button handler for dynamic banner
         addEventListenerSafe(homeInstallBtn, 'click', async () => {
             if (!deferredPrompt) {
                 console.warn('Install button clicked but no installation prompt available');
-                
-                // Show manual installation instructions instead
-                if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
                 return;
             }
             
@@ -482,7 +906,6 @@
                 
                 // Wait for the user to respond
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User installation choice: ${outcome}`);
                 
                 // Clear the saved prompt
                 deferredPrompt = null;
@@ -493,45 +916,55 @@
                 if (outcome === 'accepted') {
                     // They installed it, remember this
                     localStorage.setItem('pwaBannerDismissed', 'true');
-                    hideBanner(staticInstallBanner);
                 }
             } catch (err) {
                 console.error('Error during installation prompt:', err);
-                
-                // If installation fails, show manual instructions
-                if (installInstructionsModal) installInstructionsModal.style.display = 'flex';
             }
         });
         
-        // Close dynamic banner button - use the safe event listener
+        // Close banner button
         addEventListenerSafe(closeHomeInstallBanner, 'click', () => {
             hideBanner(homePageInstallBanner);
             localStorage.setItem('pwaBannerDismissed', 'true');
-            
-            // Set timestamp for when this was dismissed
             localStorage.setItem('pwaBannerDismissedTimestamp', Date.now().toString());
         });
         
         // Listen for appinstalled event
         window.addEventListener('appinstalled', (evt) => {
-            console.log('App was installed successfully');
             // App was installed, hide all banners
             hideBanner(homePageInstallBanner);
-            hideBanner(staticInstallBanner);
             localStorage.setItem('pwaBannerDismissed', 'true');
-            localStorage.setItem('staticBannerDismissed', 'true');
         });
         
-        // Also listen for display-mode changes (in case user installs manually)
-        window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
-            if (evt.matches) {
-                // App was installed, hide all banners
-                hideBanner(homePageInstallBanner);
-                hideBanner(staticInstallBanner);
-                localStorage.setItem('pwaBannerDismissed', 'true');
-                localStorage.setItem('staticBannerDismissed', 'true');
+        // Product word rotator implementation
+        const productWords = ['Gas', 'Food', 'Groceries', 'Medicine', 'Water', 'Electronics', 'Fruits', 'Vegetables'];
+        const productElement = document.getElementById('rotating-product');
+        let currentIndex = 0;
+        
+        function rotateProducts() {
+            productElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % productWords.length;
+                productElement.textContent = productWords[currentIndex];
+                productElement.style.opacity = '1';
+            }, 500);
+        }
+        
+        // Add CSS for fade transition
+        const style = document.createElement('style');
+        style.textContent = `
+            #rotating-product {
+                display: inline-block;
+                color: #ffcc00;
+                transition: opacity 0.5s ease;
+                font-weight: bold;
             }
-        });
+        `;
+        document.head.appendChild(style);
+        
+        // Start rotation
+        setInterval(rotateProducts, 3000);
     });
 </script>
 {% endblock %}

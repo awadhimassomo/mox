@@ -7,6 +7,7 @@ class OTPVerification(models.Model):
     otp = models.CharField(max_length=6)
     otp_timestamp = models.DateTimeField(auto_now_add=True)
     otp_expiry = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
     
     def is_expired(self):
         return timezone.now() > self.otp_expiry

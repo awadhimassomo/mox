@@ -11,6 +11,8 @@ urlpatterns = [
     path('login/', views.business_login, name='business_login'),
     path('logout/', LogoutView.as_view(next_page='business:business_login'), name='logout'),
     path('sales-history/', views.sales_history, name='sales_history'),
+    path('sales-history/export/', views.export_sales_history_excel, name='export_sales_history'),
+    path('sales-history/import/', views.import_sales_history_excel, name='import_sales_history'),
     path('earnings/', views.earnings, name='earnings'),
     path('profile/', views.business_profile, name='profile'),
     path('dashboard/', views.business_dashboard, name='business_dashboard'),

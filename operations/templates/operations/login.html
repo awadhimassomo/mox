@@ -7,8 +7,10 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-50 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
     <div class="max-w-md w-full bg-white rounded-lg shadow-md p-6 sm:p-8">
         <div class="text-center mb-8">
-            <!-- Logo could be added here -->
-            <img src="{% static 'img/logo.png' %}" alt="Mo Delivery" class="h-12 mx-auto mb-3" onerror="this.style.display='none'">
+            <!-- Logo with link to homepage -->
+            <a href="/">
+                <img src="{% static 'img/logo.png' %}" alt="Mo Delivery" class="h-12 mx-auto mb-3" onerror="this.style.display='none'">
+            </a>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-red-600 mb-3">
                 Sign in to your account
             </h2>
@@ -20,7 +22,7 @@
             </p>
         </div>
         
-        <form class="space-y-6" action="{% url 'operations:loginapi' %}" method="POST">
+        <form class="space-y-6" action="{% url 'operations:loginapi' %}" method="POST" id="loginForm">
             {% csrf_token %}
             
             {% if messages %}
@@ -52,9 +54,10 @@
                             class="appearance-none block w-full pl-14 pr-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
                             placeholder="712345678"
                             inputmode="numeric"
-                            pattern="[0-9]*">
+                            pattern="[0-9]{9}"
+                            maxlength="9">
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">Enter 9 digits after 255 (e.g., 712345678)</p>
+                    <p class="mt-1 text-xs text-gray-500">Enter 9 digits after +255 (e.g., 712345678)</p>
                 </div>
 
                 <div>
@@ -64,7 +67,7 @@
                             class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
                             placeholder="••••••••">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <button type="button" id="togglePassword" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <button type="button" id="togglePassword" class="text-gray-400 hover:text-gray-500 focus:outline-none" title="Toggle password visibility">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" id="eyeIcon">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
@@ -96,6 +99,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Limit to 9 digits
         if (this.value.length > 9) {
             this.value = this.value.slice(0, 9);
+        }
+    });
+    
+    // Add form submit handler to ensure proper formatting
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', function(e) {
+        // If phone number is not exactly 9 digits, prevent submission
+        if (phoneInput.value.length !== 9) {
+            e.preventDefault();
+            alert('Please enter exactly 9 digits after +255');
+            phoneInput.focus();
+        } else {
+            // Format with +255 prefix when submitting
+            phoneInput.value = '+255' + phoneInput.value;
         }
     });
     

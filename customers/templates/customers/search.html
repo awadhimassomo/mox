@@ -1,111 +1,545 @@
 {% extends 'customers/base.html' %}
 {% load static %}
 
-{% block title %}Search Results - {{ query }}{% endblock %}
+{% block title %}Search | Mo-Express{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Search Results for "{{ query }}"</h1>
-    
-    <!-- Search form -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="GET" action="{% url 'customers:search' %}">
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="Search for businesses or products...">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <!-- Search Header with animated gradient background -->
+    <div class="bg-gradient-to-r from-red-600 via-red-500 to-yellow-500 shadow-lg relative overflow-hidden">
+        <div class="absolute inset-0 bg-pattern opacity-10"></div>
+        <div class="container mx-auto px-4 py-8 relative z-10">
+            <div class="flex flex-col space-y-4 max-w-4xl mx-auto">
+                <h1 class="text-3xl md:text-4xl font-bold text-white text-center">Find What You Need</h1>
+                
+                <!-- Enhanced Search Box with animation -->
+                <form method="GET" action="{% url 'customers:search' %}" class="w-full transition-all duration-300 transform hover:scale-[1.01] focus-within:scale-[1.02]">
+                    <div class="relative flex items-center w-full rounded-xl overflow-hidden shadow-2xl bg-white dark:bg-gray-800 ring-4 ring-white/30">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" name="q" value="{{ query }}" placeholder="What are you looking for today?" 
+                            class="pl-12 pr-4 py-4 w-full border-none outline-none
+                            bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-lg
+                            focus:ring-0 placeholder-gray-400 dark:placeholder-gray-500">
+                        <div class="absolute inset-y-0 right-0 flex items-center">
+                            <button type="submit" class="h-full px-6 md:px-8 bg-red-600 hover:bg-red-700 
+                                text-white font-medium transition duration-200 ease-in-out flex items-center">
+                                <span class="hidden md:inline mr-2">Search</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <select name="category" class="form-control">
-                                <option value="">All Categories</option>
+                    <!-- Popular search terms -->
+                    <div class="flex flex-wrap gap-2 mt-3 justify-center">
+                        <span class="text-white/70 text-sm">Popular:</span>
+                        <a href="{% url 'customers:search' %}?q=gas" class="text-white text-sm hover:underline">Gas</a>
+                        <a href="{% url 'customers:search' %}?q=water" class="text-white text-sm hover:underline">Water</a>
+                        <a href="{% url 'customers:search' %}?q=delivery" class="text-white text-sm hover:underline">Delivery</a>
+                        <a href="{% url 'customers:search' %}?q=discount" class="text-white text-sm hover:underline">Discounts</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content with improved layout -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Filters and Results Layout -->
+        <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+            
+            <!-- Filters Sidebar with collapsible mobile view -->
+            <div class="w-full lg:w-1/4 lg:max-w-xs">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                    <!-- Mobile filter toggle -->
+                    <button id="filter-toggle" class="lg:hidden w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                            <span class="font-medium text-gray-700 dark:text-white">Filters</span>
+                        </div>
+                        <svg id="filter-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Filter content -->
+                    <div id="filter-content" class="hidden lg:block p-4">
+                        <form method="GET" action="{% url 'customers:search' %}">
+                            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                            
+                            <!-- Category Filter with custom styling -->
+                            <div class="mb-6">
+                                <label for="category" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    Category
+                                </label>
+                                <div class="relative">
+                                    <select id="category" name="category" 
+                                        class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 
+                                        bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none 
+                                        focus:ring-2 focus:ring-red-600 focus:border-red-600 appearance-none text-gray-700 dark:text-gray-200">
+                                        <option value="">All Categories</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Price Range with improved slider -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    Price Range (TZS)
+                                </label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 dark:text-gray-400 text-sm">Min</span>
+                                        </div>
+                                        <input type="number" name="min_price" placeholder="0" value="{{ request.GET.min_price }}"
+                                            class="pl-12 block w-full py-2.5 border border-gray-300 dark:border-gray-600 
+                                            bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none 
+                                            focus:ring-2 focus:ring-red-600 focus:border-red-600 text-gray-700 dark:text-gray-200">
+                                    </div>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 dark:text-gray-400 text-sm">Max</span>
+                                        </div>
+                                        <input type="number" name="max_price" placeholder="Any" value="{{ request.GET.max_price }}"
+                                            class="pl-12 block w-full py-2.5 border border-gray-300 dark:border-gray-600 
+                                            bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none 
+                                            focus:ring-2 focus:ring-red-600 focus:border-red-600 text-gray-700 dark:text-gray-200">
+                                    </div>
+                                </div>
+                                <!-- Price range display for visual feedback -->
+                                <div class="mt-2 px-1">
+                                    <div class="h-1 bg-gray-200 dark:bg-gray-700 rounded-full relative">
+                                        <div id="price-range-indicator" class="absolute h-1 bg-red-600 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sort By with custom dropdown -->
+                            <div class="mb-6">
+                                <label for="sort" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    Sort By
+                                </label>
+                                <div class="relative">
+                                    <select id="sort" name="sort" 
+                                        class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 
+                                        bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none 
+                                        focus:ring-2 focus:ring-red-600 focus:border-red-600 appearance-none text-gray-700 dark:text-gray-200">
+                                        <option value="relevance" {% if request.GET.sort == 'relevance' %}selected{% endif %}>Relevance</option>
+                                        <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                        <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                        <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                                        <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Filter Controls with improved styling -->
+                            <div class="flex space-x-2">
+                                <button type="submit" 
+                                    class="flex-grow py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-sm font-medium 
+                                    rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                    focus:ring-red-600 transition-colors duration-200 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                    Apply Filters
+                                </button>
+                                <a href="{% url 'customers:search' %}{% if query %}?q={{ query }}{% endif %}" 
+                                    class="py-2.5 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 
+                                    dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-100 
+                                    dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                    focus:ring-gray-500 transition-colors duration-200">
+                                    Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Popular Categories with visual enhancements -->
+                <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                        <h2 class="text-lg font-semibold">Popular Categories</h2>
+                    </div>
+                    <div class="p-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            {% for category in categories|slice:":8" %}
+                            <a href="{% url 'customers:search' %}?category={{ category.id }}" 
+                                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
+                                text-gray-700 dark:text-gray-300 transition-colors duration-200 flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
+                                {{ category.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search Results with improved card designs -->
+            <div class="w-full lg:w-3/4">
+                <!-- Active Filters with pill design -->
+                {% if query or request.GET.category or request.GET.min_price or request.GET.max_price %}
+                <div class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Active filters:</span>
+                        
+                        {% if query %}
+                        <div class="inline-flex items-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 
+                            rounded-full px-3 py-1.5 text-sm">
+                            <span>{{ query }}</span>
+                            <a href="{% url 'customers:search' %}?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price }}&{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+                                class="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.GET.category %}
+                        <div class="inline-flex items-center bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 
+                            rounded-full px-3 py-1.5 text-sm">
+                            <span>Category: 
                                 {% for category in categories %}
-                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                                    {% if category.id|stringformat:"i" == request.GET.category %}{{ category.name }}{% endif %}
                                 {% endfor %}
-                            </select>
+                            </span>
+                            <a href="{% url 'customers:search' %}?{% if query %}q={{ query }}&{% endif %}{% if request.GET.min_price %}min_price={{ request.GET.min_price }}&{% endif %}{% if request.GET.max_price %}max_price={{ request.GET.max_price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+                                class="ml-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
                         </div>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary">Search</button>
+                        {% endif %}
+                        
+                        {% if request.GET.min_price or request.GET.max_price %}
+                        <div class="inline-flex items-center bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 
+                            rounded-full px-3 py-1.5 text-sm">
+                            <span>Price: 
+                                {% if request.GET.min_price %}{{ request.GET.min_price }}{% else %}0{% endif %} - 
+                                {% if request.GET.max_price %}{{ request.GET.max_price }}{% else %}Any{% endif %} TZS
+                            </span>
+                            <a href="{% url 'customers:search' %}?{% if query %}q={{ query }}&{% endif %}{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+                                class="ml-2 text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-200">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <a href="{% url 'customers:search' %}" 
+                            class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium hover:underline">
+                            Clear All
+                        </a>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Businesses section -->
-    {% if businesses %}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2>Businesses</h2>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                {% for business in businesses %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        {% if business.logo %}
-                        <img src="{{ business.logo.url }}" class="card-img-top" alt="{{ business.name }}">
-                        {% else %}
-                        <img src="{% static 'img/default-business.png' %}" class="card-img-top" alt="{{ business.name }}">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ business.name }}</h5>
-                            <p class="card-text">{{ business.description|truncatechars:100 }}</p>
-                            <a href="{% url 'customers:business_detail' business.id %}" class="btn btn-primary">View Business</a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Products section -->
-    {% if products %}
-    <div class="card">
-        <div class="card-header">
-            <h2>Products</h2>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                {% for product in products %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
-                        {% else %}
-                        <img src="{% static 'img/default-product.png' %}" class="card-img-top" alt="{{ product.name }}">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ product.name }}</h5>
-                            <p class="card-text">{{ product.description|truncatechars:100 }}</p>
-                            <p class="card-text"><strong>Price:</strong> {{ product.price }} TZS</p>
-                            <p class="card-text"><small class="text-muted">From: {{ product.business.name }}</small></p>
-                            <a href="{% url 'customers:business_detail' product.business.id %}" class="btn btn-primary">View Business</a>
-                            {% if user.is_authenticated %}
-                            <form method="POST" action="{% url 'customers:add_to_cart' product.id %}" class="mt-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success">Add to Cart</button>
-                            </form>
+                {% endif %}
+                
+                <!-- Results Summary with improved design -->
+                <div class="mb-4 bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+                            {% if query %}
+                            <span class="relative">
+                                Results for "{{ query }}"
+                                <span class="absolute -bottom-1 left-0 w-full h-1 bg-red-500 rounded"></span>
+                            </span>
+                            {% else %}
+                            <span class="relative">
+                                All Results
+                                <span class="absolute -bottom-1 left-0 w-full h-1 bg-red-500 rounded"></span>
+                            </span>
                             {% endif %}
-                        </div>
+                        </h2>
+                        <span class="text-sm font-medium px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                            {{ businesses|length }} businesses • {{ products|length }} products
+                        </span>
                     </div>
                 </div>
-                {% endfor %}
+                
+                <!-- No Results with improved empty state -->
+                {% if not businesses and not products %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                    <div class="w-24 h-24 mx-auto">
+                        <svg class="w-full h-full text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="mt-6 text-xl font-medium text-gray-900 dark:text-white">No results found</h3>
+                    <p class="mt-3 text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                        We couldn't find anything matching your search criteria.
+                        Try using different keywords or adjusting your filters.
+                    </p>
+                    <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <a href="{% url 'customers:search' %}" 
+                            class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium 
+                            rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 
+                            focus:ring-red-600 transition-colors duration-200 w-full sm:w-auto">
+                            Reset Search
+                        </a>
+                        <a href="{% url 'customers:home' %}" 
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 
+                            dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-100 
+                            dark:hover:bg-gray-700 transition-colors duration-200 w-full sm:w-auto">
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                
+                    <!-- Businesses Section with improved cards -->
+                    {% if businesses %}
+                    <div class="mb-8">
+                        <div class="flex items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Businesses</h3>
+                            <div class="ml-3 h-px flex-grow bg-gray-200 dark:bg-gray-700"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for business in businesses %}
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl group">
+                                <a href="{% url 'customers:business_detail' business.id %}" class="block relative">
+                                    <div class="h-44 bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                                        {% if business.cover_image %}
+                                        <img src="{{ business.cover_image.url }}" alt="{{ business.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                        {% else %}
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-700 dark:to-gray-900">
+                                            <svg class="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <!-- Overlay gradient for better text visibility -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        
+                                        <!-- Business rating badge -->
+                                        {% if business.rating %}
+                                        <div class="absolute top-3 left-3 bg-yellow-400 text-gray-900 rounded-lg py-1 px-2.5 text-xs font-bold flex items-center shadow-lg">
+                                            <svg class="h-3.5 w-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                            {{ business.rating }}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <!-- View business button (shown on hover) -->
+                                        <div class="absolute bottom-3 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                            <span class="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white text-sm font-medium py-1.5 px-4 rounded-full shadow-lg">
+                                                View Business
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="p-4">
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{{ business.name }}</h4>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                                            {{ business.description|default:""|truncatechars:80 }}
+                                        </p>
+                                        <div class="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+                                            <svg class="h-4 w-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span class="truncate">{{ business.address|default:"Location not specified" }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Products Section with improved cards and quick add to cart -->
+                    {% if products %}
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Products</h3>
+                            <div class="ml-3 h-px flex-grow bg-gray-200 dark:bg-gray-700"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for product in products %}
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden group relative">
+                                <a href="{% url 'customers:product_detail' product.id %}" class="block">
+                                    <div class="h-48 bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+                                        {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                        {% else %}
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-700 dark:to-gray-900">
+                                            <svg class="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <!-- Overlay gradient for better text visibility -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        
+                                        <!-- Price badge with improved design -->
+                                        <div class="absolute top-3 right-3 bg-red-600 text-white rounded-lg py-1.5 px-3 text-sm font-bold shadow-lg">
+                                            TZS {{ product.price }}
+                                        </div>
+                                        
+                                        <!-- Quick add to cart (shown on hover) -->
+                                        {% if user.is_authenticated %}
+                                        <form method="POST" action="{% url 'customers:add_to_cart' product.id %}" class="absolute bottom-3 left-0 right-0 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white text-sm font-medium py-1.5 px-4 rounded-full shadow-lg hover:bg-red-600 hover:text-white transition-colors duration-200 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                </svg>
+                                                Quick Add
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors flex-grow">{{ product.name }}</h4>
+                                            {% if product.category %}
+                                            <span class="ml-2 px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full whitespace-nowrap">
+                                                {{ product.category.name }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                                            {{ product.description|default:""|truncatechars:60 }}
+                                        </p>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                </svg>
+                                                {{ product.business.name }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <!-- Standard Add to cart button -->
+                                <div class="px-4 pb-4 mt-1">
+                                    {% if user.is_authenticated %}
+                                    <form method="POST" action="{% url 'customers:add_to_cart' product.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 
+                                            text-white text-sm font-medium rounded-lg shadow-sm focus:outline-none 
+                                            focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition-colors duration-200
+                                            flex items-center justify-center">
+                                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            Add to Cart
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <a href="{% url 'customers:login' %}?next={{ request.path }}" class="w-full py-2.5 px-4 bg-gray-500 hover:bg-gray-600 
+                                        text-white text-sm font-medium rounded-lg shadow-sm focus:outline-none transition-colors duration-200
+                                        flex items-center justify-center">
+                                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                        </svg>
+                                        Login to Add
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
-    
-    {% if not businesses and not products %}
-    <div class="alert alert-info">
-        <h3>No results found for "{{ query }}"</h3>
-        <p>Try different keywords or browse by category.</p>
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile filter toggle functionality
+        const filterToggle = document.getElementById('filter-toggle');
+        const filterContent = document.getElementById('filter-content');
+        const filterIcon = document.getElementById('filter-icon');
+        
+        if (filterToggle && filterContent && filterIcon) {
+            filterToggle.addEventListener('click', function() {
+                filterContent.classList.toggle('hidden');
+                filterIcon.classList.toggle('rotate-180');
+            });
+        }
+        
+        // Price range indicator
+        const minPrice = document.querySelector('input[name="min_price"]');
+        const maxPrice = document.querySelector('input[name="max_price"]');
+        const indicator = document.getElementById('price-range-indicator');
+        
+        function updatePriceIndicator() {
+            if (!minPrice || !maxPrice || !indicator) return;
+            
+            const min = minPrice.value ? parseInt(minPrice.value) : 0;
+            const max = maxPrice.value ? parseInt(maxPrice.value) : 100000;
+            
+            // Set left position (%) based on min price
+            const leftPos = Math.min(100, Math.max(0, (min / 100000) * 100));
+            // Set width (%) based on range between min and max
+            const width = Math.min(100 - leftPos, Math.max(0, ((max - min) / 100000) * 100));
+            
+            indicator.style.left = leftPos + '%';
+            indicator.style.width = width + '%';
+        }
+        
+        if (minPrice && maxPrice && indicator) {
+            updatePriceIndicator();
+            minPrice.addEventListener('input', updatePriceIndicator);
+            maxPrice.addEventListener('input', updatePriceIndicator);
+        }
+        
+        // Smooth animations for cards
+        const cards = document.querySelectorAll('.group');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('shadow-xl');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('shadow-xl');
+            });
+        });
+        
+        // Add a fade-in animation to search results
+        const resultsSection = document.querySelector('.lg\\:w-3\\/4');
+        if (resultsSection) {
+            resultsSection.classList.add('opacity-0');
+            setTimeout(() => {
+                resultsSection.classList.add('transition-opacity', 'duration-500');
+                resultsSection.classList.remove('opacity-0');
+            }, 100);
+        }
+    });
+</script>
 {% endblock %}

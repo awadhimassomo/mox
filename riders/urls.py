@@ -37,6 +37,7 @@ urlpatterns = [
     
     # API endpoints
     path('api/update-location/', views.UpdateRiderLocation.as_view(), name='update_location'),
+    path('api/update-location-with-address/', views.api_update_location, name='update_location_with_address'),
     path('api/resend-otp/', views.ResendOTPView.as_view(), name='api_resend_otp'),
     path('api/incoming-orders/', views.incoming_orders_api, name='get_incoming_orders'),
     path('api/accept-order/<int:order_id>/', views.accept_order_api, name='accept_order_api'),

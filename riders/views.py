@@ -545,114 +545,6 @@ def rider_history_view(request):
         return redirect('riders:login')
     return render(request, 'riders/rider_history.html')
 
-def assign_orders_to_riders():
-    """
-    Background function to assign orders to groups of riders based on proximity.
-    This should be run on a scheduler or triggered when new orders come in.
-    """
-    try:
-        from orders.models import Order, OrderAssignmentGroup
-        import math
-        
-        # Function to calculate distance between two points
-        def calculate_distance(lat1, lon1, lat2, lon2):
-            """Calculate distance between two coordinates using Haversine formula."""
-            # Convert to radians
-            if not all([lat1, lon1, lat2, lon2]):
-                return float('inf')  # Return infinity if any coordinate is missing
-                
-            lat1, lon1 = float(lat1), float(lon1)
-            lat2, lon2 = float(lat2), float(lon2)
-            
-            # Radius of Earth in kilometers
-            R = 6371.0
-            
-            # Convert latitude and longitude from degrees to radians
-            lat1_rad = math.radians(lat1)
-            lon1_rad = math.radians(lon1)
-            lat2_rad = math.radians(lat2)
-            lon2_rad = math.radians(lon2)
-            
-            # Difference in coordinates
-            dlon = lon2_rad - lon1_rad
-            dlat = lat2_rad - lat1_rad
-            
-            # Haversine formula
-            a = math.sin(dlat / 2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2)**2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-            distance = R * c
-            
-            return distance
-        
-        # Get all unassigned orders that are not yet assigned to any rider
-        # Include both 'available' and 'pending' status
-        unassigned_orders = Order.objects.filter(
-            status__in=['available', 'pending']
-        ).exclude(
-            id__in=OrderAssignmentGroup.objects.values_list('order_id', flat=True)
-        )
-        
-        logger.info(f"Found {unassigned_orders.count()} unassigned orders with status 'available' or 'pending'")
-        
-        # Get all available riders
-        available_riders = Rider.objects.filter(is_available=True)
-        
-        # Process each unassigned order
-        for order in unassigned_orders:
-            # Skip if order has no business location
-            if not order.business or not order.business.latitude or not order.business.longitude:
-                logger.warning(f"Order {order.id} has no valid business location, skipping assignment")
-                continue
-            
-            # Get business coordinates
-            business_lat = order.business.latitude
-            business_lng = order.business.longitude
-            
-            # Calculate distance between order and each rider
-            rider_distances = []
-            for rider in available_riders:
-                if rider.latitude and rider.longitude:
-                    distance = calculate_distance(
-                        business_lat, business_lng,
-                        rider.latitude, rider.longitude
-                    )
-                    rider_distances.append((rider, distance))
-            
-            # Sort riders by distance to order
-            rider_distances.sort(key=lambda x: x[1])
-            
-            # If there are at least 10 riders available
-            if len(rider_distances) >= 10:
-                closest_riders = [r[0] for r in rider_distances[:10]]
-            else:
-                # If fewer than 10 riders available, use all available riders
-                closest_riders = [r[0] for r in rider_distances]
-            
-            # Skip if no riders available
-            if not closest_riders:
-                logger.warning(f"No riders available for order {order.id}, skipping assignment")
-                continue
-            
-            # Create assignment group with 40-second timeout
-            assignment_group = OrderAssignmentGroup.objects.create(
-                order=order,
-                expires_at=timezone.now() + timezone.timedelta(seconds=40)
-            )
-            
-            # Add riders to assignment group
-            for rider in closest_riders:
-                assignment_group.riders.add(rider)
-            
-            logger.info(f"Created assignment group for order {order.id} with {len(closest_riders)} riders, expires in 40 seconds")
-        
-        return True
-    
-    except Exception as e:
-        logger.error(f"Error in assign_orders_to_riders: {str(e)}")
-        return False
-
-
-
 @login_required
 def rider_dashboard(request):
     """Renders the rider dashboard page."""
@@ -965,7 +857,6 @@ def rider_login_api(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @csrf_exempt
-@login_required
 def update_location(request):
     """Update a rider's location based on their current coordinates."""
     from django.db.models import Q  # Ensure Q is imported here too
@@ -1001,9 +892,10 @@ def update_rider_location(request):
             data = json.loads(request.body)
             latitude = data.get("latitude")
             longitude = data.get("longitude")
+            is_online = data.get("is_online", True)  # Default to True if not provided
 
             # Print for debugging
-            print(f"📍 Received Location Update - Latitude: {latitude}, Longitude: {longitude}")
+            print(f"📍 Received Location Update - Latitude: {latitude}, Longitude: {longitude}, Online: {is_online}")
 
             if not latitude or not longitude:
                 return JsonResponse({"error": "Latitude and Longitude are required"}, status=400)
@@ -1013,10 +905,16 @@ def update_rider_location(request):
                 rider = Rider.objects.get(user=request.user)
                 rider.latitude = latitude
                 rider.longitude = longitude
+                rider.is_available = is_online  # Update availability status
                 rider.save()
 
-                print(f"✅ Rider {rider.user.get_full_name()} Location Updated - New Location: ({latitude}, {longitude})")
-                return JsonResponse({"message": "Location updated successfully", "latitude": latitude, "longitude": longitude}, status=200)
+                print(f"✅ Rider {rider.user.get_full_name()} Location Updated - New Location: ({latitude}, {longitude}), Online: {is_online}")
+                return JsonResponse({
+                    "message": "Location updated successfully", 
+                    "latitude": latitude, 
+                    "longitude": longitude,
+                    "is_online": is_online
+                }, status=200)
 
             else:
                 print("❌ Unauthorized request. User is not authenticated.")
@@ -1108,7 +1006,7 @@ def accept_order_api(request, order_id):
                 "success": False, 
                 "error": f"Order is not available for assignment. Current status: {order.status}. Only AVAILABLE or PENDING orders can be accepted."
             })
-        
+
         # Get rider location for tracking
         rider_location_lat = None
         rider_location_lng = None
@@ -1137,7 +1035,7 @@ def accept_order_api(request, order_id):
             order=order,
             rider=rider,
             action_type='accepted',
-            notes=f"Rider accepted order #{order.order_number} for gas delivery",
+            notes='Rider accepted order for gas delivery',
             lat=rider_location_lat,
             lng=rider_location_lng
         )
@@ -1293,6 +1191,8 @@ def dashboard_data(request):
             'completed_orders': completed_orders.count(),
             'latitude': rider.latitude,
             'longitude': rider.longitude,
+            'is_available': rider.is_available,  # Add availability status
+            'last_location_update': rider.last_location_update.isoformat() if rider.last_location_update else None
         }
         
         return JsonResponse(rider_data)
@@ -1356,7 +1256,7 @@ def complete_order_api(request, order_id):
         from orders.models import Order, OrderRiderAction
         order = Order.objects.get(id=order_id)
         
-        # Check if this rider is assigned to this order or if it's in the assignment pool
+        # Check if this rider is assigned to this order or if the order is in the assignment pool
         if not order.assignment_groups.filter(riders=rider, is_active=True).exists():
             return JsonResponse({
                 'success': False, 
@@ -1364,8 +1264,11 @@ def complete_order_api(request, order_id):
             }, status=403)
         
         # Get rider location if available
-        rider_location_lat = getattr(rider, 'latitude', None)
-        rider_location_lng = getattr(rider, 'longitude', None)
+        rider_location_lat = None
+        rider_location_lng = None
+        if hasattr(rider, 'latitude') and hasattr(rider, 'longitude'):
+            rider_location_lat = rider.latitude
+            rider_location_lng = rider.longitude
         
         # Record the completion action using the OrderRiderAction model
         OrderRiderAction.record_action(
@@ -1938,7 +1841,7 @@ def incoming_orders_api(request):
             status__iregex=r'^(pending|available)$'  # Match both pending and available, case-insensitive
         ).order_by('-created_at')
         logger.info(f"Total eligible orders (pending/available): {orders.count()}")
-        
+
         # Log the status distribution
         status_counts = {}
         for order in orders:
@@ -2052,7 +1955,7 @@ def far_orders_view(request):
         available_orders = Order.objects.filter(
             Q(status__iexact='available') | Q(status__iexact='pending')
         ).exclude(
-            rider__isnull=False  # Exclude orders that already have a rider
+            rider__isnull=False  #Exclude orders that already have a rider
         ).order_by('-created_at')
         
         # Function to check if coordinate is valid
@@ -2111,7 +2014,7 @@ def far_orders_view(request):
                         logger.info(f"Order #{order.id} is in same region but far ({distance:.1f} km)")
                 else:
                     # No valid coordinates for distance calculation
-                    logger.warning(f"No valid coordinates to calculate distance for order #{order.id}")
+                    logger.warning(f"No valid coordinates for distance calculation for order #{order.id}")
                     same_region_far_orders.append(order)
                 
                 # Format the drop-off coordinates for display 
@@ -2489,46 +2392,46 @@ def verify_reset_otp(request):
             else:
                 otp = request.POST.get('otp', '')
                 phone_number = request.POST.get('phone_number', '')
-            
+
             # Ensure we have valid data
             if not otp:
                 return JsonResponse({"error": "OTP is required"}, status=400)
-            
+
             if not phone_number:
                 phone_number = request.session.get('reset_phone_number', '')
-                
+
             if not phone_number:
                 return JsonResponse({"error": "Phone number is required"}, status=400)
-            
+
             normalized_phone = normalize_phone(phone_number)
-            
+
             try:
                 user = CustomUser.objects.get(phone=normalized_phone)
                 otp_record = OTPCredit.objects.filter(user=user).order_by('-otp_timestamp').first()
-                
+
                 if not otp_record:
                     return JsonResponse({"error": "OTP not found. Please request a new one."}, status=400)
-                
+
                 current_time = timezone.now()
                 if current_time > otp_record.otp_expiry:
                     return JsonResponse({"error": "OTP has expired. Please request a new one."}, status=400)
-                
+
                 if str(otp_record.otp) != str(otp):
                     return JsonResponse({"error": "Invalid OTP. Please try again."}, status=400)
-                
+
                 # OTP is verified - store verification in session
                 request.session['otp_verified'] = True
                 request.session['reset_user_id'] = user.id
-                
+
                 return JsonResponse({"success": True, "message": "OTP verified successfully"})
-                
+
             except CustomUser.DoesNotExist:
                 return JsonResponse({"error": "User not found"}, status=404)
-                
+
         except Exception as e:
             logger.error(f"Error in verify_reset_otp: {str(e)}")
             return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
-    
+
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 @csrf_exempt
@@ -2538,27 +2441,27 @@ def resend_reset_otp(request):
         try:
             data = json.loads(request.body)
             phone_number = data.get('phone_number', '').strip()
-            
+
             if not phone_number:
                 phone_number = request.session.get('reset_phone_number', '')
-                
+
             if not phone_number:
                 return JsonResponse({"error": "Phone number is required"}, status=400)
-            
+
             normalized_phone = normalize_phone(phone_number)
-            
+
             try:
                 user = CustomUser.objects.get(phone=normalized_phone)
                 otp_record = OTPCredit.objects.filter(user=user).order_by('-otp_timestamp').first()
-                
+
                 # Check if we can send a new OTP (prevent spamming)
                 if otp_record and (timezone.now() - otp_record.otp_timestamp).seconds < 60:
                     return JsonResponse({"error": "Please wait 60 seconds before requesting a new OTP."}, status=400)
-                
+
                 # Generate new OTP
                 otp = str(random.randint(10000, 99999))
                 expiry_time = timezone.now() + timedelta(minutes=10)
-                
+
                 # Save OTP
                 otp_record, created = OTPCredit.objects.update_or_create(
                     user=user,
@@ -2568,21 +2471,21 @@ def resend_reset_otp(request):
                         "otp_expiry": expiry_time
                     }
                 )
-                
+
                 # Send OTP via SMS
                 otp_sent = send_otp_via_sms(normalized_phone, otp)
                 if not otp_sent:
                     return JsonResponse({"error": "Failed to send OTP. Please try again."}, status=500)
-                
+
                 return JsonResponse({"success": True, "message": "OTP resent successfully"})
-                
+
             except CustomUser.DoesNotExist:
                 return JsonResponse({"error": "User not found"}, status=404)
-                
+
         except Exception as e:
             logger.error(f"Error in resend_reset_otp: {str(e)}")
             return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
-    
+
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 @csrf_exempt
@@ -2601,52 +2504,94 @@ def reset_password(request):
             else:
                 new_password = request.POST.get('new_password', '')
                 phone_number = request.POST.get('phone_number', '')
-            
+
             # Validate required fields
             if not new_password:
                 return JsonResponse({"error": "New password is required"}, status=400)
-            
+
             if not phone_number:
                 phone_number = request.session.get('reset_phone_number', '')
-                
+
             if not phone_number:
                 return JsonResponse({"error": "Phone number is required"}, status=400)
-            
+
             # Check if OTP was verified
             otp_verified = request.session.get('otp_verified', False)
             reset_user_id = request.session.get('reset_user_id')
-            
+
             if not otp_verified:
                 return JsonResponse({"error": "OTP verification required before resetting password"}, status=400)
-            
+
             normalized_phone = normalize_phone(phone_number)
-            
+
             try:
                 user = CustomUser.objects.get(phone=normalized_phone)
-                
+
                 # Extra security check - ensure user_id matches the one from OTP verification
                 if reset_user_id != user.id:
                     return JsonResponse({"error": "Unauthorized password reset attempt"}, status=403)
-                
+
                 # Update password
                 user.password = make_password(new_password)
                 user.save()
-                
+
                 # Clear the OTP record
                 OTPCredit.objects.filter(user=user).delete()
-                
+
                 # Clear session data
                 request.session.pop('otp_verified', None)
                 request.session.pop('reset_user_id', None)
                 request.session.pop('reset_phone_number', None)
-                
+
                 return JsonResponse({"success": True, "message": "Password reset successfully"})
-                
+
             except CustomUser.DoesNotExist:
                 return JsonResponse({"error": "User not found"}, status=404)
-                
+
         except Exception as e:
             logger.error(f"Error in reset_password: {str(e)}")
             return JsonResponse({"error": "An error occurred. Please try again."}, status=500)
-    
+
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_update_location(request):
+    """API View for updating rider location with address information."""
+    try:
+        rider = Rider.objects.get(user=request.user)
+        
+        # Extract location data
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
+        is_online = request.data.get('is_online', True)  # Default to True if not provided
+        address = request.data.get('address')  # Get address from request if available
+        
+        # Log received data
+        logger.info(f"Rider location update received - Lat: {latitude}, Lng: {longitude}, Online: {is_online}, Address: {address}")
+        
+        # Update rider location
+        rider.latitude = latitude
+        rider.longitude = longitude
+        rider.is_available = is_online
+        
+        # If address was provided, update it
+        if address:
+            rider.address = address
+            logger.info(f"Updated rider address to: {address}")
+        
+        rider.last_location_update = timezone.now()
+        rider.save()
+        
+        return Response({
+            'status': 'success',
+            'latitude': latitude,
+            'longitude': longitude,
+            'is_online': is_online,
+            'address': address if address else None
+        })
+    except Rider.DoesNotExist:
+        return Response({'status': 'error', 'message': 'Rider not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error updating rider location: {str(e)}")
+        return Response({'status': 'error', 'message': str(e)}, status=500)
