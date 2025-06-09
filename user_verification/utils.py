@@ -44,7 +44,7 @@ def send_otp_via_sms(phone, otp):
 def create_otp_for_user(user):
     """Generate and store OTP for a user"""
     otp = generate_otp()
-    expiry_time = timezone.now() + timedelta(minutes=10)  # OTP expires in 10 minutes
+    expiry_time = timezone.now() + timedelta(minutes=5)  # OTP expires in 5 minutes
 
     # Save OTP to database
     OTPVerification.objects.create(user=user, otp=otp, otp_expiry=expiry_time)

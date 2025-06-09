@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Business Dashboard{% endblock %}</title>
+    {% block extra_css %}{% endblock %}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -59,5 +60,7 @@
             menu.classList.toggle("hidden");
         });
     </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

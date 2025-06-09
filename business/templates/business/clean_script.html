@@ -1,0 +1,145 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const categorySelect = document.getElementById('id_category');
+        const gasFields = document.getElementById('gas_fields');
+        const foodFields = document.getElementById('food_fields');
+        const categoryDebug = document.getElementById('category-debug');
+        
+        // Debug elements in console
+        console.log('DOMContentLoaded event fired');
+        console.log('Category select found:', categorySelect !== null);
+        console.log('Gas fields found:', gasFields !== null);
+        console.log('Food fields found:', foodFields !== null);
+        
+        // Show/hide category-specific fields based on selection
+        function toggleCategoryFields() {
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            
+            if (!selectedOption || selectedOption.value === '') {
+                if (categoryDebug) categoryDebug.textContent = 'No category selected';
+                return;
+            }
+            
+            const categoryType = selectedOption.dataset.categoryType || '';
+            const categoryValue = selectedOption.value;
+            const categoryName = selectedOption.textContent;
+            
+            if (categoryDebug) {
+                categoryDebug.innerHTML = `Selected: ${categoryName}<br>ID: ${categoryValue}<br>Type: ${categoryType}`;
+            }
+            
+            // Hide all category-specific fields first
+            if (gasFields) gasFields.classList.add('hidden');
+            if (foodFields) foodFields.classList.add('hidden');
+            
+            // Show fields based on category type
+            if (categoryType === 'gas') {
+                if (gasFields) {
+                    gasFields.classList.remove('hidden');
+                    if (categoryDebug) categoryDebug.innerHTML += '<br>✅ Gas fields shown';
+                }
+            } else if (categoryType === 'food') {
+                if (foodFields) {
+                    foodFields.classList.remove('hidden');
+                    if (categoryDebug) categoryDebug.innerHTML += '<br>✅ Food fields shown';
+                }
+            } else {
+                if (categoryDebug) categoryDebug.innerHTML += '<br>ℹ️ No special fields for this category type';
+            }
+        }
+        
+        // Fetch categories from API and populate dropdown
+        function fetchCategories(selectedCategoryId = null) {
+            console.log('Fetching categories...');
+            if (!categorySelect) {
+                console.error('Category select element not found!');
+                return;
+            }
+            
+            // Keep the first option and clear the rest
+            while (categorySelect.options.length > 1) {
+                categorySelect.remove(1);
+            }
+            
+            fetch('/api/categories/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(categories => {
+                console.log('Categories data received:', categories);
+                
+                // Organize categories by parent
+                const categoryMap = {};
+                const rootCategories = [];
+                
+                // First pass: Create map of all categories
+                categories.forEach(category => {
+                    categoryMap[category.id] = {
+                        ...category,
+                        children: []
+                    };
+                });
+                
+                // Second pass: Build tree structure
+                categories.forEach(category => {
+                    if (category.parent && categoryMap[category.parent]) {
+                        categoryMap[category.parent].children.push(categoryMap[category.id]);
+                    } else if (!category.parent) {
+                        rootCategories.push(categoryMap[category.id]);
+                    }
+                });
+                
+                // Function to recursively add options with proper indentation
+                function addCategoryOptions(category, level = 0) {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    
+                    const indent = '—'.repeat(level);
+                    const prefix = level > 0 ? indent + ' ' : '';
+                    option.textContent = prefix + category.name;
+                    
+                    if (category.parent) option.dataset.parent = category.parent;
+                    if (category.category_type) option.dataset.categoryType = category.category_type;
+                    if (category.is_top_level) option.dataset.isTopLevel = 'true';
+                    
+                    if (selectedCategoryId && category.id == selectedCategoryId) {
+                        option.selected = true;
+                        console.log(`Selected category ${category.name} by ID.`);
+                    }
+                    
+                    categorySelect.appendChild(option);
+                    
+                    if (category.children && category.children.length > 0) {
+                        category.children.forEach(child => {
+                            addCategoryOptions(child, level + 1);
+                        });
+                    }
+                }
+                
+                rootCategories.forEach(category => {
+                    addCategoryOptions(category);
+                });
+                
+                // Trigger change event to update fields visibility
+                const event = new Event('change');
+                categorySelect.dispatchEvent(event);
+            })
+            .catch(error => {
+                console.error('Error in fetchCategories:', error);
+                categorySelect.innerHTML = `<option value="">Error loading categories: ${error.message}</option>`;
+            });
+        }
+        
+        // Listen for category selection changes
+        if (categorySelect) {
+            categorySelect.addEventListener('change', toggleCategoryFields);
+        }
+        
+        // Initial load of categories
+        fetchCategories();
+    });
+</script>

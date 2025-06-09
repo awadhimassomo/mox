@@ -141,10 +141,25 @@ class BusinessProfile(models.Model):
 
 
 class Category(models.Model):
+    CATEGORY_TYPES = [
+        ('general', 'General'),
+        ('electronics', 'Electronics'),
+        ('food', 'Food'),
+        ('gas', 'Gas'),
+        ('clothing', 'Clothing'),
+        ('furniture', 'Furniture'),
+        ('health', 'Health & Beauty'),
+        ('other', 'Other'),
+    ]
+    
     name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=150)  # Removed unique constraint since we'll use business+slug uniqueness
     description = models.TextField(blank=True)
     icon = models.ImageField(upload_to='categories/', blank=True)
+    business = models.ForeignKey('Business', on_delete=models.CASCADE, related_name='categories')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES, default='general')
+    is_top_level = models.BooleanField(default=False, help_text='Whether this is a main category')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -152,11 +167,33 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'Categories'
         ordering = ['name']
+        unique_together = ('business', 'slug')  # Slug only needs to be unique per business
 
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
         return self.name
+        
+    @property
+    def full_name(self):
+        if self.parent:
+            return f"{self.parent.name} > {self.name}"
+        return self.name
+        
+    @property
+    def has_children(self):
+        return self.children.count() > 0
+        
+    @classmethod
+    def get_top_level_categories(cls):
+        return cls.objects.filter(parent__isnull=True, is_active=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+            
+        # If this category has a parent, it cannot be a top-level category
+        if self.parent:
+            self.is_top_level = False
+            
         super().save(*args, **kwargs)

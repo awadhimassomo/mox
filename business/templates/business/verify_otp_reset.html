@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP | Mo-Express</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <div class="flex justify-center mb-4">
+            <a href="/">
+                <img src="{% static 'img/mo-express-logo.png' %}" alt="Mo-Express Logo" class="h-20 w-auto">
+            </a>
+        </div>
+        <h2 class="text-2xl font-bold text-center text-[#FF0000] mb-6">Verify OTP</h2>
+        <form class="space-y-6" method="POST">
+            {% csrf_token %}
+            <div>
+                <label class="block text-gray-700 mb-2">Enter OTP sent to your phone:</label>
+                <input type="text" name="otp" id="otp" required maxlength="6"
+                    placeholder="Enter OTP here" title="Enter the 6-digit OTP sent to your phone"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+            <button type="submit"
+                class="w-full bg-[#FF0000] text-white py-3 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Verify OTP
+            </button>
+        </form>
+        <form method="POST" action="{% url 'business:resend_otp' %}" class="mt-2 text-center">
+            {% csrf_token %}
+            <button type="submit" class="text-[#FF0000] hover:text-red-700 underline">Resend OTP</button>
+        </form>
+    </div>
+</body>
+</html>

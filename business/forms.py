@@ -35,7 +35,17 @@ class ProductForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Pop the 'business' argument before calling super().__init__
+        business = kwargs.pop('business', None)
         super().__init__(*args, **kwargs)
+        
+        # If you need to use the 'business' instance later in the form, 
+        # for example, to filter choices for a ModelChoiceField, you can assign it to self.
+        # self.business = business
+
+        # Example: If your category field needed to be filtered by business:
+        # if business:
+        #     self.fields['category'].queryset = Category.objects.filter(business=business)
         
         # Make category-specific fields optional
         self.fields['gas_type'].required = False

@@ -25,13 +25,127 @@ from django.db.models.functions import Abs
 from business.models import Business, Product, Category, REGION_CHOICES
 from riders.utils import calculate_distance
 from .models import CustomerProfile, DeliveryAddress, Cart, CartItem, Favorite
+from rest_framework import viewsets, status, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from .serializers import CustomerProfileSerializer, UserSerializer, CustomerLoginSerializer
 from orders.models import Order, OrderAssignmentGroup, OrderItem, TransportMode
 from .forms import CustomerProfileForm, DeliveryAddressForm, CustomerSignUpForm
-from operations.models import CustomUser as User
+from operations.models import CustomUser
 from riders.models import Rider as RiderProfile
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+# Add a console handler if not already configured
+if not logger.handlers:
+    console = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    logger.setLevel(logging.DEBUG)
+
+class CustomerProfileViewSet(viewsets.ModelViewSet):
+    queryset = CustomerProfile.objects.all()
+    serializer_class = CustomerProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class CustomerLoginAPIView(APIView):
+    """
+    API endpoint for customer login.
+    Returns JWT tokens on successful authentication.
+    """
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Customer Login",
+        request_body=CustomerLoginSerializer,
+        responses={
+            200: openapi.Response(
+                description="Login successful",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'refresh': openapi.Schema(type=openapi.TYPE_STRING),
+                        'access': openapi.Schema(type=openapi.TYPE_STRING),
+                        'user': UserSerializer()
+                    }
+                )
+            ),
+            400: 'Invalid data',
+            401: 'Invalid credentials'
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        logger.info("Login request received")
+        logger.debug(f"Request data: {request.data}")
+        logger.debug(f"Request headers: {dict(request.headers)}")
+        
+        try:
+            serializer = CustomerLoginSerializer(data=request.data, context={'request': request})
+            
+            if not serializer.is_valid():
+                logger.warning(f"Validation failed. Errors: {serializer.errors}")
+                logger.warning(f"Input data: {request.data}")
+                return Response(
+                    {
+                        'status': 'error',
+                        'code': 'validation_error',
+                        'message': 'Invalid input data',
+                        'errors': serializer.errors,
+                        'received_data': str(request.data)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            user = serializer.validated_data.get('user')
+            if not user:
+                logger.error("No user found in validated data")
+                return Response(
+                    {'error': 'Authentication failed'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            # Get user data
+            user_data = UserSerializer(user, context={'request': request}).data
+            
+            # Update last login
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            logger.info(f"User {user.phone} logged in successfully")
+            
+            return Response({
+                'status': 'success',
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': user_data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error in login: {str(e)}", exc_info=True)
+            return Response(
+                {
+                    'status': 'error',
+                    'code': 'server_error',
+                    'message': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 # Utility functions for common operations
 

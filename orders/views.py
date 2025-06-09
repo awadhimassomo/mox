@@ -4,9 +4,16 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 from riders.models import Rider
-from .models import Order, CustomerProfile, OrderAssignmentGroup
+from .models import Order, CustomerProfile, OrderAssignmentGroup, TransportMode
+from .serializers import OrderCreateSerializer
 
 def incoming_orders(request):
     """Retrieve all pending orders."""
@@ -96,3 +103,56 @@ def complete_order_api(request, order_id):
             'success': False,
             'error': f'Error completing order: {str(e)}'
         }, status=500)
+
+
+
+
+class CreateOrderAPIView(APIView):
+    """
+    API endpoint for creating new orders.
+    No authentication required.
+    """
+    authentication_classes = []  # Disable authentication
+    permission_classes = [AllowAny]  # Allow any user including unauthenticated ones
+    
+    def post(self, request, format=None):
+        # Make a copy of the request data
+        request_data = request.data.copy()
+        
+        # Initialize the serializer with the request data
+        serializer = OrderCreateSerializer(data=request_data, context={'request': request})
+        
+        if serializer.is_valid():
+            try:
+                # Create the order
+                order = serializer.save()
+                
+                # Generate order number if not set
+                if not order.order_number:
+                    order.generate_order_number()
+                    order.save()
+                
+                return Response({
+                    'status': 'success',
+                    'data': {
+                        'order_id': order.id,
+                        'order_number': order.order_number,
+                        'total': str(order.total),
+                        'status': order.status,
+                        'created_at': order.created_at
+                    }
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                return Response({
+                    'status': 'error',
+                    'message': 'Failed to create order',
+                    'detail': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Return validation errors
+        return Response({
+            'status': 'error',
+            'message': 'Invalid data',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .result { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 15px; white-space: pre-wrap; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        input { padding: 8px; width: 100%; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Direct API Test</h1>
+        <p>This page tests API endpoints directly, outside of Django templates.</p>
+
+        <div>
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" name="apiUrl" value="/business/categories/" 
+                   aria-label="API endpoint URL" title="Enter the API endpoint URL to test" 
+                   placeholder="/business/categories/">
+            <button onclick="testAPI()" aria-label="Test the API endpoint">Test API Now</button>
+        </div>
+        
+        <div class="result" id="result">Results will appear here...</div>
+    </div>
+
+    <script>
+        function testAPI() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Testing API at ' + apiUrl + '...\n\n';
+            
+            // Force console open in case of errors
+            console.clear();
+            console.log('STARTING API TEST TO: ' + apiUrl);
+            
+            // Create a very simple fetch with no options to simplify
+            fetch(apiUrl)
+                .then(response => {
+                    resultDiv.innerHTML += 'Response received! Status: ' + response.status + '\n';
+                    console.log('API Response Status:', response.status);
+                    return response.text();
+                })
+                .then(text => {
+                    console.log('API Response Text (first 100 chars):', text.substring(0, 100));
+                    
+                    resultDiv.innerHTML += 'Response body:\n';
+                    
+                    try {
+                        // Try to parse as JSON
+                        const json = JSON.parse(text);
+                        resultDiv.innerHTML += JSON.stringify(json, null, 2);
+                    } catch (e) {
+                        // If not valid JSON, just show the raw text
+                        resultDiv.innerHTML += text.substring(0, 1000) + 
+                            (text.length > 1000 ? '... (truncated)' : '');
+                    }
+                })
+                .catch(error => {
+                    console.error('API ERROR:', error);
+                    resultDiv.innerHTML += 'ERROR: ' + error.message + '\n\n';
+                    resultDiv.innerHTML += 'Check browser console (F12) for more details.';
+                });
+        }
+    </script>
+</body>
+</html>

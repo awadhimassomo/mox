@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Business, Product
+from .models import Business, Product, Category
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'price', 'stock_quantity', 'business', 'is_available', 'display_unit')
@@ -55,5 +55,13 @@ class BusinessAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)  # Order by newest businesses first
 
 
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category_type', 'parent', 'is_top_level', 'is_active')
+    list_filter = ('category_type', 'is_top_level', 'is_active')
+    search_fields = ('name', 'description')
+    prepopulated_fields = {'slug': ('name',)}
+
+
 admin.site.register(Business, BusinessAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(Category, CategoryAdmin)

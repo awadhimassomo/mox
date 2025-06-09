@@ -1,0 +1,87 @@
+{% extends 'business/base.html' %}
+{% load static %}
+
+{% block title %}Add Category{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Add New Category</h1>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-4 mb-4 {% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white p-6 shadow-md rounded-lg">
+        <form method="POST" action="{% url 'business:add_category' %}">
+            {% csrf_token %}
+            
+            <!-- Hidden field to track where to return after submission -->
+            <input type="hidden" name="next" value="{{ next }}">
+            
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Category Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" id="name" required
+                       class="w-full p-3 border rounded-lg bg-white border-gray-300 text-black">
+            </div>
+            
+            <div class="mb-4">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea name="description" id="description" rows="3"
+                          class="w-full p-3 border rounded-lg bg-white border-gray-300 text-black"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label for="category_type" class="block text-sm font-medium text-gray-700 mb-1">Category Type <span class="text-red-500">*</span></label>
+                <select name="category_type" id="category_type" required
+                        class="w-full p-3 border rounded-lg bg-white border-gray-300 text-black">
+                    {% for type_code, type_name in category_types %}
+                    <option value="{{ type_code }}">{{ type_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+     
+            
+            <div class="mb-4" id="topLevelContainer">
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_top_level" id="is_top_level"
+                           class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <label for="is_top_level" class="ml-2 block text-sm text-gray-700">
+                        Show as Top-Level Category
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Top-level categories appear at the root of category lists</p>
+            </div>
+            
+            <div class="flex justify-between mt-6">
+                <a href="{% if 'add_product' in next %}{% url 'business:add_product' %}{% else %}{% url 'business:manage_categories' %}{% endif %}" 
+                   class="py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="bg-[#FF0000] hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors">
+                    Add Category
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Since parent select has been removed, we only need to handle the top level checkbox
+        const topLevelCheckbox = document.getElementById('is_top_level');
+        const topLevelContainer = document.getElementById('topLevelContainer');
+        
+        console.log('Add Category JS loaded successfully');
+        console.log('Top level checkbox found:', topLevelCheckbox !== null);
+    });
+</script>
+{% endblock %}

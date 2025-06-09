@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Categories API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Test Categories API Directly</h1>
+    <button onclick="testCategoriesAPI()">Test Categories API</button>
+    <div id="result">Results will appear here...</div>
+
+    <script>
+        function testCategoriesAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing categories API...\n\n';
+            
+            // Get CSRF token
+            const csrftoken = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+                
+            resultDiv.innerHTML += 'CSRF Token: ' + (csrftoken || 'Not found') + '\n\n';
+            
+            // Make the direct API call
+            fetch('/business/categories/', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || '',
+                }
+            })
+            .then(response => {
+                resultDiv.innerHTML += 'Response status: ' + response.status + '\n';
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    // Try to parse as JSON
+                    const data = JSON.parse(text);
+                    resultDiv.innerHTML += 'Categories found: ' + (data.length || 0) + '\n\n';
+                    resultDiv.innerHTML += JSON.stringify(data, null, 2);
+                } catch (e) {
+                    // If not valid JSON, just show the raw text
+                    resultDiv.innerHTML += 'Raw response (not JSON):\n' + text;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML += 'Error: ' + error.message + '\n';
+                console.error('API Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
