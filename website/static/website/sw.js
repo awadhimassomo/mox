@@ -1,6 +1,6 @@
-// Service Worker for Mo-Express PWA
+// Service Worker for Moex PWA
 
-const CACHE_NAME = 'mo-express-cache-v3';
+const CACHE_NAME = 'Moex-cache-v3';
 const urlsToCache = [
   '/',
   '/static/website/manifest.webmanifest',

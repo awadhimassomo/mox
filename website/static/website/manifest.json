@@ -1,7 +1,7 @@
 {
-  "name": "Mo-Express",
-  "short_name": "Mo-Express",
-  "description": "Mo-Express: Your trusted delivery partner in Tanzania for gas, groceries, and packages",
+  "name": "Moex",
+  "short_name": "Moex",
+  "description": "Moex: Your trusted delivery partner in Tanzania for gas, groceries, and packages",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",

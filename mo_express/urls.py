@@ -57,9 +57,9 @@ api_patterns = [
 # Schema View for Swagger
 schema_view = get_schema_view(
     openapi.Info(
-        title="Mo-Express API",
+        title="Moex API",
         default_version='v1',
-        description="API documentation for Mo-Express",
+        description="API documentation for Moex",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="support@moexpress.com"),
         license=openapi.License(name="BSD License"),

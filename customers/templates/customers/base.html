@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mo-Express{% endblock %}</title>
-    <meta name="description" content="Mo-Express - Your trusted delivery partner in Tanzania">
+    <title>{% block title %}Moex{% endblock %}</title>
+    <meta name="description" content="Moex - Your trusted delivery partner in Tanzania">
     <meta name="theme-color" content="#FF0000">
     
     <!-- PWA Meta Tags -->
@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Mo-Express">
+    <meta name="apple-mobile-web-app-title" content="Moex">
     
     <!-- Use Tailwind CSS from CDN - Updated to v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -210,7 +210,7 @@
     <div id="installBanner">
         <div class="banner-content">
             <div class="text">
-                <strong class="text-lg font-medium">Install Mo-Express App</strong>
+                <strong class="text-lg font-medium">Install Moex App</strong>
                 <p class="text-sm opacity-90">Install this app for quick and easy access anytime.</p>
             </div>
             <div class="actions flex">
@@ -227,8 +227,8 @@
                 <div class="flex items-center space-x-4">
                     {% block back_button %}{% endblock %}
                     <a href="{% url 'website:home' %}" class="text-lg font-semibold hover:text-primary-500 transition-colors flex items-center">
-                        <img src="{% static 'img/logo.png' %}" alt="Mo-Express" class="h-10 w-auto mr-2">
-                        {% block header_title %}Mo-Express{% endblock %}
+                        <img src="{% static 'img/logo.png' %}" alt="Moex" class="h-10 w-auto mr-2">
+                        {% block header_title %}Moex{% endblock %}
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">

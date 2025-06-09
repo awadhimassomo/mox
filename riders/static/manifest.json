@@ -1,6 +1,6 @@
 {
-  "name": "Mo-Express",
-  "short_name": "Mo-Express",
+  "name": "Moex",
+  "short_name": "Moex",
   "description": "B2B gas delivery management system for Tanzania",
   "start_url": "/",
   "display": "standalone",

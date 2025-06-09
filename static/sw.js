@@ -1,6 +1,6 @@
-// Service Worker for Mo-Express
+// Service Worker for Moex
 
-const CACHE_NAME = 'mo-express-cache-v6';
+const CACHE_NAME = 'Moex-cache-v6';
 const urlsToCache = [
   '/',
   '/static/manifest.json',
