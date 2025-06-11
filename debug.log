@@ -931,3 +931,844 @@ DEBUG 2025-06-09 23:08:59,321 viewsets Business viewsets logger initialized
 DEBUG 2025-06-09 23:08:59,321 viewsets Business viewsets logger initialized
 INFO 2025-06-09 23:09:30,326 basehttp "GET / HTTP/1.1" 200 23031
 INFO 2025-06-09 23:09:30,326 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-09 23:46:52,627 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-09 23:46:55,055 viewsets Business viewsets logger initialized
+DEBUG 2025-06-09 23:46:55,055 viewsets Business viewsets logger initialized
+INFO 2025-06-09 23:49:00,198 autoreload C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\business\viewsets.py changed, reloading.
+INFO 2025-06-09 23:49:04,889 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-09 23:49:08,739 viewsets Business viewsets logger initialized
+DEBUG 2025-06-09 23:49:08,739 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:05:37,727 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:05:37,727 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:06:57,334 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:06:57,334 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:11:52,583 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:11:52,583 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:22:30,357 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:22:30,357 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:25:51,883 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:25:51,883 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:30:57,006 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:30:57,006 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:31:21,124 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 05:31:21,124 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:19:26,350 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:24:24,353 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:28:34,608 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:29:05,449 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:29:38,643 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:30:10,178 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:30:42,397 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:31:50,688 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:33:33,261 autoreload Watching for file changes with StatReloader
+INFO 2025-06-10 17:36:17,672 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:36:28,010 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:36:28,010 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:37:26,979 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:37:28,388 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:37:28,388 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:40:30,653 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:40:35,026 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:40:35,026 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:41:42,943 autoreload C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\mo_express\urls.py changed, reloading.
+INFO 2025-06-10 17:41:43,796 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:41:44,500 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:41:44,500 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:42:05,564 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:42:05,564 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:42:14,615 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:42:14,615 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:42:43,927 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:42:50,310 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:42:50,310 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:44:43,418 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:44:46,055 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:44:46,055 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:45:23,043 autoreload C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\mo_express\urls.py changed, reloading.
+INFO 2025-06-10 17:45:26,927 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:45:28,698 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:45:28,698 viewsets Business viewsets logger initialized
+INFO 2025-06-10 17:48:04,210 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-10 17:48:05,820 viewsets Business viewsets logger initialized
+DEBUG 2025-06-10 17:48:05,820 viewsets Business viewsets logger initialized
+WARNING 2025-06-10 17:50:50,289 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:50:50,289 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 17:50:50,289 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:50:50,289 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 17:50:50,291 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 17:50:50,291 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 17:50:50,291 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 17:50:50,291 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 17:50:52,585 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:50:52,585 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:50:52,586 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 17:50:52,586 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+INFO 2025-06-10 17:52:17,280 views Login request received
+DEBUG 2025-06-10 17:52:17,283 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 17:52:17,285 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 17:52:17,285 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 17:52:20,945 views User 255687046323 logged in successfully
+INFO 2025-06-10 17:52:21,019 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 17:52:21,019 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 17:52:21,826 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:52:21,826 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 17:52:21,829 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 17:52:21,829 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:17:30,038 views Login request received
+DEBUG 2025-06-10 18:17:30,040 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:17:30,040 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:17:30,041 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:17:30,612 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:17:30,620 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:17:30,620 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:17:31,493 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:17:31,493 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:17:31,494 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:17:31,494 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:27:34,260 views Login request received
+DEBUG 2025-06-10 18:27:34,263 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:27:34,265 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:27:34,268 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:27:34,850 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:27:34,854 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:27:34,854 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:27:35,780 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:27:35,780 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:27:35,780 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:27:35,780 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:28:50,860 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:28:50,860 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:28:50,881 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:28:50,881 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:31:27,985 views Login request received
+DEBUG 2025-06-10 18:31:27,985 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:31:27,986 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:31:27,986 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:31:29,090 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:31:29,095 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:31:29,095 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:31:30,036 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:31:30,036 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:31:30,038 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:31:30,038 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:36:51,328 views Login request received
+DEBUG 2025-06-10 18:36:51,338 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:36:51,343 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:36:51,353 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:36:53,562 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:36:53,569 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:36:53,569 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:36:54,679 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:36:54,679 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:36:54,685 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:36:54,685 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:41:54,814 views Login request received
+DEBUG 2025-06-10 18:41:54,816 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:41:54,818 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:41:54,820 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:41:55,437 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:41:55,444 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:41:55,444 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:41:56,451 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:41:56,451 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:41:56,451 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:41:56,451 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:45:25,379 views Login request received
+DEBUG 2025-06-10 18:45:25,384 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:45:25,389 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:45:25,395 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:45:32,479 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:45:32,542 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:45:32,542 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:45:33,710 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:45:33,710 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:45:33,724 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:45:33,724 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:56:14,130 views Login request received
+DEBUG 2025-06-10 18:56:14,133 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:56:14,133 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:56:14,135 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:56:14,993 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:56:15,000 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:56:15,000 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:56:16,030 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:56:16,030 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:56:16,030 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:56:16,030 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 18:59:27,468 views Login request received
+DEBUG 2025-06-10 18:59:27,480 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 18:59:27,545 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 18:59:27,556 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 18:59:36,001 views User 255687046323 logged in successfully
+INFO 2025-06-10 18:59:36,018 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 18:59:36,018 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 18:59:36,969 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:59:36,969 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 18:59:36,973 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 18:59:36,973 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 19:19:23,741 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 19:19:23,741 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 19:19:23,742 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 19:19:23,742 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 19:19:23,772 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:19:23,772 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:19:23,773 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 19:19:23,773 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+INFO 2025-06-10 19:19:59,040 views Login request received
+DEBUG 2025-06-10 19:19:59,040 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 19:19:59,044 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 19:19:59,045 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 19:19:59,633 views User 255687046323 logged in successfully
+INFO 2025-06-10 19:19:59,635 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 19:19:59,635 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 19:20:00,772 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:20:00,772 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:20:00,772 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 19:20:00,772 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 19:21:31,567 views Login request received
+DEBUG 2025-06-10 19:21:31,572 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 19:21:31,572 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 19:21:31,574 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 19:21:32,535 views User 255687046323 logged in successfully
+INFO 2025-06-10 19:21:32,545 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 19:21:32,545 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 19:21:33,495 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:21:33,495 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:21:33,497 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 19:21:33,497 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 19:25:43,739 views Login request received
+DEBUG 2025-06-10 19:25:43,740 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 19:25:43,740 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 19:25:43,743 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 19:25:44,445 views User 255687046323 logged in successfully
+INFO 2025-06-10 19:25:44,451 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 19:25:44,451 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 19:25:45,739 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:25:45,739 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:25:45,845 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 19:25:45,845 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 19:32:30,260 views Login request received
+DEBUG 2025-06-10 19:32:30,261 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 19:32:30,262 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 19:32:30,264 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 19:32:31,362 views User 255687046323 logged in successfully
+INFO 2025-06-10 19:32:31,370 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 19:32:31,370 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 19:32:32,395 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:32:32,395 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 19:32:32,396 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 19:32:32,396 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 20:35:06,248 views Login request received
+DEBUG 2025-06-10 20:35:06,252 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 20:35:06,253 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 20:35:06,254 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 20:35:07,104 views User 255687046323 logged in successfully
+INFO 2025-06-10 20:35:07,112 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 20:35:07,112 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 20:35:08,186 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:35:08,186 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:35:08,186 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 20:35:08,186 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 20:42:08,010 views Login request received
+DEBUG 2025-06-10 20:42:08,018 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 20:42:08,021 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 20:42:08,027 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 20:42:10,581 views User 255687046323 logged in successfully
+INFO 2025-06-10 20:42:10,591 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 20:42:10,591 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 20:42:11,554 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:42:11,554 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:42:11,554 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 20:42:11,554 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 20:59:25,091 views Login request received
+DEBUG 2025-06-10 20:59:25,104 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 20:59:25,106 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 20:59:25,107 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 20:59:26,259 views User 255687046323 logged in successfully
+INFO 2025-06-10 20:59:26,268 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 20:59:26,268 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 20:59:27,209 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:59:27,209 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 20:59:27,210 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 20:59:27,210 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:02:22,326 views Login request received
+DEBUG 2025-06-10 21:02:22,351 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:02:22,373 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:02:22,394 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:02:24,907 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:02:24,948 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:02:24,948 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:02:25,865 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:02:25,865 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:02:25,867 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:02:25,867 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:05:57,397 views Login request received
+DEBUG 2025-06-10 21:05:57,406 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:05:57,407 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:05:57,420 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:05:59,496 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:05:59,507 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:05:59,507 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:06:00,590 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:06:00,590 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:06:00,591 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:06:00,591 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:12:46,890 views Login request received
+DEBUG 2025-06-10 21:12:46,914 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:12:46,931 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:12:46,992 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:12:57,100 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:12:57,279 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:12:57,279 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:12:58,513 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:12:58,513 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:12:58,578 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:12:58,578 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:18:02,083 views Login request received
+DEBUG 2025-06-10 21:18:02,085 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:18:02,085 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:18:02,086 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:18:02,998 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:18:03,005 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:18:03,005 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:18:04,181 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:18:04,181 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:18:04,278 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:18:04,278 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:26:02,365 views Login request received
+DEBUG 2025-06-10 21:26:02,365 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:26:02,366 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:26:02,367 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:26:07,694 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:26:07,698 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:26:07,698 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:26:08,779 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:26:08,779 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:26:08,787 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:26:08,787 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:31:59,811 views Login request received
+DEBUG 2025-06-10 21:31:59,844 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:31:59,846 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:31:59,847 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:32:01,459 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:32:01,470 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:32:01,470 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:32:02,536 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:32:02,536 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:32:02,537 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:32:02,537 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:41:50,714 views Login request received
+DEBUG 2025-06-10 21:41:50,723 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:41:50,729 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:41:50,736 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:42:00,055 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:42:00,153 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:42:00,153 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:42:01,307 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:42:01,307 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:42:01,324 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:42:01,324 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:46:30,076 views Login request received
+DEBUG 2025-06-10 21:46:30,080 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:46:30,080 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:46:30,082 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:46:30,691 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:46:30,696 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:46:30,696 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:46:31,808 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:46:31,808 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:46:31,809 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:46:31,809 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 21:52:13,160 views Login request received
+DEBUG 2025-06-10 21:52:13,161 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 21:52:13,162 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 21:52:13,163 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 21:52:15,035 views User 255687046323 logged in successfully
+INFO 2025-06-10 21:52:15,045 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 21:52:15,045 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 21:52:16,318 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:52:16,318 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 21:52:16,320 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 21:52:16,320 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+INFO 2025-06-10 22:04:04,997 views Login request received
+DEBUG 2025-06-10 22:04:05,001 views Request data: {'phone_number': '+255687046323', 'password': 'Mamasholo@65'}
+DEBUG 2025-06-10 22:04:05,002 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:04:05,005 serializers Attempting to authenticate user with phone: 255687046323
+WARNING 2025-06-10 22:04:06,593 serializers Authentication failed for phone: 255687046323
+WARNING 2025-06-10 22:04:06,594 views Validation failed. Errors: {'non_field_errors': [ErrorDetail(string='Unable to log in with provided credentials.', code='authorization')]}
+WARNING 2025-06-10 22:04:06,595 views Input data: {'phone_number': '+255687046323', 'password': 'Mamasholo@65'}
+WARNING 2025-06-10 22:04:06,602 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:04:06,602 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:04:06,604 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 233
+WARNING 2025-06-10 22:04:06,604 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 233
+INFO 2025-06-10 22:04:21,355 views Login request received
+DEBUG 2025-06-10 22:04:21,355 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 22:04:21,355 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:04:21,357 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 22:04:21,963 views User 255687046323 logged in successfully
+INFO 2025-06-10 22:04:21,969 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 22:04:21,969 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 22:04:23,097 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:04:23,097 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:04:23,098 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:04:23,098 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:04:28,729 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:04:28,729 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:04:28,729 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:04:28,729 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+INFO 2025-06-10 22:20:25,196 views Login request received
+DEBUG 2025-06-10 22:20:25,210 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 22:20:25,216 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:20:25,232 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 22:20:34,378 views User 255687046323 logged in successfully
+INFO 2025-06-10 22:20:34,433 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 22:20:34,433 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 22:20:35,969 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:20:35,969 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:20:35,988 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:20:35,988 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:20:43,035 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:20:43,035 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:20:43,038 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:20:43,038 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-10 22:25:55,483 views Login request received
+DEBUG 2025-06-10 22:25:55,507 views Request data: {'phone_number': '+255687046323', 'password': 'Lufuli@65'}
+DEBUG 2025-06-10 22:25:55,521 views Request headers: {'Content-Length': '55', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:25:55,578 serializers Attempting to authenticate user with phone: 255687046323
+WARNING 2025-06-10 22:25:59,959 serializers Authentication failed for phone: 255687046323
+WARNING 2025-06-10 22:25:59,959 views Validation failed. Errors: {'non_field_errors': [ErrorDetail(string='Unable to log in with provided credentials.', code='authorization')]}
+WARNING 2025-06-10 22:25:59,960 views Input data: {'phone_number': '+255687046323', 'password': 'Lufuli@65'}
+WARNING 2025-06-10 22:25:59,962 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:25:59,962 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:25:59,963 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 230
+WARNING 2025-06-10 22:25:59,963 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 230
+INFO 2025-06-10 22:26:28,125 views Login request received
+DEBUG 2025-06-10 22:26:28,129 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 22:26:28,133 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:26:28,140 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 22:26:37,330 views User 255687046323 logged in successfully
+INFO 2025-06-10 22:26:37,358 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 22:26:37,358 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 22:26:38,553 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:26:38,553 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:26:38,558 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:26:38,558 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:26:42,785 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:26:42,785 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:26:42,787 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:26:42,787 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-10 22:32:24,632 views Login request received
+DEBUG 2025-06-10 22:32:24,637 views Request data: {'phone_number': '+255687046323', 'password': 'Mamasholo@65'}
+DEBUG 2025-06-10 22:32:24,638 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:32:24,644 serializers Attempting to authenticate user with phone: 255687046323
+WARNING 2025-06-10 22:32:25,287 serializers Authentication failed for phone: 255687046323
+WARNING 2025-06-10 22:32:25,288 views Validation failed. Errors: {'non_field_errors': [ErrorDetail(string='Unable to log in with provided credentials.', code='authorization')]}
+WARNING 2025-06-10 22:32:25,288 views Input data: {'phone_number': '+255687046323', 'password': 'Mamasholo@65'}
+WARNING 2025-06-10 22:32:25,290 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:32:25,290 log Bad Request: /api/v1/customers/auth/login/
+WARNING 2025-06-10 22:32:25,291 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 233
+WARNING 2025-06-10 22:32:25,291 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 400 233
+INFO 2025-06-10 22:32:40,201 views Login request received
+DEBUG 2025-06-10 22:32:40,203 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 22:32:40,205 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:32:40,207 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 22:32:40,801 views User 255687046323 logged in successfully
+INFO 2025-06-10 22:32:40,810 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 22:32:40,810 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 22:32:42,067 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:32:42,067 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:32:42,068 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:32:42,068 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:32:46,882 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:32:46,882 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:32:46,884 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:32:46,884 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:32:51,940 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:32:51,940 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:32:51,941 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:32:51,941 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:34:42,045 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 22:34:42,045 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-10 22:34:42,047 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 22:34:42,047 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 22:34:42,198 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:34:42,198 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:34:42,199 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 22:34:42,199 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 22:36:31,567 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:36:31,567 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:36:31,568 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-10 22:36:31,568 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+INFO 2025-06-10 22:37:14,469 views Login request received
+DEBUG 2025-06-10 22:37:14,470 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-10 22:37:14,470 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-10 22:37:14,472 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-10 22:37:15,055 views User 255687046323 logged in successfully
+INFO 2025-06-10 22:37:15,060 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-10 22:37:15,060 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-10 22:37:16,231 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:37:16,231 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-10 22:37:16,233 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:37:16,233 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-10 22:37:24,086 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:37:24,086 log Not Found: /business/api/v1/products/
+WARNING 2025-06-10 22:37:24,088 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-10 22:37:24,088 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 05:30:25,888 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:30:25,895 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:30:25,888 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:30:25,895 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:30:25,896 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:30:25,896 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:30:25,898 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:30:25,898 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:46:55,187 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:46:55,196 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:46:55,187 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:46:55,196 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:46:55,222 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:46:55,222 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:46:55,222 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:46:55,222 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:48:41,410 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:48:41,410 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:48:41,417 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:48:41,417 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:48:41,444 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:48:41,444 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:48:41,447 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:48:41,447 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:53:17,254 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:53:17,260 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:53:17,254 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:53:17,260 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:53:17,266 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:53:17,266 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:53:17,266 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:53:17,266 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:59:20,013 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:59:20,041 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:59:20,013 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 05:59:20,041 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 05:59:20,046 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:59:20,046 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:59:20,046 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 05:59:20,046 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 06:01:14,235 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 06:01:14,235 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 06:01:14,239 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 06:01:14,239 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 06:01:14,253 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:01:14,253 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:01:14,254 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 06:01:14,254 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+INFO 2025-06-11 06:02:14,985 views Login request received
+DEBUG 2025-06-11 06:02:14,988 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 06:02:14,988 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 06:02:14,993 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 06:02:16,121 views User 255687046323 logged in successfully
+INFO 2025-06-11 06:02:16,134 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 06:02:16,134 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 06:02:17,483 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:02:17,483 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:02:17,485 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:02:17,485 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:02:24,092 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:02:24,092 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:02:24,093 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 06:02:24,093 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-11 06:27:27,074 views Login request received
+DEBUG 2025-06-11 06:27:27,079 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 06:27:27,079 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 06:27:27,081 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 06:27:27,669 views User 255687046323 logged in successfully
+INFO 2025-06-11 06:27:27,682 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 06:27:27,682 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 06:27:29,124 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:27:29,124 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:27:29,132 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:27:29,132 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:27:32,838 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:27:32,838 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:27:32,934 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 06:27:32,934 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-11 06:38:19,851 views Login request received
+DEBUG 2025-06-11 06:38:19,854 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 06:38:19,854 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 06:38:19,857 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 06:38:20,895 views User 255687046323 logged in successfully
+INFO 2025-06-11 06:38:20,910 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 06:38:20,910 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 06:38:22,140 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:38:22,140 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:38:22,140 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:38:22,140 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:38:25,892 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:38:25,892 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:38:25,894 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 06:38:25,894 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-11 06:45:58,461 views Login request received
+DEBUG 2025-06-11 06:45:58,465 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 06:45:58,466 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 06:45:58,468 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 06:45:59,053 views User 255687046323 logged in successfully
+INFO 2025-06-11 06:45:59,057 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 06:45:59,057 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 06:46:00,257 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:46:00,257 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 06:46:00,258 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:46:00,258 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 06:46:07,699 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:46:07,699 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 06:46:07,701 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 06:46:07,701 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 09:23:31,689 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 09:23:31,689 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 09:23:31,695 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:23:31,695 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:23:31,707 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:23:31,707 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:23:31,707 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:23:31,707 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:51:30,855 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:51:30,855 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:51:31,154 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:51:31,154 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:52:27,712 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:52:27,712 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:52:27,714 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:52:27,714 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:54:04,640 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 09:54:04,640 log Not Found: /business/api/v1/categories/
+WARNING 2025-06-11 09:54:04,643 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:54:04,643 basehttp "GET /business/api/v1/categories/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:54:04,770 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:54:04,770 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:54:04,774 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+WARNING 2025-06-11 09:54:04,774 basehttp "GET /business/api/v1/businesses/ HTTP/1.1" 404 6433
+INFO 2025-06-11 09:54:33,452 views Login request received
+DEBUG 2025-06-11 09:54:33,453 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 09:54:33,453 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 09:54:33,455 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 09:54:34,145 views User 255687046323 logged in successfully
+INFO 2025-06-11 09:54:34,154 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 09:54:34,154 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 09:54:35,397 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:54:35,397 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 09:54:35,398 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 09:54:35,398 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 09:54:44,874 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 09:54:44,874 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 09:54:44,874 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 09:54:44,874 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-11 10:09:00,518 views Login request received
+DEBUG 2025-06-11 10:09:00,520 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 10:09:00,521 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 10:09:00,522 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 10:09:01,113 views User 255687046323 logged in successfully
+INFO 2025-06-11 10:09:01,118 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 10:09:01,118 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 10:09:02,491 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 10:09:02,491 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 10:09:02,497 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 10:09:02,497 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 10:09:08,322 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:09:08,322 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:09:08,328 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:09:08,328 basehttp "GET /business/api/v1/products/?business_id=1 HTTP/1.1" 404 6441
+INFO 2025-06-11 10:20:28,401 views Login request received
+DEBUG 2025-06-11 10:20:28,404 views Request data: {'phone_number': '+255687046323', 'password': 'Mamashoko@65'}
+DEBUG 2025-06-11 10:20:28,404 views Request headers: {'Content-Length': '58', 'Content-Type': 'application/json', 'User-Agent': 'Dart/3.8 (dart:io)', 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Host': '192.168.1.198:8000'}
+DEBUG 2025-06-11 10:20:28,404 serializers Attempting to authenticate user with phone: 255687046323
+INFO 2025-06-11 10:20:29,385 views User 255687046323 logged in successfully
+INFO 2025-06-11 10:20:29,393 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+INFO 2025-06-11 10:20:29,393 basehttp "POST /api/v1/customers/auth/login/ HTTP/1.1" 200 829
+WARNING 2025-06-11 10:20:30,707 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 10:20:30,707 log Not Found: /business/api/v1/businesses/
+WARNING 2025-06-11 10:20:30,707 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 10:20:30,707 basehttp "GET /business/api/v1/businesses/?limit=10 HTTP/1.1" 404 6442
+WARNING 2025-06-11 10:20:35,320 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:20:35,320 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:20:35,321 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:20:35,321 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:15,499 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:15,499 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:15,936 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:15,936 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:17,909 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:17,909 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:18,395 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:18,395 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:19,785 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:19,785 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:19,988 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:19,988 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:53,685 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:53,685 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:53,686 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:53,686 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:57,452 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:57,452 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:21:57,453 basehttp "GET /business/api/v1/products/?business_id=2 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:21:57,453 basehttp "GET /business/api/v1/products/?business_id=2 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:01,580 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:01,580 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:01,582 basehttp "GET /business/api/v1/products/?business_id=3 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:01,582 basehttp "GET /business/api/v1/products/?business_id=3 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:04,263 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:04,263 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:04,265 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:04,265 basehttp "GET /business/api/v1/products/?business_id=5 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:06,897 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:06,897 log Not Found: /business/api/v1/products/
+WARNING 2025-06-11 10:22:06,897 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+WARNING 2025-06-11 10:22:06,897 basehttp "GET /business/api/v1/products/?business_id=6 HTTP/1.1" 404 6441
+INFO 2025-06-11 10:23:39,784 autoreload C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\mo_express\urls.py changed, reloading.
+INFO 2025-06-11 10:23:46,040 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-11 10:23:53,458 viewsets Business viewsets logger initialized
+DEBUG 2025-06-11 10:23:53,458 viewsets Business viewsets logger initialized
+INFO 2025-06-11 10:24:04,235 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:24:04,235 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:24:14,383 basehttp "GET /api/v1/customers/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:24:14,383 basehttp "GET /api/v1/customers/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:24:14,991 basehttp "GET /api/v1/customers/login/?next=/api/v1/customers/ HTTP/1.1" 200 26855
+INFO 2025-06-11 10:24:14,991 basehttp "GET /api/v1/customers/login/?next=/api/v1/customers/ HTTP/1.1" 200 26855
+INFO 2025-06-11 10:24:47,907 basehttp "GET /api/v1/customers/register/ HTTP/1.1" 200 30865
+INFO 2025-06-11 10:24:47,907 basehttp "GET /api/v1/customers/register/ HTTP/1.1" 200 30865
+ERROR 2025-06-11 10:25:09,366 log Internal Server Error: /api/v1/customers/register/
+Traceback (most recent call last):
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\.venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\.venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\awadhi\AppData\Local\Programs\Python\Python310\lib\contextlib.py", line 79, in inner
+    return func(*args, **kwds)
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\customers\views.py", line 872, in register_view
+    if User.objects.filter(email=email).exists() and email:
+NameError: name 'User' is not defined
+ERROR 2025-06-11 10:25:09,366 log Internal Server Error: /api/v1/customers/register/
+Traceback (most recent call last):
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\.venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\.venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\awadhi\AppData\Local\Programs\Python\Python310\lib\contextlib.py", line 79, in inner
+    return func(*args, **kwds)
+  File "C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\customers\views.py", line 872, in register_view
+    if User.objects.filter(email=email).exists() and email:
+NameError: name 'User' is not defined
+ERROR 2025-06-11 10:25:09,370 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 500 86843
+ERROR 2025-06-11 10:25:09,370 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 500 86843
+INFO 2025-06-11 10:26:05,838 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 200 905
+INFO 2025-06-11 10:26:05,838 basehttp "GET /business/api/v1/products/?business_id=4 HTTP/1.1" 200 905
+INFO 2025-06-11 10:27:03,182 autoreload C:\Users\awadhi\Desktop\projects\swahili studio\projects\Mandood\mo-web\customers\views.py changed, reloading.
+INFO 2025-06-11 10:27:13,890 autoreload Watching for file changes with StatReloader
+DEBUG 2025-06-11 10:27:19,215 viewsets Business viewsets logger initialized
+DEBUG 2025-06-11 10:27:19,215 viewsets Business viewsets logger initialized
+ERROR 2025-06-11 10:28:36,996 views Error creating user account: UNIQUE constraint failed: operations_customuser.phone
+INFO 2025-06-11 10:28:37,308 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 200 31720
+INFO 2025-06-11 10:28:37,308 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 200 31720
+INFO 2025-06-11 10:28:54,365 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-06-11 10:28:54,365 basehttp "GET /admin HTTP/1.1" 301 0
+INFO 2025-06-11 10:28:54,428 basehttp "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:28:54,428 basehttp "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:28:54,815 basehttp "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4173
+INFO 2025-06-11 10:28:54,815 basehttp "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4173
+INFO 2025-06-11 10:28:55,733 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-06-11 10:28:55,738 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-06-11 10:28:55,733 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-06-11 10:28:55,738 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-06-11 10:28:55,753 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-06-11 10:28:55,753 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-06-11 10:28:55,763 basehttp "GET /static/admin/css/login.css HTTP/1.1" 200 951
+INFO 2025-06-11 10:28:55,763 basehttp "GET /static/admin/css/login.css HTTP/1.1" 200 951
+INFO 2025-06-11 10:28:55,775 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-06-11 10:28:55,775 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-06-11 10:28:55,820 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-06-11 10:28:55,820 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-06-11 10:28:55,843 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-06-11 10:28:55,843 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-06-11 10:29:15,759 basehttp "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:29:15,759 basehttp "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:29:15,925 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:29:15,925 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:29:16,030 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-06-11 10:29:16,030 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-06-11 10:29:16,058 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+INFO 2025-06-11 10:29:16,060 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-06-11 10:29:16,058 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+INFO 2025-06-11 10:29:16,061 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-06-11 10:29:16,060 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-06-11 10:29:16,061 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-06-11 10:29:23,467 basehttp "GET /admin/operations/customuser/ HTTP/1.1" 200 29070
+INFO 2025-06-11 10:29:23,467 basehttp "GET /admin/operations/customuser/ HTTP/1.1" 200 29070
+INFO 2025-06-11 10:29:23,586 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-06-11 10:29:23,586 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-06-11 10:29:23,597 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-06-11 10:29:23,597 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-06-11 10:29:23,627 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-06-11 10:29:23,627 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-06-11 10:29:23,636 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-06-11 10:29:23,639 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-06-11 10:29:23,636 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-06-11 10:29:23,639 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-06-11 10:29:23,678 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-06-11 10:29:23,678 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-06-11 10:29:23,690 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-06-11 10:29:23,690 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-06-11 10:29:23,691 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-06-11 10:29:23,691 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-06-11 10:29:23,742 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-06-11 10:29:23,747 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-06-11 10:29:23,763 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-06-11 10:29:23,742 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-06-11 10:29:23,747 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-06-11 10:29:23,763 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-06-11 10:29:23,811 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-06-11 10:29:23,811 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-06-11 10:29:23,857 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-06-11 10:29:23,857 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-06-11 10:29:23,982 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-06-11 10:29:23,982 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-06-11 10:29:24,058 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-06-11 10:29:24,058 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-06-11 10:29:24,067 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-06-11 10:29:24,067 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-06-11 10:29:24,075 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-06-11 10:29:24,075 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-06-11 10:30:11,268 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:30:11,268 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:30:21,063 basehttp "GET /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:30:21,063 basehttp "GET /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:30:21,340 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:30:21,340 basehttp "GET /admin/ HTTP/1.1" 200 25703
+INFO 2025-06-11 10:30:30,288 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:30:30,288 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:30:38,394 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+INFO 2025-06-11 10:30:38,394 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+WARNING 2025-06-11 10:30:38,644 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+WARNING 2025-06-11 10:30:38,644 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+INFO 2025-06-11 10:30:44,513 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:30:44,513 basehttp "GET / HTTP/1.1" 200 23031
+INFO 2025-06-11 10:30:48,168 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+INFO 2025-06-11 10:30:48,168 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+WARNING 2025-06-11 10:30:48,424 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+WARNING 2025-06-11 10:30:48,424 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+INFO 2025-06-11 10:30:51,820 basehttp "GET /api/v1/customers/profile/ HTTP/1.1" 200 42819
+INFO 2025-06-11 10:30:51,820 basehttp "GET /api/v1/customers/profile/ HTTP/1.1" 200 42819
+INFO 2025-06-11 10:31:01,397 basehttp "GET /api/v1/customers/logout/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:31:01,397 basehttp "GET /api/v1/customers/logout/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:31:01,425 basehttp "GET /api/v1/customers/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:31:01,425 basehttp "GET /api/v1/customers/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:31:01,476 basehttp "GET /api/v1/customers/login/?next=/api/v1/customers/ HTTP/1.1" 200 26855
+INFO 2025-06-11 10:31:01,476 basehttp "GET /api/v1/customers/login/?next=/api/v1/customers/ HTTP/1.1" 200 26855
+INFO 2025-06-11 10:31:06,347 basehttp "GET /api/v1/customers/register/ HTTP/1.1" 200 30865
+INFO 2025-06-11 10:31:06,347 basehttp "GET /api/v1/customers/register/ HTTP/1.1" 200 30865
+INFO 2025-06-11 10:32:07,216 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:32:07,216 basehttp "POST /api/v1/customers/register/ HTTP/1.1" 302 0
+INFO 2025-06-11 10:32:07,493 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+INFO 2025-06-11 10:32:07,493 basehttp "GET /api/v1/customers/ HTTP/1.1" 200 87776
+WARNING 2025-06-11 10:32:08,009 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+WARNING 2025-06-11 10:32:08,009 basehttp "GET /static/icons/icon-72x72.png HTTP/1.1" 404 1991
+INFO 2025-06-11 10:32:29,646 basehttp "GET /api/v1/customers/profile/ HTTP/1.1" 200 32121
+INFO 2025-06-11 10:32:29,646 basehttp "GET /api/v1/customers/profile/ HTTP/1.1" 200 32121

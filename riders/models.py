@@ -21,12 +21,34 @@ REGION_CHOICES = [
 ]
 
 class Rider(models.Model):
-    # Transport type choices
+    # Service type choices
+    SERVICE_TYPES = [
+        ('delivery', 'Delivery Service'),
+        ('moving_truck', 'Moving Truck'),
+        ('water_bowser', 'Water Bowser'),
+        ('sewage_truck', 'Sewage Truck'),
+        ('ambulance', 'Ambulance'),
+        ('fuel_truck', 'Fuel Truck'),
+        ('other', 'Other')
+    ]
+    
+    # Transport type choices (for delivery service and other services)
     TRANSPORT_CHOICES = [
+        # Delivery service options
         ('boda', 'Boda'),
         ('guta', 'Guta'),
         ('kirikuu', 'Kirikuu'),
         ('kenta', 'Kenta'),
+        # Moving truck options
+        ('small_truck', 'Small Truck (1-2 tons)'),
+        ('medium_truck', 'Medium Truck (3-5 tons)'),
+        ('large_truck', 'Large Truck (5+ tons)'),
+        # Other service types (will use service_type as transport_type)
+        ('water_bowser', 'Water Bowser'),
+        ('sewage_truck', 'Sewage Truck'),
+        ('ambulance', 'Ambulance'),
+        ('fuel_truck', 'Fuel Truck'),
+        ('other', 'Other')
     ]
     
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='rider', null=True, blank=True)
@@ -36,7 +58,12 @@ class Rider(models.Model):
     email = models.EmailField(blank=True, null=True)
     password = models.CharField(max_length=128, null=True, blank=True)  # For storing hashed password
     region = models.CharField(max_length=50, choices=REGION_CHOICES, null=True, blank=True)
-    transport_type = models.CharField(max_length=10, choices=TRANSPORT_CHOICES, null=True, blank=True, help_text='Type of transport vehicle used by the rider',default='boda')
+    # Service type (delivery, moving_truck, water_bowser, etc.)
+    service_type = models.CharField(max_length=20, choices=SERVICE_TYPES, default='delivery', help_text='Type of service provided by the rider')
+    
+    # Transport type (only applicable for delivery service)
+    transport_type = models.CharField(max_length=15, choices=TRANSPORT_CHOICES, null=True, blank=True, 
+                                    help_text='Type of transport vehicle used by the rider (for delivery service only)', default='boda')
     kijiwe = models.ForeignKey('operations.Kijiwe', on_delete=models.SET_NULL, null=True, blank=True)
     is_available = models.BooleanField(default=True, null=True, blank=True)
     consecutive_declines = models.IntegerField(default=0, null=True, blank=True)

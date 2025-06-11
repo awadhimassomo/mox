@@ -869,7 +869,7 @@ def register_view(request):
             email = form.cleaned_data.get('email')
             phone = form.cleaned_data.get('phone')
             
-            if User.objects.filter(email=email).exists() and email:
+            if CustomUser.objects.filter(email=email).exists() and email:
                 # User is already registered with this email
                 messages.info(request, 'An account with this email already exists. Please log in.')
                 return render(request, 'customers/already_registered.html', {
@@ -878,7 +878,7 @@ def register_view(request):
                 })
             
             # Check if a user with this phone number already exists
-            if User.objects.filter(phone=phone).exists():
+            if CustomUser.objects.filter(phone=phone).exists():
                 # Phone number is already registered
                 messages.error(request, 'This phone number is already registered. Please use a different number or log in.')
                 return render(request, 'customers/register.html', {'form': form})

@@ -97,14 +97,42 @@ def rider_register(request):
             phone = request.POST.get('phone')
             password = request.POST.get('password')
             region = request.POST.get('region')
+            service_type = request.POST.get('service_type', 'delivery')  # Default to 'delivery' if not provided
+            
+            # Set transport type based on service type
             transport_type = request.POST.get('transport_type')
+            if not transport_type and service_type != 'delivery' and service_type != 'moving_truck':
+                # For non-delivery services, use the service type as transport type
+                transport_type = service_type
+                
             kijiwe_id = request.POST.get('kijiwe_id')  # match the name in the HTML form
             
             print(f"📋 Form Data - First Name: {first_name}, Last Name: {last_name}, Phone: {phone}, Password: {'YES' if password else 'NO'}")  # Debugging
 
-            if not phone or not first_name or not last_name or not password:
-                print("❌ Missing required fields!")  # Debugging
-                messages.error(request, "All fields are required")
+            # Required fields validation
+            required_fields = {
+                'first_name': 'First name is required',
+                'last_name': 'Last name is required',
+                'phone': 'Phone number is required',
+                'password': 'Password is required',
+                'service_type': 'Please select a service type',
+                'region': 'Please select your region'
+            }
+            
+            errors = []
+            for field, error_msg in required_fields.items():
+                if not request.POST.get(field):
+                    errors.append(error_msg)
+            
+            # Special validation for transport type when service type is delivery
+            service_type = request.POST.get('service_type')
+            if service_type == 'delivery' and not request.POST.get('transport_type'):
+                errors.append('Please select your mode of transport')
+            
+            if errors:
+                print(f"❌ Validation errors: {errors}")
+                for error in errors:
+                    messages.error(request, error)
                 return redirect('riders:rider_register')
 
             # ✅ Ensure phone is formatted correctly
@@ -151,7 +179,8 @@ def rider_register(request):
                 phone_number=cleaned_phone,
                 password=make_password(password),  # Hash password
                 region=region,  # Save the region
-                transport_type=transport_type,  # Save transport type
+                service_type=service_type,  # Save service type
+                transport_type=transport_type,  # Save transport type (only for delivery)
                 kijiwe=kijiwe_instance,  # Save Kijiwe if applicable
             )
             print(f"✅ Rider Profile Created: {rider}")

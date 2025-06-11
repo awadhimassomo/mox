@@ -263,8 +263,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Get categories - both general (no business) and for the specified business.
+        Get categories - returns all general categories plus any custom categories
+        for the specified business, with business-specific categories taking precedence
+        over general ones with the same name.
         """
+        from django.db.models import Q, Case, When, Value, BooleanField
+        
         # Get business_id from query params if provided
         business_id = self.request.query_params.get('business_id')
         
@@ -273,10 +277,38 @@ class CategoryViewSet(viewsets.ModelViewSet):
         
         # If business_id is provided, get both general and business-specific categories
         if business_id:
-            queryset = queryset.filter(Q(business_id=business_id) | Q(business__isnull=True))
+            try:
+                business = Business.objects.get(id=business_id)
+                print(f"\n[CATEGORIES API] Found business: {business.name} (ID: {business.id})")
+                
+                # Get all general categories (no business) and categories for this business
+                queryset = queryset.filter(Q(business_id=business_id) | Q(business__isnull=True))
+                
+                # Add a field to prioritize business-specific categories in sorting
+                queryset = queryset.annotate(
+                    is_business_specific=Case(
+                        When(business_id=business_id, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    )
+                )
+                
+                # Order by business-specific first, then by name
+                queryset = queryset.order_by('-is_business_specific', 'name')
+                
+            except Business.DoesNotExist:
+                print(f"\n[CATEGORIES API] Business with ID {business_id} not found")
+                # If business not found, return only general categories
+                queryset = queryset.filter(business__isnull=True)
         else:
             # If no business_id, only get general categories
             queryset = queryset.filter(business__isnull=True)
+        
+        # Apply additional filters if provided
+        category_type = self.request.query_params.get('type')
+        if category_type:
+            print(f"[CATEGORIES API] Filtering by type: {category_type}")
+            queryset = queryset.filter(category_type=category_type)
         
         # Debug output
         print("\n" + "*" * 80)
@@ -285,21 +317,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
         print(f"Business ID from params: {business_id}")
         print(f"Found {queryset.count()} categories")
         
-        # Print categories with their business info
-        for idx, cat in enumerate(queryset, 1):
+        # Print categories with their business info (limit to 10 for brevity)
+        for idx, cat in enumerate(queryset[:10], 1):
             business_info = f"Business: {cat.business.name} (ID: {cat.business_id})" if cat.business else "General (No Business)"
             print(f"{idx}. {cat.name} (ID: {cat.id}, {business_info})")
-        
+        if queryset.count() > 10:
+            print(f"... and {queryset.count() - 10} more categories")
         print("*" * 80 + "\n")
-        
-        # Apply additional filters if provided
-        category_type = self.request.query_params.get('type')
-        if category_type:
-            print(f"[CATEGORIES API] Filtering by type: {category_type}")
-            queryset = queryset.filter(category_type=category_type)
-        
-        # Order the results
-        queryset = queryset.order_by('name')
         
         return queryset
 

@@ -26,7 +26,7 @@ router.register(r'categories', CategoryViewSet, basename='category')
 # API v1 URL patterns
 v1_patterns = [
     # Include business app API URLs
-    path('business/', include('business.urls')),
+    path('business/', include(('business.urls', 'business_api'))),
     
     # Category endpoints
     path('categories/', include([
@@ -47,6 +47,9 @@ v1_patterns = [
     
     # Authentication
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
+    
+    # Bookings API
+    path('bookings/', include('bookings.urls')),
 ]
 
 # API URL patterns
@@ -85,7 +88,7 @@ urlpatterns = [
     # Other apps
     path('operations/', include('operations.urls')),
     path('riders/', include('riders.urls')),
-    path('business/', include('business.urls')),
+    path('business/', include(('business.urls', 'business_main'))),
     path("orders/", include("orders.urls")),
     path('user-verification/', include('user_verification.urls')),
     path("__reload__/", include("django_browser_reload.urls")),

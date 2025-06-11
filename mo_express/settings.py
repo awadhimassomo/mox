@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'orders', 
     'tailwind',
     'drf_yasg',
+    'bookings',
 ]
 
 MIDDLEWARE = [
